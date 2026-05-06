@@ -1,6 +1,6 @@
 # LLMRender [![npm install llmrender](https://img.shields.io/badge/npm%20install-llmrender-blue.svg "install badge")](https://www.npmjs.com/package/llmrender) [![test badge](https://github.com/franciscop/llmrender/workflows/tests/badge.svg "test badge")](https://github.com/franciscop/llmrender/blob/master/.github/workflows/tests.yml) [![gzip size](https://img.badgesize.io/franciscop/llmrender/master/index.min.js.svg?compression=gzip "gzip badge")](https://github.com/franciscop/llmrender/blob/master/index.min.js)
 
-A small React Markdown renderer packed with features for all your LLM output.
+A React Markdown renderer packed with features for all your LLM output:
 
 ```jsx
 import Markdown from "llmrender";
