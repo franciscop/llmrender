@@ -1,0 +1,375 @@
+# LLMRender [![npm install llmrender](https://img.shields.io/badge/npm%20install-llmrender-blue.svg "install badge")](https://www.npmjs.com/package/llmrender) [![test badge](https://github.com/franciscop/llmrender/workflows/tests/badge.svg "test badge")](https://github.com/franciscop/llmrender/blob/master/.github/workflows/tests.yml) [![gzip size](https://img.badgesize.io/franciscop/llmrender/master/index.min.js.svg?compression=gzip "gzip badge")](https://github.com/franciscop/llmrender/blob/master/index.min.js)
+
+A small React Markdown renderer packed with features for all your LLM output.
+
+```jsx
+import Markdown from "llmrender";
+
+export default function Post({ content }) {
+  return <Markdown className="prose">{content}</Markdown>;
+}
+```
+
+- **Zero dependencies** and a fraction of the size of remark/rehype or markdown-it.
+- **Syntax highlighting** — 30+ languages and multiple themes to pick. Can be replaced for Shiki or Prism easily.
+- **Math** — built-in Math renderer for common Latex. Can be replaced for full KaTeX easily.
+- **GitHub Flavored Markdown** — tables, task lists, strikethrough, callouts, auto-links.
+- **Drop-in styling** — renders in a plain `<div>`. Tailwind, Styled Components, or plain CSS all work.
+
+## Getting started
+
+First create a React project, and install the library:
+
+```sh
+npm i llmrender
+```
+
+Pass your Markdown string as `children`:
+
+```jsx
+import Markdown from "llmrender";
+
+<Markdown>{`
+# Hello world
+
+This is **bold**, _italic_, ~~strikethrough~~, and [a link](https://example.com).
+
+\`\`\`js
+const greet = (name) => \`Hello, \${name}!\`;
+\`\`\`
+`}</Markdown>
+```
+
+Every HTML attribute you'd put on a `<div>` — `className`, `style`, `id`, `data-*` — passes through:
+
+```jsx
+<Markdown className="prose" id="content" data-testid="article">
+  {content}
+</Markdown>
+```
+
+## Themes
+
+LLMRender ships four ready-to-use themes. Import one to get syntax highlighting, callout styles, and table styling with a single line:
+
+```js
+import "llmrender/llmrender.css";  // GitHub light (default)
+import "llmrender/dark.css";       // GitHub dark
+import "llmrender/adaptive.css";   // follows prefers-color-scheme
+import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
+```
+
+All colors are CSS variables, so you can override any token without touching the rest:
+
+```css
+:root {
+  --llmrender-keyword:  #d73a49;
+  --llmrender-string:   #032f62;
+  --llmrender-function: #6f42c1;
+  --llmrender-pre-bg:   #f8f8f8;
+}
+```
+
+| Variable | Default (light) | Controls |
+|---|---|---|
+| `--llmrender-keyword` | `#cf222e` | `if`, `const`, `return`, … |
+| `--llmrender-string` | `#0969da` | string literals |
+| `--llmrender-comment` | `#6e7781` | comments |
+| `--llmrender-number` | `#0550ae` | numeric literals |
+| `--llmrender-function` | `#8250df` | function calls |
+| `--llmrender-type` | `#953800` | class / type names |
+| `--llmrender-operator` | `#24292f` | `=`, `=>`, `+`, … |
+| `--llmrender-pre-bg` | `#f6f8fa` | code block background |
+| `--llmrender-pre-color` | `#24292f` | code block text |
+| `--llmrender-inline-bg` | `#f6f8fa` | inline code background |
+| `--llmrender-table-border` | `#d0d7de` | table borders |
+
+## API
+
+```ts
+<Markdown
+  highlight?: (code: string, lang: string) => ReactNode[]
+  math?: ((tex: string, block: boolean) => ReactNode) | false
+  ...HTMLAttributes<HTMLDivElement>
+>
+  {markdownString}
+</Markdown>
+```
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `children` | `string` | required | Markdown source to render |
+| `highlight` | `(code, lang) => ReactNode[]` | built-in | Syntax highlighter for fenced code blocks |
+| `math` | `(tex, block) => ReactNode` \| `false` | built-in | Math renderer for `$…$` and `$$…$$` |
+| `rawHtml` | `boolean \| Record<string, string[]>` | `undefined` | Allow HTML tags in Markdown source — see [Security](#security) |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
+
+### `highlight`
+
+Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`.
+
+```ts
+type HighlightFn = (code: string, lang: string) => ReactNode[];
+```
+
+The built-in highlighter covers 30+ languages with `<span>` tokens and CSS variable colors. Swap it for any library:
+
+```jsx
+import { codeToHtml } from "shiki";
+
+async function highlight(code, lang) {
+  const html = await codeToHtml(code, { lang, theme: "github-light" });
+  return [<span key="h" dangerouslySetInnerHTML={{ __html: html }} />];
+}
+
+<Markdown highlight={highlight}>{content}</Markdown>
+```
+
+### `math`
+
+Called for every math expression. `block` is `true` for `$$…$$`, `false` for `$…$`.
+
+```ts
+type MathFn = (tex: string, block: boolean) => ReactNode;
+```
+
+The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing entirely.
+
+## Syntax
+
+### Headings
+
+```md
+# H1
+## H2
+### H3
+#### H4
+```
+
+Headings render with an `id` derived from their text (e.g. `## Getting Started` → `id="getting-started"`), so anchor links like `[jump](#getting-started)` work out of the box.
+
+### Inline formatting
+
+```md
+**bold**  _italic_  ~~strikethrough~~  `inline code`
+
+[link text](https://example.com)
+![alt text](https://example.com/image.png)
+https://auto-linked.com
+```
+
+### Blockquotes
+
+```md
+> This is a blockquote.
+> It can span multiple lines.
+>
+> > And nest.
+```
+
+### Callouts
+
+GitHub-style callouts inside blockquotes:
+
+```md
+> [!NOTE]
+> Highlights information users should know.
+
+> [!TIP]
+> Optional information to help a user be more successful.
+
+> [!IMPORTANT]
+> Crucial information necessary for users to succeed.
+
+> [!WARNING]
+> Critical content demanding immediate user attention.
+
+> [!CAUTION]
+> Negative potential consequences of an action.
+```
+
+Each renders as `<blockquote class="callout-{type}">` with a `<p class="callout-title">` header. The included themes style them out of the box; you can also target them directly:
+
+```css
+.callout-note    { border-left: 4px solid #0969da; background: #ddf4ff; }
+.callout-warning { border-left: 4px solid #d1242f; background: #ffebe9; }
+```
+
+### Lists
+
+```md
+- Unordered item
+- Another item
+  - Nested item
+
+1. Ordered item
+2. Second item
+   1. Nested
+
+- [ ] Unchecked task
+- [x] Checked task
+```
+
+Task items render with a disabled `<input type="checkbox">`.
+
+### Code blocks
+
+````md
+```js
+const greeting = "hello world";
+console.log(greeting);
+```
+````
+
+Supported languages include: `js`/`ts`/`jsx`/`tsx`, `py`, `go`, `rust`, `java`, `c`/`cpp`/`cs`, `html`, `css`/`scss`, `json`, `bash`/`sh`, `sql`, `yaml`, `svelte`, `vue`, and more.
+
+### Tables
+
+```md
+| Name  | Role    | Score |
+|:------|:-------:|------:|
+| Alice | Admin   |    99 |
+| Bob   | Viewer  |    42 |
+```
+
+Column alignment: `:---` left, `:---:` center, `---:` right. Inline markup and escaped pipes (`\|`) work inside cells.
+
+### Math
+
+Inline with `$…$`, display with `$$…$$`:
+
+```md
+The formula $E = mc^2$ changed everything.
+
+$$\frac{a}{b} = \sqrt{1 + x^2}$$
+```
+
+Supported out of the box: Greek letters (`\alpha`, `\beta`, …), fractions (`\frac`), square roots (`\sqrt`), superscripts, subscripts, sums (`\sum`), products (`\prod`), integrals (`\int`), limits (`\lim`), and binomials (`\binom`).
+
+### Horizontal rule
+
+```md
+---
+```
+
+## Security
+
+LLMRender is safe to use with untrusted Markdown. Here is how that works, and what the limits are.
+
+### How React does the heavy lifting
+
+LLMRender never produces raw HTML strings. Every piece of content — headings, paragraphs, link text, table cells, code, image alt text — becomes a React element rendered through JSX. React automatically escapes all text children, so input like `[<script>alert(1)</script>](url)` renders the `<script>` as literal visible text, not an executed tag. This protection is unconditional and applies to every Markdown construct.
+
+URL attributes (`href`, `src`, etc.) are the one place text becomes an executable value. LLMRender uses an allowlist here too: only `http:` and `https:` URLs are allowed. Relative URLs and `#` fragments have no scheme and are always allowed. Everything else — `javascript:`, `data:`, `blob:`, `ftp:`, custom app protocols, and anything new — is replaced with `#`. Control characters that browsers strip from scheme names before resolving (e.g. `java\x09script:`) are removed before the check. Auto-linked bare URLs in Markdown only match `http://` and `https://` by definition.
+
+### Raw HTML (`rawHtml` prop)
+
+By default, HTML tags written inside Markdown source are not rendered — they appear as escaped text. The `rawHtml` prop opts in to rendering them.
+
+**`rawHtml={true}`** — renders tags from a built-in allowlist of known-safe content elements. Anything not on the list is silently dropped as text. The allowlist covers:
+
+- **Inline:** `a`, `abbr`, `b`, `bdi`, `bdo`, `br`, `cite`, `code`, `data`, `dfn`, `em`, `i`, `kbd`, `mark`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `small`, `span`, `strong`, `sub`, `sup`, `time`, `u`, `var`, `wbr`
+- **Block:** `address`, `article`, `aside`, `blockquote`, `dd`, `del`, `details`, `div`, `dl`, `dt`, `figcaption`, `figure`, `footer`, `h1`–`h6`, `header`, `hr`, `ins`, `li`, `main`, `nav`, `ol`, `p`, `pre`, `section`, `summary`, `ul`
+- **Tables:** `caption`, `col`, `colgroup`, `table`, `tbody`, `td`, `th`, `thead`, `tr`
+- **Media:** `audio`, `img`, `map`, `area`, `picture`, `source`, `track`, `video`
+
+Tags not on this list — including `script`, `style`, `iframe`, `canvas`, `svg`, `form`, `input`, `dialog`, and anything new browsers add in the future — are never rendered. This allowlist model means the library stays secure by default even as the HTML spec evolves.
+
+Regardless of the allowlist, these attributes are always stripped: all `on*` event handlers, `srcdoc`, `style`, `ping`. URL-bearing attributes (`href`, `src`, `action`, etc.) are sanitized to block any scheme other than `http:` and `https:`. Any `<a target="_blank">` automatically gets `rel="noopener noreferrer"` added (merged with any existing `rel` value) to prevent tabnapping.
+
+**`rawHtml={{ tag: ["attr", …] }}`** — explicit allowlist. Only the listed tags render, and only the listed attributes pass through. The hard-blocked tags and attributes above cannot be unlocked even here:
+
+```jsx
+// Allow <mark> with no attributes, and <span> with only class
+<Markdown rawHtml={{ mark: [], span: ["class"] }}>{content}</Markdown>
+```
+
+Prefer the explicit allowlist for untrusted sources — it gives you precise control over what HTML can appear.
+
+## Recipes
+
+### Tailwind Typography
+
+```jsx
+<Markdown className="prose prose-lg dark:prose-invert max-w-none">
+  {content}
+</Markdown>
+```
+
+### Styled Components
+
+```jsx
+import styled from "styled-components";
+import Markdown from "llmrender";
+
+const Article = styled(Markdown)`
+  font-family: Georgia, serif;
+  line-height: 1.7;
+
+  h1, h2, h3 { font-weight: 700; margin-top: 1.5em; }
+  a { color: #0969da; text-decoration: underline; }
+  pre { background: #f6f8fa; padding: 1em; border-radius: 6px; overflow-x: auto; }
+  blockquote { border-left: 4px solid #d0d7de; padding-left: 1em; color: #57606a; }
+`;
+
+export default function Post({ content }) {
+  return <Article>{content}</Article>;
+}
+```
+
+### KaTeX
+
+For full LaTeX — matrices, stretchy brackets, and anything beyond the built-in renderer:
+
+```bash
+npm i katex
+```
+
+```jsx
+import Markdown from "llmrender";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+
+function renderMath(tex, block) {
+  const html = katex.renderToString(tex, { displayMode: block, throwOnError: false });
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+<Markdown math={renderMath}>{content}</Markdown>
+```
+
+### Mermaid diagrams
+
+Intercept ` ```mermaid ` blocks via the `highlight` prop:
+
+```jsx
+import Markdown from "llmrender";
+import mermaid from "mermaid";
+import { useEffect, useRef } from "react";
+
+mermaid.initialize({ startOnLoad: false });
+
+function Diagram({ code }) {
+  const ref = useRef(null);
+  useEffect(() => {
+    if (ref.current) mermaid.run({ nodes: [ref.current] });
+  }, [code]);
+  return [<div ref={ref} className="mermaid" key="d">{code}</div>];
+}
+
+function highlight(code, lang) {
+  if (lang === "mermaid") return [<Diagram code={code} key="d" />];
+  return [code];
+}
+
+<Markdown highlight={highlight}>{content}</Markdown>
+```
+
+````md
+```mermaid
+graph TD
+  A[Start] --> B{Decision}
+  B -->|Yes| C[Do it]
+  B -->|No| D[Skip]
+```
+````

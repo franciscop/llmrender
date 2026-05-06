@@ -1,0 +1,68 @@
+import $ from "react-test";
+import Markdown from "./index";
+
+it("renders h1", () => {
+  expect(
+    $(<Markdown># Hello</Markdown>)
+      .find("h1")
+      .text(),
+  ).toBe("Hello");
+});
+
+it("renders h2", () => {
+  expect(
+    $(<Markdown>## World</Markdown>)
+      .find("h2")
+      .text(),
+  ).toBe("World");
+});
+
+it("renders h3 through h6", () => {
+  for (let i = 3; i <= 6; i++) {
+    expect(
+      $(<Markdown>{"#".repeat(i) + " Title"}</Markdown>)
+        .find(`h${i}`)
+        .text(),
+    ).toBe("Title");
+  }
+});
+
+it("renders bold inside a heading", () => {
+  expect(
+    $(<Markdown># **bold heading**</Markdown>)
+      .find("h1")
+      .find("strong")
+      .text(),
+  ).toBe("bold heading");
+});
+
+it("adds id to heading from text", () => {
+  expect(
+    $(<Markdown>## Hello World</Markdown>)
+      .find("h2")
+      .attr("id"),
+  ).toBe("hello-world");
+});
+
+it("renders anchor link inside heading", () => {
+  const h = $(<Markdown># My Heading</Markdown>).find("h1");
+  expect(h.attr("id")).toBe("my-heading");
+  expect(h.find("a").attr("href")).toBe("#my-heading");
+  expect(h.find("a").text()).toBe("My Heading");
+});
+
+it("slugifies heading with special characters", () => {
+  expect(
+    $(<Markdown>## Hello, World!</Markdown>)
+      .find("h2")
+      .attr("id"),
+  ).toBe("hello-world");
+});
+
+it("slugifies heading with multiple spaces", () => {
+  expect(
+    $(<Markdown>### Foo Bar</Markdown>)
+      .find("h3")
+      .attr("id"),
+  ).toBe("foo-bar");
+});

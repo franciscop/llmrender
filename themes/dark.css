@@ -1,0 +1,98 @@
+/* LLMRender — dark theme */
+
+:root {
+  --llmrender-keyword:   #ff7b72;
+  --llmrender-string:    #a5d6ff;
+  --llmrender-comment:   #8b949e;
+  --llmrender-number:    #79c0ff;
+  --llmrender-function:  #d2a8ff;
+  --llmrender-type:      #ffa657;
+  --llmrender-operator:  #e6edf3;
+
+  --llmrender-pre-bg:       #161b22;
+  --llmrender-pre-color:    #e6edf3;
+  --llmrender-inline-bg:    #2d333b;
+  --llmrender-inline-color: #e6edf3;
+
+  --llmrender-callout-note:           #388bfd;
+  --llmrender-callout-note-bg:        #051d4d;
+  --llmrender-callout-tip:            #3fb950;
+  --llmrender-callout-tip-bg:         #031a06;
+  --llmrender-callout-important:      #a371f7;
+  --llmrender-callout-important-bg:   #21012e;
+  --llmrender-callout-warning:        #d29922;
+  --llmrender-callout-warning-bg:     #2f1d02;
+  --llmrender-callout-caution:        #f85149;
+  --llmrender-callout-caution-bg:     #2d0202;
+
+  --llmrender-table-border:    #30363d;
+  --llmrender-table-header-bg: #161b22;
+}
+
+/* Code blocks */
+pre {
+  background: var(--llmrender-pre-bg);
+  color: var(--llmrender-pre-color);
+  padding: 1em 1.25em;
+  border-radius: 6px;
+  overflow-x: auto;
+  font-size: 0.9em;
+  line-height: 1.6;
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+}
+
+/* Inline code */
+:not(pre) > code {
+  background: var(--llmrender-inline-bg);
+  color: var(--llmrender-inline-color);
+  padding: 0.2em 0.4em;
+  border-radius: 4px;
+  font-size: 0.875em;
+  font-family: ui-monospace, "Cascadia Code", "Source Code Pro", Menlo, Consolas, monospace;
+}
+
+/* Syntax tokens */
+pre code .keyword  { color: var(--llmrender-keyword); }
+pre code .string   { color: var(--llmrender-string); }
+pre code .comment  { color: var(--llmrender-comment); font-style: italic; }
+pre code .number   { color: var(--llmrender-number); }
+pre code .function { color: var(--llmrender-function); }
+pre code .type     { color: var(--llmrender-type); }
+pre code .operator { color: var(--llmrender-operator); }
+
+/* Callouts */
+blockquote[class^="callout-"] {
+  margin: 0;
+  padding: 0.75em 1em;
+  border-radius: 6px;
+}
+
+blockquote[class^="callout-"] .callout-title {
+  font-weight: 600;
+  margin: 0 0 0.25em;
+}
+
+blockquote.callout-note      { border-left: 4px solid var(--llmrender-callout-note);      background: var(--llmrender-callout-note-bg); }
+blockquote.callout-tip       { border-left: 4px solid var(--llmrender-callout-tip);       background: var(--llmrender-callout-tip-bg); }
+blockquote.callout-important { border-left: 4px solid var(--llmrender-callout-important); background: var(--llmrender-callout-important-bg); }
+blockquote.callout-warning   { border-left: 4px solid var(--llmrender-callout-warning);   background: var(--llmrender-callout-warning-bg); }
+blockquote.callout-caution   { border-left: 4px solid var(--llmrender-callout-caution);   background: var(--llmrender-callout-caution-bg); }
+
+blockquote.callout-note      .callout-title { color: var(--llmrender-callout-note); }
+blockquote.callout-tip       .callout-title { color: var(--llmrender-callout-tip); }
+blockquote.callout-important .callout-title { color: var(--llmrender-callout-important); }
+blockquote.callout-warning   .callout-title { color: var(--llmrender-callout-warning); }
+blockquote.callout-caution   .callout-title { color: var(--llmrender-callout-caution); }
+
+/* Tables */
+table { border-collapse: collapse; width: 100%; }
+
+th, td {
+  border: 1px solid var(--llmrender-table-border);
+  padding: 0.5em 0.75em;
+}
+
+th {
+  background: var(--llmrender-table-header-bg);
+  font-weight: 600;
+}

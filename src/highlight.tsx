@@ -1,0 +1,200 @@
+import type { ReactNode } from "react";
+
+type Token = { regex: RegExp; cls: string };
+
+const kw = (words: string): Token => ({
+  regex: new RegExp(`\\b(${words.trim().split(/\s+/).join("|")})\\b`),
+  cls: "keyword",
+});
+
+const BASE =
+  "as async await break case catch class const continue default delete do else enum export extends false finally for from function if import in instanceof interface let loop match new null of return static struct super switch this throw true try type typeof undefined use var void while yield";
+
+// --- Shared tokens ---
+const COMMENT_SLASH: Token = {
+  regex: /\/\/[^\n]*|\/\*[\s\S]*?\*\//,
+  cls: "comment",
+};
+const COMMENT_BLOCK: Token = { regex: /\/\*[\s\S]*?\*\//, cls: "comment" };
+const COMMENT_HASH: Token = { regex: /#[^\n]*/, cls: "comment" };
+const COMMENT_HTML: Token = { regex: /<!--[\s\S]*?-->/, cls: "comment" };
+const STRING_JS: Token = {
+  regex: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'|`(?:[^`\\]|\\.)*`/,
+  cls: "string",
+};
+const STRING_PY: Token = {
+  regex: /"""[\s\S]*?"""|'''[\s\S]*?'''|"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/,
+  cls: "string",
+};
+const STRING_BASIC: Token = {
+  regex: /"(?:[^"\\]|\\.)*"|'(?:[^'\\]|\\.)*'/,
+  cls: "string",
+};
+const STRING_HTML: Token = { regex: /"[^"]*"|'[^']*'/, cls: "string" };
+const NUMBER: Token = { regex: /\b\d+(\.\d+)?\b/, cls: "number" };
+const NUMBER_CSS: Token = {
+  regex: /#[0-9a-fA-F]{3,8}\b|\b\d+(\.\d+)?(px|em|rem|vh|vw|%|s|ms)?\b/,
+  cls: "number",
+};
+const VAR_SH: Token = { regex: /\$\{?[\w#@?*!-]+\}?/, cls: "number" };
+const KEYWORD_CSS: Token = { regex: /@\w+|!important/, cls: "keyword" };
+const KEYWORD_HTML: Token = { regex: /<\/?[\w.-]+|\/?>/, cls: "keyword" };
+const OPERATOR_JS: Token = {
+  regex: /===|!==|=>|&&|\|\||[+\-*/%=<>!&|^~?:]+/,
+  cls: "operator",
+};
+const OPERATOR_PY: Token = {
+  regex: /\*\*|\/\/|->|[+\-*/%=<>!&|^~]+/,
+  cls: "operator",
+};
+const FUNCTION: Token = { regex: /\b([a-z_]\w*)\s*(?=\()/, cls: "function" };
+const TYPE: Token = { regex: /\b[A-Z][a-zA-Z0-9]*\b/, cls: "type" };
+
+// --- Language definitions ---
+const KEY_JS: Token = { regex: /"[^"]*"(?=\s*:)/, cls: "function" };
+const js = [
+  COMMENT_SLASH,
+  KEY_JS,
+  STRING_JS,
+  kw(BASE),
+  TYPE,
+  FUNCTION,
+  OPERATOR_JS,
+  NUMBER,
+];
+const py = [
+  COMMENT_HASH,
+  STRING_PY,
+  kw(
+    `${BASE} and assert def del elif except False global is lambda None nonlocal not or pass raise self True with`,
+  ),
+  TYPE,
+  FUNCTION,
+  OPERATOR_PY,
+  NUMBER,
+];
+const go = [
+  COMMENT_SLASH,
+  STRING_JS,
+  kw(`${BASE} chan defer fallthrough func go goto map package range select`),
+  TYPE,
+  FUNCTION,
+  OPERATOR_JS,
+  NUMBER,
+];
+const rust = [
+  COMMENT_SLASH,
+  STRING_JS,
+  kw(
+    `${BASE} crate dyn extern fn impl mod move mut pub ref self Self trait unsafe where`,
+  ),
+  TYPE,
+  FUNCTION,
+  OPERATOR_JS,
+  NUMBER,
+];
+const sh = [
+  COMMENT_HASH,
+  STRING_BASIC,
+  VAR_SH,
+  kw(`${BASE} then elif fi done esac echo cd exit source local`),
+];
+const SELECTOR_CSS: Token = { regex: /[.#:][\w-]+/, cls: "type" };
+const PROPERTY_CSS: Token = { regex: /\b[\w-]+(?=\s*:)/, cls: "function" };
+const css = [
+  COMMENT_BLOCK,
+  STRING_BASIC,
+  KEYWORD_CSS,
+  SELECTOR_CSS,
+  PROPERTY_CSS,
+  FUNCTION,
+  NUMBER_CSS,
+];
+const html = [COMMENT_HTML, STRING_HTML, KEYWORD_HTML];
+const jsxTokens = [...html, ...js];
+
+const languages: Record<string, Token[]> = {
+  js,
+  javascript: js,
+  ts: js,
+  typescript: js,
+  c: js,
+  cpp: js,
+  "c++": js,
+  cs: js,
+  csharp: js,
+  java: js,
+  kotlin: js,
+  kt: js,
+  scala: js,
+  swift: js,
+  php: js,
+  go,
+  rust,
+  rs: rust,
+  py,
+  python: py,
+  rb: py,
+  ruby: py,
+  yaml: py,
+  yml: py,
+  toml: py,
+  json: js,
+  jsonc: js,
+  sql: js,
+  css,
+  scss: css,
+  less: css,
+  html,
+  xml: html,
+  jsx: jsxTokens,
+  tsx: jsxTokens,
+  svelte: html,
+  vue: html,
+  sh,
+  bash: sh,
+  shell: sh,
+  zsh: sh,
+  fish: sh,
+  dockerfile: sh,
+  makefile: sh,
+};
+
+export default function highlight(code: string, lang: string): ReactNode[] {
+  const tokens = languages[lang];
+  if (!tokens) return [code];
+
+  const parts: ReactNode[] = [];
+  let remaining = code;
+  let i = 0;
+
+  while (remaining.length > 0) {
+    let earliest: RegExpExecArray | null = null;
+    let earliestToken: Token | null = null;
+
+    for (const token of tokens) {
+      token.regex.lastIndex = 0;
+      const m = token.regex.exec(remaining);
+      if (m && (earliest === null || m.index < earliest.index)) {
+        earliest = m;
+        earliestToken = token;
+      }
+    }
+
+    if (!earliest || !earliestToken) {
+      parts.push(remaining);
+      break;
+    }
+    if (earliest.index > 0) {
+      parts.push(remaining.slice(0, earliest.index));
+    }
+    parts.push(
+      <span key={i++} className={earliestToken.cls}>
+        {earliest[0]}
+      </span>,
+    );
+    remaining = remaining.slice(earliest.index + earliest[0].length);
+  }
+
+  return parts;
+}
