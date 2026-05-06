@@ -27,7 +27,8 @@
     "themes/"
   ],
   "documentation.page": {
-    "title": "🧯 LLMRender",
+    "title": "LLMRender",
+    "name": "LLMRender2",
     "homepage": "https://llmrender.com/",
     "menu": {
       "Author": "https://francisco.io/",
