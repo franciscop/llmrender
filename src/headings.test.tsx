@@ -66,3 +66,27 @@ it("slugifies heading with multiple spaces", () => {
       .attr("id"),
   ).toBe("foo-bar");
 });
+
+it("preserves CJK characters in heading id", () => {
+  expect(
+    $(<Markdown>{"## 日本語"}</Markdown>)
+      .find("h2")
+      .attr("id"),
+  ).toBe("日本語");
+});
+
+it("preserves accented characters in heading id", () => {
+  expect(
+    $(<Markdown>{"## Café"}</Markdown>)
+      .find("h2")
+      .attr("id"),
+  ).toBe("café");
+});
+
+it("preserves Greek characters in heading id", () => {
+  expect(
+    $(<Markdown>{"## Ελληνικά"}</Markdown>)
+      .find("h2")
+      .attr("id"),
+  ).toBe("ελληνικά");
+});

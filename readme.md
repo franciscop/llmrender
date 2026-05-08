@@ -1,4 +1,4 @@
-# LLMRender [![npm install llmrender](https://img.shields.io/badge/npm%20install-llmrender-blue.svg "install badge")](https://www.npmjs.com/package/llmrender) [![test badge](https://github.com/franciscop/llmrender/workflows/tests/badge.svg "test badge")](https://github.com/franciscop/llmrender/blob/master/.github/workflows/tests.yml) [![gzip size](https://img.badgesize.io/franciscop/llmrender/master/index.min.js.svg?compression=gzip "gzip badge")](https://github.com/franciscop/llmrender/blob/master/index.min.js)
+# LLMRender [![npm install llmrender](https://img.shields.io/badge/npm%20install-llmrender-blue.svg "install badge")](https://www.npmjs.com/package/llmrender) [![test badge](https://github.com/franciscop/llmrender/workflows/tests/badge.svg "test badge")](https://github.com/franciscop/llmrender/actions) [![gzip size](https://badgen.net/bundlephobia/minzip/llmrender?label=gzip&color=green)](https://github.com/franciscop/llmrender/blob/master/index.min.js) [![dependencies](https://img.shields.io/badge/dependencies-0-limegreen.svg)](https://github.com/franciscop/llmrender/blob/master/package.json)
 
 A React Markdown renderer packed with features for all your LLM output:
 
@@ -14,9 +14,9 @@ export default function Post({ content }) {
 - **Syntax highlighting** — 30+ languages and multiple themes to pick. Can be replaced for Shiki or Prism easily.
 - **Math** — built-in Math renderer for common Latex. Can be replaced for full KaTeX easily.
 - **GitHub Flavored Markdown** — tables, task lists, strikethrough, callouts, auto-links.
-- **Drop-in styling** — renders in a plain `<div>`. Tailwind, Styled Components, or plain CSS all work.
+- **Easy styles** — renders in a plain `<div>`. Tailwind, Styled Components, or plain CSS all work.
 
-## Getting started
+## Getting Started
 
 First create a React project, and install the library:
 
@@ -26,18 +26,25 @@ npm i llmrender
 
 Pass your Markdown string as `children`:
 
+```md
+
+```
+
 ```jsx
 import Markdown from "llmrender";
 
-<Markdown>{`
+// This would normally come from the DB, LLM output, API, or a file read
+const text = `
 # Hello world
 
 This is **bold**, _italic_, ~~strikethrough~~, and [a link](https://example.com).
 
 \`\`\`js
 const greet = (name) => \`Hello, \${name}!\`;
-\`\`\`
-`}</Markdown>
+\`\`\``;
+
+// Actually render it
+<Markdown>{text}</Markdown>
 ```
 
 Every HTML attribute you'd put on a `<div>` — `className`, `style`, `id`, `data-*` — passes through:
@@ -48,8 +55,6 @@ Every HTML attribute you'd put on a `<div>` — `className`, `style`, `id`, `dat
 </Markdown>
 ```
 
-## Themes
-
 LLMRender ships four ready-to-use themes. Import one to get syntax highlighting, callout styles, and table styling with a single line:
 
 ```js
@@ -58,82 +63,6 @@ import "llmrender/dark.css";       // GitHub dark
 import "llmrender/adaptive.css";   // follows prefers-color-scheme
 import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
 ```
-
-All colors are CSS variables, so you can override any token without touching the rest:
-
-```css
-:root {
-  --llmrender-keyword:  #d73a49;
-  --llmrender-string:   #032f62;
-  --llmrender-function: #6f42c1;
-  --llmrender-pre-bg:   #f8f8f8;
-}
-```
-
-| Variable | Default (light) | Controls |
-|---|---|---|
-| `--llmrender-keyword` | `#cf222e` | `if`, `const`, `return`, … |
-| `--llmrender-string` | `#0969da` | string literals |
-| `--llmrender-comment` | `#6e7781` | comments |
-| `--llmrender-number` | `#0550ae` | numeric literals |
-| `--llmrender-function` | `#8250df` | function calls |
-| `--llmrender-type` | `#953800` | class / type names |
-| `--llmrender-operator` | `#24292f` | `=`, `=>`, `+`, … |
-| `--llmrender-pre-bg` | `#f6f8fa` | code block background |
-| `--llmrender-pre-color` | `#24292f` | code block text |
-| `--llmrender-inline-bg` | `#f6f8fa` | inline code background |
-| `--llmrender-table-border` | `#d0d7de` | table borders |
-
-## API
-
-```ts
-<Markdown
-  highlight?: (code: string, lang: string) => ReactNode[]
-  math?: ((tex: string, block: boolean) => ReactNode) | false
-  ...HTMLAttributes<HTMLDivElement>
->
-  {markdownString}
-</Markdown>
-```
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `children` | `string` | required | Markdown source to render |
-| `highlight` | `(code, lang) => ReactNode[]` | built-in | Syntax highlighter for fenced code blocks |
-| `math` | `(tex, block) => ReactNode` \| `false` | built-in | Math renderer for `$…$` and `$$…$$` |
-| `rawHtml` | `boolean \| Record<string, string[]>` | `undefined` | Allow HTML tags in Markdown source — see [Security](#security) |
-| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
-
-### `highlight`
-
-Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`.
-
-```ts
-type HighlightFn = (code: string, lang: string) => ReactNode[];
-```
-
-The built-in highlighter covers 30+ languages with `<span>` tokens and CSS variable colors. Swap it for any library:
-
-```jsx
-import { codeToHtml } from "shiki";
-
-async function highlight(code, lang) {
-  const html = await codeToHtml(code, { lang, theme: "github-light" });
-  return [<span key="h" dangerouslySetInnerHTML={{ __html: html }} />];
-}
-
-<Markdown highlight={highlight}>{content}</Markdown>
-```
-
-### `math`
-
-Called for every math expression. `block` is `true` for `$$…$$`, `false` for `$…$`.
-
-```ts
-type MathFn = (tex: string, block: boolean) => ReactNode;
-```
-
-The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing entirely.
 
 ## Syntax
 
@@ -154,8 +83,24 @@ Headings render with an `id` derived from their text (e.g. `## Getting Started` 
 **bold**  _italic_  ~~strikethrough~~  `inline code`
 
 [link text](https://example.com)
+[link with title](https://example.com "Tooltip on hover")
 ![alt text](https://example.com/image.png)
 https://auto-linked.com
+```
+
+### Ruby annotations
+
+Ruby text (furigana / phonetic glosses) follows the syntax proposed in the [CommonMark discussion](https://talk.commonmark.org/t/proper-ruby-text-rb-syntax-support-in-markdown/2279/8):
+
+```md
+[漢字]{かんじ}
+[漢字]{かんじ "kanji"}
+```
+
+The first renders `<ruby>漢字<rt>かんじ</rt></ruby>`. The second adds a `title` attribute to `<ruby>`, useful as a tooltip or machine-readable gloss:
+
+```html
+<ruby title="kanji">漢字<rt>かんじ</rt></ruby>
 ```
 
 ### Blockquotes
@@ -252,41 +197,83 @@ Supported out of the box: Greek letters (`\alpha`, `\beta`, …), fractions (`\f
 ---
 ```
 
-## Security
+## API
 
-LLMRender is safe to use with untrusted Markdown. Here is how that works, and what the limits are.
-
-### How React does the heavy lifting
-
-LLMRender never produces raw HTML strings. Every piece of content — headings, paragraphs, link text, table cells, code, image alt text — becomes a React element rendered through JSX. React automatically escapes all text children, so input like `[<script>alert(1)</script>](url)` renders the `<script>` as literal visible text, not an executed tag. This protection is unconditional and applies to every Markdown construct.
-
-URL attributes (`href`, `src`, etc.) are the one place text becomes an executable value. LLMRender uses an allowlist here too: only `http:` and `https:` URLs are allowed. Relative URLs and `#` fragments have no scheme and are always allowed. Everything else — `javascript:`, `data:`, `blob:`, `ftp:`, custom app protocols, and anything new — is replaced with `#`. Control characters that browsers strip from scheme names before resolving (e.g. `java\x09script:`) are removed before the check. Auto-linked bare URLs in Markdown only match `http://` and `https://` by definition.
-
-### Raw HTML (`rawHtml` prop)
-
-By default, HTML tags written inside Markdown source are not rendered — they appear as escaped text. The `rawHtml` prop opts in to rendering them.
-
-**`rawHtml={true}`** — renders tags from a built-in allowlist of known-safe content elements. Anything not on the list is silently dropped as text. The allowlist covers:
-
-- **Inline:** `a`, `abbr`, `b`, `bdi`, `bdo`, `br`, `cite`, `code`, `data`, `dfn`, `em`, `i`, `kbd`, `mark`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `small`, `span`, `strong`, `sub`, `sup`, `time`, `u`, `var`, `wbr`
-- **Block:** `address`, `article`, `aside`, `blockquote`, `dd`, `del`, `details`, `div`, `dl`, `dt`, `figcaption`, `figure`, `footer`, `h1`–`h6`, `header`, `hr`, `ins`, `li`, `main`, `nav`, `ol`, `p`, `pre`, `section`, `summary`, `ul`
-- **Tables:** `caption`, `col`, `colgroup`, `table`, `tbody`, `td`, `th`, `thead`, `tr`
-- **Media:** `audio`, `img`, `map`, `area`, `picture`, `source`, `track`, `video`
-
-Tags not on this list — including `script`, `style`, `iframe`, `canvas`, `svg`, `form`, `input`, `dialog`, and anything new browsers add in the future — are never rendered. This allowlist model means the library stays secure by default even as the HTML spec evolves.
-
-Regardless of the allowlist, these attributes are always stripped: all `on*` event handlers, `srcdoc`, `style`, `ping`. URL-bearing attributes (`href`, `src`, `action`, etc.) are sanitized to block any scheme other than `http:` and `https:`. Any `<a target="_blank">` automatically gets `rel="noopener noreferrer"` added (merged with any existing `rel` value) to prevent tabnapping.
-
-**`rawHtml={{ tag: ["attr", …] }}`** — explicit allowlist. Only the listed tags render, and only the listed attributes pass through. The hard-blocked tags and attributes above cannot be unlocked even here:
-
-```jsx
-// Allow <mark> with no attributes, and <span> with only class
-<Markdown rawHtml={{ mark: [], span: ["class"] }}>{content}</Markdown>
+```ts
+<Markdown
+  highlight?: (code: string, lang: string) => ReactNode[]
+  math?: ((tex: string, block: boolean) => ReactNode) | false
+  ...HTMLAttributes<HTMLDivElement>
+>
+  {markdownString}
+</Markdown>
 ```
 
-Prefer the explicit allowlist for untrusted sources — it gives you precise control over what HTML can appear.
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `children` | `string` | required | Markdown source to render |
+| `highlight` | `(code, lang) => ReactNode[]` | built-in | Syntax highlighter for fenced code blocks |
+| `math` | `(tex, block) => ReactNode` \| `false` | built-in | Math renderer for `$…$` and `$$…$$` |
+| `rawHtml` | `boolean \| Record<string, string[]>` | `undefined` | Allow HTML tags in Markdown source — see [Security](#security) |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
 
-## Recipes
+### `highlight`
+
+Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`.
+
+```ts
+type HighlightFn = (code: string, lang: string) => ReactNode[];
+```
+
+The built-in highlighter covers 30+ languages with `<span>` tokens and CSS variable colors. Swap it for any library:
+
+```jsx
+import { codeToHtml } from "shiki";
+
+async function highlight(code, lang) {
+  const html = await codeToHtml(code, { lang, theme: "github-light" });
+  return [<span key="h" dangerouslySetInnerHTML={{ __html: html }} />];
+}
+
+<Markdown highlight={highlight}>{content}</Markdown>
+```
+
+All colors in the built-in theme are CSS variables you can override without touching the rest:
+
+```css
+:root {
+  --llmrender-keyword:  #d73a49;
+  --llmrender-string:   #032f62;
+  --llmrender-function: #6f42c1;
+  --llmrender-pre-bg:   #f8f8f8;
+}
+```
+
+| Variable | Default (light) | Controls |
+|---|---|---|
+| `--llmrender-keyword` | `#cf222e` | `if`, `const`, `return`, … |
+| `--llmrender-string` | `#0969da` | string literals |
+| `--llmrender-comment` | `#6e7781` | comments |
+| `--llmrender-number` | `#0550ae` | numeric literals |
+| `--llmrender-function` | `#8250df` | function calls |
+| `--llmrender-type` | `#953800` | class / type names |
+| `--llmrender-operator` | `#24292f` | `=`, `=>`, `+`, … |
+| `--llmrender-pre-bg` | `#f6f8fa` | code block background |
+| `--llmrender-pre-color` | `#24292f` | code block text |
+| `--llmrender-inline-bg` | `#f6f8fa` | inline code background |
+| `--llmrender-table-border` | `#d0d7de` | table borders |
+
+### `math`
+
+Called for every math expression. `block` is `true` for `$$…$$`, `false` for `$…$`.
+
+```ts
+type MathFn = (tex: string, block: boolean) => ReactNode;
+```
+
+The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing entirely.
+
+## Examples
 
 ### Tailwind Typography
 
@@ -373,3 +360,33 @@ graph TD
   B -->|No| D[Skip]
 ```
 ````
+
+## Security
+
+LLMRender is safe to use with untrusted Markdown. Here is how that works, and what the limits are.
+
+LLMRender never produces raw HTML strings. Every piece of content — headings, paragraphs, link text, table cells, code, image alt text — becomes a React element rendered through JSX. React automatically escapes all text children, so input like `[<script>alert(1)</script>](url)` renders the `<script>` as literal visible text, not an executed tag. This protection is unconditional and applies to every Markdown construct.
+
+URL attributes (`href`, `src`, etc.) are the one place text becomes an executable value. LLMRender uses an allowlist here too: only `http:` and `https:` URLs are allowed. Relative URLs and `#` fragments have no scheme and are always allowed. Everything else — `javascript:`, `data:`, `blob:`, `ftp:`, custom app protocols, and anything new — is replaced with `#`. Control characters that browsers strip from scheme names before resolving (e.g. `java\x09script:`) are removed before the check. Auto-linked bare URLs in Markdown only match `http://` and `https://` by definition.
+
+By default, HTML tags written inside Markdown source are not rendered — they appear as escaped text. The `rawHtml` prop opts in to rendering them.
+
+**`rawHtml={true}`** — renders tags from a built-in allowlist of known-safe content elements. Anything not on the list is silently dropped as text. The allowlist covers:
+
+- **Inline:** `a`, `abbr`, `b`, `bdi`, `bdo`, `br`, `cite`, `code`, `data`, `dfn`, `em`, `i`, `kbd`, `mark`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `small`, `span`, `strong`, `sub`, `sup`, `time`, `u`, `var`, `wbr`
+- **Block:** `address`, `article`, `aside`, `blockquote`, `dd`, `del`, `details`, `div`, `dl`, `dt`, `figcaption`, `figure`, `footer`, `h1`–`h6`, `header`, `hr`, `ins`, `li`, `main`, `nav`, `ol`, `p`, `pre`, `section`, `summary`, `ul`
+- **Tables:** `caption`, `col`, `colgroup`, `table`, `tbody`, `td`, `th`, `thead`, `tr`
+- **Media:** `audio`, `img`, `map`, `area`, `picture`, `source`, `track`, `video`
+
+Tags not on this list — including `script`, `style`, `iframe`, `canvas`, `svg`, `form`, `input`, `dialog`, and anything new browsers add in the future — are never rendered. This allowlist model means the library stays secure by default even as the HTML spec evolves.
+
+Regardless of the allowlist, these attributes are always stripped: all `on*` event handlers, `srcdoc`, `style`, `ping`. URL-bearing attributes (`href`, `src`, `action`, etc.) are sanitized to block any scheme other than `http:` and `https:`. Any `<a target="_blank">` automatically gets `rel="noopener noreferrer"` added (merged with any existing `rel` value) to prevent tabnapping.
+
+**`rawHtml={{ tag: ["attr", …] }}`** — explicit allowlist. Only the listed tags render, and only the listed attributes pass through. The hard-blocked tags and attributes above cannot be unlocked even here:
+
+```jsx
+// Allow <mark> with no attributes, and <span> with only class
+<Markdown rawHtml={{ mark: [], span: ["class"] }}>{content}</Markdown>
+```
+
+Prefer the explicit allowlist for untrusted sources — it gives you precise control over what HTML can appear.

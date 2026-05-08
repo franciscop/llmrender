@@ -15,6 +15,24 @@ it("does not render image as a link", () => {
   expect($el.find("img").length).toBe(1);
 });
 
+it("renders image with title", () => {
+  const img = $(
+    <Markdown>
+      {'![alt text](https://example.com/img.png "My Image")'}
+    </Markdown>,
+  ).find("img");
+  expect(img.attr("src")).toBe("https://example.com/img.png");
+  expect(img.attr("alt")).toBe("alt text");
+  expect(img.attr("title")).toBe("My Image");
+});
+
+it("renders image without title and has no title attribute", () => {
+  const img = $(
+    <Markdown>{"![alt](https://example.com/img.png)"}</Markdown>,
+  ).find("img");
+  expect(img.attr("title")).toBeFalsy();
+});
+
 it("renders image and link in same paragraph", () => {
   const $el = $(
     <Markdown>

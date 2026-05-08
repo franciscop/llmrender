@@ -114,7 +114,7 @@ const IS_CHECKED = /^\[[x]\] /i;
 const slugify = (text: string) =>
   text
     .toLowerCase()
-    .replace(/[^\w\s-]/g, "")
+    .replace(/[^\p{L}\p{N}\s-]/gu, "")
     .trim()
     .replace(/[\s_]+/g, "-");
 
@@ -189,17 +189,36 @@ function allowTag(
   return result;
 }
 
-type Render = (m: RegExpExecArray, i: number) => ReactNode;
+type Render = (
+  m: RegExpExecArray,
+  i: number,
+  r: (s: string) => ReactNode[],
+) => ReactNode;
 
 const patterns: { regex: RegExp; render: Render }[] = [
-  { regex: /~~(.+?)~~/, render: (m, i) => <del key={i}>{m[1]}</del> },
+  {
+    regex: /\\([\\`*_{}\[\]()#+\-.!|~])/,
+    render: (m) => m[1],
+  },
+  {
+    regex: /~~(.+?)~~/,
+    render: (m, i, r) => <del key={i}>{r(m[1])}</del>,
+  },
+  {
+    regex: /(?:\*\*\*|___)(.+?)(?:\*\*\*|___)/,
+    render: (m, i, r) => (
+      <strong key={i}>
+        <em>{r(m[1])}</em>
+      </strong>
+    ),
+  },
   {
     regex: /(?:\*\*|__)(.+?)(?:\*\*|__)/,
-    render: (m, i) => <strong key={i}>{m[1]}</strong>,
+    render: (m, i, r) => <strong key={i}>{r(m[1])}</strong>,
   },
   {
     regex: /(?:\*|_)(.+?)(?:\*|_)/,
-    render: (m, i) => <em key={i}>{m[1]}</em>,
+    render: (m, i, r) => <em key={i}>{r(m[1])}</em>,
   },
   {
     regex: /``\s*(.+?)\s*``/,
@@ -208,14 +227,25 @@ const patterns: { regex: RegExp; render: Render }[] = [
   { regex: /`(.+?)`/, render: (m, i) => <code key={i}>{m[1]}</code> },
   { regex: /<br\s*\/?>/i, render: (_, i) => <br key={i} /> },
   {
-    regex: /!\[(.+?)\]\((.+?)\)/,
-    render: (m, i) => <img key={i} alt={m[1]} src={sanitize(m[2])} />,
+    regex: /!\[(.+?)\]\((.+?)(?:\s+"([^"]*)")?\)/,
+    render: (m, i) => (
+      <img key={i} alt={m[1]} src={sanitize(m[2])} title={m[3] || undefined} />
+    ),
   },
   {
-    regex: /\[(.+?)\]\((.+?)\)/,
+    regex: /\[([^\]]+)\]\{([^}"]+?)(?:\s+"([^"]*)")?\}/,
     render: (m, i) => (
-      <a key={i} href={sanitize(m[2])}>
+      <ruby key={i} title={m[3] || undefined}>
         {m[1]}
+        <rt>{m[2]}</rt>
+      </ruby>
+    ),
+  },
+  {
+    regex: /\[(.+?)\]\((.+?)(?:\s+"([^"]*)")?\)/,
+    render: (m, i, r) => (
+      <a key={i} href={sanitize(m[2])} title={m[3] || undefined}>
+        {r(m[1])}
       </a>
     ),
   },
@@ -312,7 +342,11 @@ function parseInline(
     }
 
     if (earliest.index > 0) parts.push(remaining.slice(0, earliest.index));
-    parts.push(earliestPattern.render(earliest, index++));
+    parts.push(
+      earliestPattern.render(earliest, index++, (s) =>
+        parseInline(s, math, rawHtml),
+      ),
+    );
     remaining = remaining.slice(earliest.index + earliest[0].length);
   }
 
@@ -715,7 +749,11 @@ function parseLines(
       continue;
     }
 
-    buffer.push(line.trim());
+    buffer.push(
+      / {2,}$/.test(line)
+        ? line.trimStart().replace(/ {2,}$/, "<br>")
+        : line.trim(),
+    );
   }
 
   flushAll();
