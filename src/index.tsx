@@ -233,20 +233,20 @@ const patterns: { regex: RegExp; render: Render }[] = [
     ),
   },
   {
-    regex: /\[([^\]]+)\]\{([^}"]+?)(?:\s+"([^"]*)")?\}/,
-    render: (m, i) => (
-      <ruby key={i} title={m[3] || undefined}>
-        {m[1]}
-        <rt>{m[2]}</rt>
-      </ruby>
-    ),
-  },
-  {
     regex: /\[(.+?)\]\((.+?)(?:\s+"([^"]*)")?\)/,
     render: (m, i, r) => (
       <a key={i} href={sanitize(m[2])} title={m[3] || undefined}>
         {r(m[1])}
       </a>
+    ),
+  },
+  {
+    regex: /\[([^\]]+)\]\{([^}"]+?)(?:\s+"([^"]*)")?\}/,
+    render: (m, i, r) => (
+      <ruby key={i} title={m[3] || undefined}>
+        {r(m[1])}
+        <rt>{m[2]}</rt>
+      </ruby>
     ),
   },
   {
