@@ -233,7 +233,7 @@ const patterns: { regex: RegExp; render: Render }[] = [
     ),
   },
   {
-    regex: /\[(.+?)\]\((.+?)(?:\s+"([^"]*)")?\)/,
+    regex: /\[((?:[^[\]]|\[[^\]]*\])+)\]\((.+?)(?:\s+"([^"]*)")?\)/,
     render: (m, i, r) => (
       <a key={i} href={sanitize(m[2])} title={m[3] || undefined}>
         {r(m[1])}
