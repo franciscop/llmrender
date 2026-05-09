@@ -1,4 +1,4 @@
-# LLMRender [![npm install llmrender](https://img.shields.io/badge/npm%20install-llmrender-blue.svg "install badge")](https://www.npmjs.com/package/llmrender) [![test badge](https://github.com/franciscop/llmrender/workflows/tests/badge.svg "test badge")](https://github.com/franciscop/llmrender/actions) [![gzip size](https://badgen.net/bundlephobia/minzip/llmrender?label=gzip&color=green)](https://github.com/franciscop/llmrender/blob/master/index.min.js) [![dependencies](https://img.shields.io/badge/dependencies-0-limegreen.svg)](https://github.com/franciscop/llmrender/blob/master/package.json)
+# LLMRender [![npm install llmrender](https://img.shields.io/badge/npm-llmrender-blue.svg "install badge")](https://www.npmjs.com/package/llmrender) [![test badge](https://github.com/franciscop/llmrender/workflows/tests/badge.svg "test badge")](https://github.com/franciscop/llmrender/actions) [![gzip size](https://badgen.net/bundlephobia/minzip/llmrender?label=gzip&color=green)](https://github.com/franciscop/llmrender/blob/master/index.min.js) [![dependencies](https://img.shields.io/badge/dependencies-0-limegreen.svg)](https://github.com/franciscop/llmrender/blob/master/package.json)
 
 A React Markdown renderer packed with features for all your LLM output:
 
@@ -63,6 +63,83 @@ import "llmrender/dark.css";       // GitHub dark
 import "llmrender/adaptive.css";   // follows prefers-color-scheme
 import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
 ```
+
+
+## <Markdown math highlight rawHtml />
+
+```ts
+<Markdown
+  highlight?: (code: string, lang: string) => ReactNode[]
+  math?: ((tex: string, block: boolean) => ReactNode) | false
+  ...HTMLAttributes<HTMLDivElement>
+>
+  {markdownString}
+</Markdown>
+```
+
+| Prop | Type | Default | Description |
+|---|---|---|---|
+| `children` | `string` | required | Markdown source to render |
+| `highlight` | `(code, lang) => ReactNode[]` | built-in | Syntax highlighter for fenced code blocks |
+| `math` | `(tex, block) => ReactNode` \| `false` | built-in | Math renderer for `$…$` and `$$…$$` |
+| `rawHtml` | `boolean \| Record<string, string[]>` | `undefined` | Allow HTML tags in Markdown source — see [Security](#security) |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
+
+#### `highlight`
+
+Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`.
+
+```ts
+type HighlightFn = (code: string, lang: string) => ReactNode[];
+```
+
+The built-in highlighter covers 30+ languages with `<span>` tokens and CSS variable colors. Swap it for any library:
+
+```jsx
+import { codeToHtml } from "shiki";
+
+async function highlight(code, lang) {
+  const html = await codeToHtml(code, { lang, theme: "github-light" });
+  return [<span key="h" dangerouslySetInnerHTML={{ __html: html }} />];
+}
+
+<Markdown highlight={highlight}>{content}</Markdown>
+```
+
+All colors in the built-in theme are CSS variables you can override without touching the rest:
+
+```css
+:root {
+  --llmrender-keyword:  #d73a49;
+  --llmrender-string:   #032f62;
+  --llmrender-function: #6f42c1;
+  --llmrender-pre-bg:   #f8f8f8;
+}
+```
+
+| Variable | Default (light) | Controls |
+|---|---|---|
+| `--llmrender-keyword` | `#cf222e` | `if`, `const`, `return`, … |
+| `--llmrender-string` | `#0969da` | string literals |
+| `--llmrender-comment` | `#6e7781` | comments |
+| `--llmrender-number` | `#0550ae` | numeric literals |
+| `--llmrender-function` | `#8250df` | function calls |
+| `--llmrender-type` | `#953800` | class / type names |
+| `--llmrender-operator` | `#24292f` | `=`, `=>`, `+`, … |
+| `--llmrender-pre-bg` | `#f6f8fa` | code block background |
+| `--llmrender-pre-color` | `#24292f` | code block text |
+| `--llmrender-inline-bg` | `#f6f8fa` | inline code background |
+| `--llmrender-table-border` | `#d0d7de` | table borders |
+
+#### `math`
+
+Called for every math expression. `block` is `true` for `$$…$$`, `false` for `$…$`.
+
+```ts
+type MathFn = (tex: string, block: boolean) => ReactNode;
+```
+
+The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing entirely.
 
 ## Syntax
 
@@ -196,82 +273,6 @@ Supported out of the box: Greek letters (`\alpha`, `\beta`, …), fractions (`\f
 ```md
 ---
 ```
-
-## API
-
-```ts
-<Markdown
-  highlight?: (code: string, lang: string) => ReactNode[]
-  math?: ((tex: string, block: boolean) => ReactNode) | false
-  ...HTMLAttributes<HTMLDivElement>
->
-  {markdownString}
-</Markdown>
-```
-
-| Prop | Type | Default | Description |
-|---|---|---|---|
-| `children` | `string` | required | Markdown source to render |
-| `highlight` | `(code, lang) => ReactNode[]` | built-in | Syntax highlighter for fenced code blocks |
-| `math` | `(tex, block) => ReactNode` \| `false` | built-in | Math renderer for `$…$` and `$$…$$` |
-| `rawHtml` | `boolean \| Record<string, string[]>` | `undefined` | Allow HTML tags in Markdown source — see [Security](#security) |
-| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
-
-### `highlight`
-
-Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`.
-
-```ts
-type HighlightFn = (code: string, lang: string) => ReactNode[];
-```
-
-The built-in highlighter covers 30+ languages with `<span>` tokens and CSS variable colors. Swap it for any library:
-
-```jsx
-import { codeToHtml } from "shiki";
-
-async function highlight(code, lang) {
-  const html = await codeToHtml(code, { lang, theme: "github-light" });
-  return [<span key="h" dangerouslySetInnerHTML={{ __html: html }} />];
-}
-
-<Markdown highlight={highlight}>{content}</Markdown>
-```
-
-All colors in the built-in theme are CSS variables you can override without touching the rest:
-
-```css
-:root {
-  --llmrender-keyword:  #d73a49;
-  --llmrender-string:   #032f62;
-  --llmrender-function: #6f42c1;
-  --llmrender-pre-bg:   #f8f8f8;
-}
-```
-
-| Variable | Default (light) | Controls |
-|---|---|---|
-| `--llmrender-keyword` | `#cf222e` | `if`, `const`, `return`, … |
-| `--llmrender-string` | `#0969da` | string literals |
-| `--llmrender-comment` | `#6e7781` | comments |
-| `--llmrender-number` | `#0550ae` | numeric literals |
-| `--llmrender-function` | `#8250df` | function calls |
-| `--llmrender-type` | `#953800` | class / type names |
-| `--llmrender-operator` | `#24292f` | `=`, `=>`, `+`, … |
-| `--llmrender-pre-bg` | `#f6f8fa` | code block background |
-| `--llmrender-pre-color` | `#24292f` | code block text |
-| `--llmrender-inline-bg` | `#f6f8fa` | inline code background |
-| `--llmrender-table-border` | `#d0d7de` | table borders |
-
-### `math`
-
-Called for every math expression. `block` is `true` for `$$…$$`, `false` for `$…$`.
-
-```ts
-type MathFn = (tex: string, block: boolean) => ReactNode;
-```
-
-The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing entirely.
 
 ## Examples
 
