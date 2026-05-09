@@ -58,6 +58,11 @@ it("renders ruby inside link text", () => {
   );
 });
 
+it("does not emit title attribute on ruby without definition inside link", () => {
+  const $el = $(<Markdown>{"[[行]{い}く](#)"}</Markdown>);
+  expect($el.find("ruby").attr("title")).toBeFalsy();
+});
+
 it("renders multiple ruby annotations inside link text", () => {
   const $el = $(<Markdown>{"[[行]{い}きたいと[思]{おも}](#)"}</Markdown>);
   expect($el.find("p")).toHaveHtml(

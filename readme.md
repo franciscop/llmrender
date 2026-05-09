@@ -11,10 +11,10 @@ export default function Post({ content }) {
 ```
 
 - **Zero dependencies** and a fraction of the size of remark/rehype or markdown-it.
-- **Syntax highlighting** — 30+ languages and multiple themes to pick. Can be replaced for Shiki or Prism easily.
-- **Math** — built-in Math renderer for common Latex. Can be replaced for full KaTeX easily.
-- **GitHub Flavored Markdown** — tables, task lists, strikethrough, callouts, auto-links.
-- **Easy styles** — renders in a plain `<div>`. Tailwind, Styled Components, or plain CSS all work.
+- **Syntax highlighting**: 30+ languages and multiple themes to pick. Can be replaced for Shiki or Prism easily.
+- **Math**: built-in Math renderer for common Latex. Can be replaced for KaTeX easily.
+- **GitHub Flavored Markdown**: tables, task lists, strikethrough, callouts, auto-links.
+- **Easy styles**: renders in a `<div>`, so Tailwind, Styled Components, CSS, etc. all work.
 
 ## Getting Started
 
