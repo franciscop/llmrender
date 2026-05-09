@@ -47,8 +47,7 @@ it("adds id to heading from text", () => {
 it("renders anchor link inside heading", () => {
   const h = $(<Markdown># My Heading</Markdown>).find("h1");
   expect(h.attr("id")).toBe("my-heading");
-  expect(h.find("a").attr("href")).toBe("#my-heading");
-  expect(h.find("a").text()).toBe("My Heading");
+  expect(h).toHaveHtml('<a href="#my-heading">My Heading</a>');
 });
 
 it("slugifies heading with special characters", () => {

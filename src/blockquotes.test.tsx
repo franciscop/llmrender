@@ -23,9 +23,8 @@ it("renders inline markup inside blockquotes", () => {
   expect(
     $(<Markdown>{"> **bold**"}</Markdown>)
       .find("blockquote")
-      .find("strong")
-      .text(),
-  ).toBe("bold");
+      .find("p"),
+  ).toHaveHtml("<strong>bold</strong>");
 });
 
 it("renders a blockquote with an empty > line as paragraph break", () => {

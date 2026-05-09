@@ -49,8 +49,7 @@ it("renders a link", () => {
 
 it("renders bold and italic in same paragraph", () => {
   const $el = $(<Markdown>**bold** and *italic*</Markdown>);
-  expect($el.find("strong").text()).toBe("bold");
-  expect($el.find("em").text()).toBe("italic");
+  expect($el.find("p")).toHaveHtml("<strong>bold</strong> and <em>italic</em>");
 });
 
 it("renders italic with underscores", () => {
@@ -71,8 +70,7 @@ it("renders bold with double underscores", () => {
 
 it("renders bold and italic with underscores in same paragraph", () => {
   const $el = $(<Markdown>{"__bold__ and _italic_"}</Markdown>);
-  expect($el.find("strong").text()).toBe("bold");
-  expect($el.find("em").text()).toBe("italic");
+  expect($el.find("p")).toHaveHtml("<strong>bold</strong> and <em>italic</em>");
 });
 
 it("renders angle-bracket auto-link", () => {
@@ -116,31 +114,31 @@ it("renders a fragment link with title", () => {
 
 it("renders bold italic with ***text***", () => {
   const $el = $(<Markdown>{"***bold italic***"}</Markdown>);
-  expect($el.find("strong").length).toBe(1);
-  expect($el.find("em").length).toBe(1);
-  expect($el.find("em").text()).toBe("bold italic");
+  expect($el.find("p")).toHaveHtml("<strong><em>bold italic</em></strong>");
 });
 
 it("renders italic inside bold text", () => {
   const $el = $(<Markdown>{"**text with *italic* inside**"}</Markdown>);
-  expect($el.find("strong").length).toBe(1);
-  expect($el.find("em").text()).toBe("italic");
+  expect($el.find("p")).toHaveHtml(
+    "<strong>text with <em>italic</em> inside</strong>",
+  );
 });
 
 it("renders link inside bold", () => {
   const $el = $(<Markdown>{"**[link](https://example.com)**"}</Markdown>);
-  expect($el.find("strong").length).toBe(1);
-  expect($el.find("a").attr("href")).toBe("https://example.com");
-  expect($el.find("a").text()).toBe("link");
+  expect($el.find("p")).toHaveHtml(
+    '<strong><a href="https://example.com">link</a></strong>',
+  );
 });
 
 it("renders bold inside link text", () => {
   const $el = $(<Markdown>{"[**bold**](https://example.com)"}</Markdown>);
-  expect($el.find("a").length).toBe(1);
-  expect($el.find("strong").text()).toBe("bold");
+  expect($el.find("p")).toHaveHtml(
+    '<a href="https://example.com"><strong>bold</strong></a>',
+  );
 });
 
 it("renders a hard line break with two trailing spaces", () => {
   const $el = $(<Markdown>{"line one  \nline two"}</Markdown>);
-  expect($el.find("br").length).toBe(1);
+  expect($el.find("p")).toHaveHtml("line one<br> line two");
 });
