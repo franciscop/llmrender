@@ -130,6 +130,21 @@ const sanitize = (url?: string) => (url && isUnsafeUrl(url) ? "#" : url);
 const BLOCK_EL =
   /^(hr|div|p|ul|ol|li|table|thead|tbody|tr|th|td|pre|blockquote|h[1-6]|section|article|aside|header|footer|main|nav|figure|details|summary|form|fieldset|address)$/;
 
+const HR = /^(-{3,}|\*{3,}|_{3,})$/;
+const DISPLAY_MATH = /^\$\$(.+)\$\$$/;
+const CALLOUT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i;
+const BLOCK_HTML_START = /^<[a-zA-Z]/;
+const BLOCK_HTML_PAIR = /^<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*)?>(.+?)<\/\1>$/;
+const BLOCK_HTML_VOID = /^<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*)?\s*\/?>$/;
+const TABLE_ROW = /^\|.+\|$/;
+const TABLE_SEP = /^\|[\s|:-]+\|$/;
+const LIST_ITEM = /^([*+-])\s+(.+)/;
+const SUB_LIST_ITEM = /^\s{2,4}[*+-]\s+(.+)/;
+const INDENTED_CODE = /^ {4,}/;
+const ORDERED_ITEM = /^\d+\. /;
+const ORDERED_SUB_ITEM = /^   \d+\. /;
+const TRAILING_BR = / {2,}$/;
+
 // HTML attribute name → React prop name (critical mappings only)
 const ATTR_MAP: Record<string, string> = {
   class: "className",
@@ -506,9 +521,7 @@ function parseLines(
 
   function flushBlockquote() {
     if (inBlockquote) {
-      const callout = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i.exec(
-        blockquoteLines[0],
-      );
+      const callout = CALLOUT.exec(blockquoteLines[0]);
       if (callout) {
         const type = callout[1].toLowerCase();
         const label = type[0].toUpperCase() + type.slice(1);
@@ -651,7 +664,7 @@ function parseLines(
     }
 
     if (math) {
-      const displayMath = /^\$\$(.+)\$\$$/.exec(line.trim());
+      const displayMath = DISPLAY_MATH.exec(line.trim());
       if (displayMath) {
         flushAll();
         elements.push(
@@ -683,16 +696,16 @@ function parseLines(
       continue;
     }
 
-    if (/^(-{3,}|\*{3,}|_{3,})$/.test(line.trim())) {
+    if (HR.test(line.trim())) {
       flushAll();
       elements.push(<hr key={key.v++} />);
       continue;
     }
 
     // Single-line block HTML
-    if (raw && /^<[a-zA-Z]/.test(line)) {
-      const pair = /^<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*)?>(.+?)<\/\1>$/.exec(line);
-      const voidEl = /^<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*)?\s*\/?>$/.exec(line);
+    if (raw && BLOCK_HTML_START.test(line)) {
+      const pair = BLOCK_HTML_PAIR.exec(line);
+      const voidEl = BLOCK_HTML_VOID.exec(line);
       const match = pair ?? voidEl;
       if (match) {
         const attrs = allowTag(match[1], raw, match[2] ?? "");
@@ -709,12 +722,12 @@ function parseLines(
       }
     }
 
-    if (/^\|.+\|$/.test(line)) {
+    if (TABLE_ROW.test(line)) {
       flushParagraph();
       flushList();
       flushOrderedList();
       flushBlockquote();
-      if (/^\|[\s|:-]+\|$/.test(line)) {
+      if (TABLE_SEP.test(line)) {
         tableSepSeen = true;
         tableAligns = parseAligns(line);
       } else if (!tableSepSeen) {
@@ -726,7 +739,7 @@ function parseLines(
       continue;
     }
 
-    const listMatch = /^([*+-])\s+(.+)/.exec(line);
+    const listMatch = LIST_ITEM.exec(line);
     if (listMatch) {
       flushParagraph();
       flushOrderedList();
@@ -737,13 +750,13 @@ function parseLines(
       continue;
     }
 
-    const subListMatch = /^\s{2,4}[*+-]\s+(.+)/.exec(line);
+    const subListMatch = SUB_LIST_ITEM.exec(line);
     if (subListMatch && inList) {
       listItems[listItems.length - 1].sub.push(subListMatch[1]);
       continue;
     }
 
-    if (/^ {4,}/.test(line) && !inCodeBlock) {
+    if (INDENTED_CODE.test(line) && !inCodeBlock) {
       flushParagraph();
       flushList();
       flushOrderedList();
@@ -753,17 +766,17 @@ function parseLines(
       continue;
     }
 
-    if (/^\d+\. /.test(line)) {
+    if (ORDERED_ITEM.test(line)) {
       flushParagraph();
       flushList();
       flushBlockquote();
       flushTable();
       inOrderedList = true;
-      orderedItems.push({ text: line.replace(/^\d+\. /, ""), sub: [] });
+      orderedItems.push({ text: line.replace(ORDERED_ITEM, ""), sub: [] });
       continue;
     }
 
-    if (/^   \d+\. /.test(line) && inOrderedList) {
+    if (ORDERED_SUB_ITEM.test(line) && inOrderedList) {
       orderedItems[orderedItems.length - 1].sub.push(
         line.replace(/^\s+\d+\. /, ""),
       );
@@ -781,8 +794,8 @@ function parseLines(
     }
 
     buffer.push(
-      / {2,}$/.test(line)
-        ? line.trimStart().replace(/ {2,}$/, "<br>")
+      TRAILING_BR.test(line)
+        ? line.trimStart().replace(TRAILING_BR, "<br>")
         : line.trim(),
     );
   }
