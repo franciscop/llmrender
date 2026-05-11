@@ -8,7 +8,7 @@ import type { RawHtml } from "./sanitize";
 import { allowTags } from "./sanitize";
 
 export type { HighlightFn, MathFn, RawHtml };
-export { allowTags };
+export { allowTags, highlightCode };
 
 export default function Markdown({
   children,

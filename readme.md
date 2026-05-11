@@ -11,10 +11,10 @@ export default function Post({ content }) {
 ```
 
 - **Zero dependencies** and a fraction of the size of remark/rehype or markdown-it.
-- **Syntax highlighting**: 30+ languages and multiple themes to pick. Can be replaced for Shiki or Prism easily.
-- **Math**: built-in Math renderer with no extra dependencies. Can be replaced for KaTeX easily.
+- **Syntax highlighting**: 30+ languages built-in and multiple themes.
+- **Math**: built-in complete Math renderer that uses MathML.
 - **GitHub Flavored Markdown**: tables, task lists, strikethrough, callouts, auto-links.
-- **Easy styles**: renders in a `<div>`, so Tailwind, Styled Components, CSS, etc. all work.
+- **Easy styles**: renders in a `<div>`, so Tailwind, Styled Components, CSS, all work.
 
 ## Getting Started
 
@@ -411,10 +411,10 @@ export default function Editor() {
 Use the `highlight` prop to wrap each block with a copy button:
 
 ```jsx
-import Markdown from "llmrender";
+import Markdown, { highlightCode } from "llmrender";
 import { useState } from "react";
 
-function CodeBlock({ code, lang, children }) {
+function CodeBlock({ code, children }) {
   const [copied, setCopied] = useState(false);
   const copy = () => {
     navigator.clipboard.writeText(code);
@@ -432,7 +432,7 @@ function CodeBlock({ code, lang, children }) {
 }
 
 function highlight(code, lang) {
-  return [<CodeBlock key="c" code={code} lang={lang}>{code}</CodeBlock>];
+  return [<CodeBlock key="c" code={code}>{highlightCode(code, lang)}</CodeBlock>];
 }
 
 <Markdown highlight={highlight}>{content}</Markdown>

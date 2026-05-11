@@ -2,6 +2,7 @@
 
 import { HTMLAttributes, ReactElement, ReactNode } from "react";
 
+declare function highlight(code: string, lang: string): ReactNode[];
 export type RawHtml = Record<string, string[]>;
 export declare const allowTags: RawHtml;
 export type HighlightFn = (code: string, lang: string) => ReactNode[];
@@ -19,6 +20,6 @@ declare function Markdown({
   rawHtml?: boolean | RawHtml;
 } & HTMLAttributes<HTMLDivElement>): ReactElement;
 
-export { Markdown as default };
+export { Markdown as default, highlight as highlightCode };
 
 export {};
