@@ -12,7 +12,7 @@ export default function Post({ content }) {
 
 - **Zero dependencies** and a fraction of the size of remark/rehype or markdown-it.
 - **Syntax highlighting**: 30+ languages built-in and multiple themes.
-- **Math**: built-in complete Math renderer that uses MathML.
+- **Latex rendering**: transforms Mathematics expressions into browser-native MathML.
 - **GitHub Flavored Markdown**: tables, task lists, strikethrough, callouts, auto-links.
 - **Easy styles**: renders in a `<div>`, so Tailwind, Styled Components, CSS, all work.
 
