@@ -12,7 +12,7 @@ export default function Post({ content }) {
 
 - **Zero dependencies** and a fraction of the size of remark/rehype or markdown-it.
 - **Syntax highlighting**: 30+ languages and multiple themes to pick. Can be replaced for Shiki or Prism easily.
-- **Math**: built-in Math renderer for common Latex. Can be replaced for KaTeX easily.
+- **Math**: built-in Math renderer with no extra dependencies. Can be replaced for KaTeX easily.
 - **GitHub Flavored Markdown**: tables, task lists, strikethrough, callouts, auto-links.
 - **Easy styles**: renders in a `<div>`, so Tailwind, Styled Components, CSS, etc. all work.
 
@@ -136,7 +136,7 @@ Called for every math expression. `block` is `true` for `$$…$$`, `false` for `
 type MathFn = (tex: string, block: boolean) => ReactNode;
 ```
 
-The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing.
+The built-in renderer converts LaTeX to MathML with no extra dependencies. Pass `math={false}` to disable math parsing.
 
 ## Syntax
 
@@ -263,7 +263,6 @@ The formula $E = mc^2$ changed everything.
 $$\frac{a}{b} = \sqrt{1 + x^2}$$
 ```
 
-Supported out of the box: Greek letters (`\alpha`, `\beta`, …), fractions (`\frac`), square roots (`\sqrt`), superscripts, subscripts, sums (`\sum`), products (`\prod`), integrals (`\int`), limits (`\lim`), and binomials (`\binom`).
 
 ### Horizontal rule
 
