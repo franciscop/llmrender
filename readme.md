@@ -358,6 +358,86 @@ graph TD
 ```
 ````
 
+### Streaming LLM output
+
+Render tokens as they arrive — pass the partial string and LLMRender handles incomplete Markdown gracefully:
+
+```jsx
+import { useChat } from "@ai-sdk/react";
+import Markdown from "llmrender";
+
+export default function Chat() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat();
+
+  return (
+    <div>
+      {messages.map((m) => (
+        <div key={m.id}>
+          {m.role === "user" ? (
+            <p>{m.content}</p>
+          ) : (
+            <Markdown>{m.content}</Markdown>
+          )}
+        </div>
+      ))}
+      <form onSubmit={handleSubmit}>
+        <input value={input} onChange={handleInputChange} />
+      </form>
+    </div>
+  );
+}
+```
+
+### Live editor
+
+```jsx
+import { useState } from "react";
+import Markdown from "llmrender";
+
+export default function Editor() {
+  const [text, setText] = useState("# Hello\n\nStart typing...");
+
+  return (
+    <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "1rem" }}>
+      <textarea value={text} onChange={(e) => setText(e.target.value)} />
+      <Markdown>{text}</Markdown>
+    </div>
+  );
+}
+```
+
+### Copy button on code blocks
+
+Use the `highlight` prop to wrap each block with a copy button:
+
+```jsx
+import Markdown from "llmrender";
+import { useState } from "react";
+
+function CodeBlock({ code, lang, children }) {
+  const [copied, setCopied] = useState(false);
+  const copy = () => {
+    navigator.clipboard.writeText(code);
+    setCopied(true);
+    setTimeout(() => setCopied(false), 2000);
+  };
+  return (
+    <div style={{ position: "relative" }}>
+      <button onClick={copy} style={{ position: "absolute", top: 8, right: 8 }}>
+        {copied ? "Copied!" : "Copy"}
+      </button>
+      {children}
+    </div>
+  );
+}
+
+function highlight(code, lang) {
+  return [<CodeBlock key="c" code={code} lang={lang}>{code}</CodeBlock>];
+}
+
+<Markdown highlight={highlight}>{content}</Markdown>
+```
+
 ## Security
 
 LLMRender is safe to use with untrusted Markdown. Here is how that works, and what the limits are.
