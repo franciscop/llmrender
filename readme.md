@@ -27,6 +27,7 @@ npm i llmrender
 Pass your Markdown string as `children`:
 
 ```jsx
+import "llmrender/llmrender.css";  // Import a theme as well
 import Markdown from "llmrender";
 
 // This would normally come from the DB, LLM output, API, or a file read
