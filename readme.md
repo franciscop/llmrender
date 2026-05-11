@@ -6,7 +6,7 @@ A React Markdown renderer packed with features for all your LLM output:
 import Markdown from "llmrender";
 
 export default function Post({ content }) {
-  return <Markdown className="prose">{content}</Markdown>;
+  return <Markdown>{text}</Markdown>;
 }
 ```
 
@@ -25,10 +25,6 @@ npm i llmrender
 ```
 
 Pass your Markdown string as `children`:
-
-```md
-
-```
 
 ```jsx
 import Markdown from "llmrender";
@@ -69,8 +65,9 @@ import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
 
 ```ts
 <Markdown
-  highlight?: (code: string, lang: string) => ReactNode[]
-  math?: ((tex: string, block: boolean) => ReactNode) | false
+  highlight?: HighlightFn | boolean
+  math?: MathFn | boolean
+  rawHtml?: RawHtml | boolean
   ...HTMLAttributes<HTMLDivElement>
 >
   {markdownString}
@@ -80,14 +77,14 @@ import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `children` | `string` | required | Markdown source to render |
-| `highlight` | `(code, lang) => ReactNode[]` | built-in | Syntax highlighter for fenced code blocks |
-| `math` | `(tex, block) => ReactNode` \| `false` | built-in | Math renderer for `$…$` and `$$…$$` |
-| `rawHtml` | `boolean \| Record<string, string[]>` | `undefined` | Allow HTML tags in Markdown source — see [Security](#security) |
+| `highlight` | `HighlightFn \| boolean` | `true` | Syntax highlighter — `false` disables, `true` uses built-in |
+| `math` | `MathFn \| boolean` | `true` | Math renderer — `false` disables, `true` uses built-in |
+| `rawHtml` | `RawHtml \| boolean` | `false` | Allow HTML tags in Markdown source — see [Security](#security) |
 | `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
 
 #### `highlight`
 
-Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`.
+Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`. Pass `false` to avoid highlighting.
 
 ```ts
 type HighlightFn = (code: string, lang: string) => ReactNode[];
@@ -139,7 +136,7 @@ Called for every math expression. `block` is `true` for `$$…$$`, `false` for `
 type MathFn = (tex: string, block: boolean) => ReactNode;
 ```
 
-The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing entirely.
+The built-in renderer converts common LaTeX to MathML — Greek letters, fractions, superscripts, subscripts, square roots, binomials, and operators — with no extra dependencies. Pass `math={false}` to disable math parsing.
 
 ## Syntax
 
@@ -383,11 +380,20 @@ Tags not on this list — including `script`, `style`, `iframe`, `canvas`, `svg`
 
 Regardless of the allowlist, these attributes are always stripped: all `on*` event handlers, `srcdoc`, `style`, `ping`. URL-bearing attributes (`href`, `src`, `action`, etc.) are sanitized to block any scheme other than `http:` and `https:`. Any `<a target="_blank">` automatically gets `rel="noopener noreferrer"` added (merged with any existing `rel` value) to prevent tabnapping.
 
-**`rawHtml={{ tag: ["attr", …] }}`** — explicit allowlist. Only the listed tags render, and only the listed attributes pass through. The hard-blocked tags and attributes above cannot be unlocked even here:
+**`rawHtml={{ tag: ["attr", …] }}`** — explicit allowlist. Only the listed tags render, and only the listed attributes pass through. Use `"*"` to allow all safe attributes for a tag. The hard-blocked tags and attributes above cannot be unlocked even here:
 
 ```jsx
 // Allow <mark> with no attributes, and <span> with only class
 <Markdown rawHtml={{ mark: [], span: ["class"] }}>{content}</Markdown>
+```
+
+The exported `allowTags` constant is the exact object used by `rawHtml={true}`, useful as a base to extend:
+
+```jsx
+import Markdown, { allowTags } from "llmrender";
+
+// Everything from the default allowlist, plus <details> with open attribute
+<Markdown rawHtml={{ ...allowTags, details: ["open"] }}>{content}</Markdown>
 ```
 
 Prefer the explicit allowlist for untrusted sources — it gives you precise control over what HTML can appear.

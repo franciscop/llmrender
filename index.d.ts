@@ -2,9 +2,10 @@
 
 import { HTMLAttributes, ReactElement, ReactNode } from "react";
 
+export type RawHtml = Record<string, string[]>;
+export declare const allowTags: RawHtml;
 export type HighlightFn = (code: string, lang: string) => ReactNode[];
 export type MathFn = (tex: string, block: boolean) => ReactNode;
-export type RawHtmlProp = boolean | Record<string, string[]>;
 declare function Markdown({
   children,
   highlight,
@@ -13,9 +14,9 @@ declare function Markdown({
   ...props
 }: {
   children: string;
-  highlight?: HighlightFn;
-  math?: MathFn | false;
-  rawHtml?: RawHtmlProp;
+  highlight?: boolean | HighlightFn;
+  math?: boolean | MathFn;
+  rawHtml?: boolean | RawHtml;
 } & HTMLAttributes<HTMLDivElement>): ReactElement;
 
 export { Markdown as default };
