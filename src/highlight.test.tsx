@@ -263,3 +263,128 @@ it("does not create DOM elements from injected HTML in code", () => {
   expect(result.find("script").length).toBe(0);
   expect(result.text()).toContain("<script>");
 });
+
+// diff language
+it("highlights diff addition", () => {
+  expect(
+    $(<p>{highlight("+ added line", "diff")}</p>)
+      .find(".string")
+      .text(),
+  ).toBe("+ added line");
+});
+
+it("highlights diff deletion", () => {
+  expect(
+    $(<p>{highlight("- removed line", "diff")}</p>)
+      .find(".keyword")
+      .text(),
+  ).toBe("- removed line");
+});
+
+it("highlights diff hunk header", () => {
+  expect(
+    $(<p>{highlight("@@ -1,3 +1,4 @@", "diff")}</p>)
+      .find(".comment")
+      .text(),
+  ).toBe("@@ -1,3 +1,4 @@");
+});
+
+it.each(["diff", "patch"])("recognises %s language alias", (lang) => {
+  expect(
+    $(<p>{highlight("+ line", lang)}</p>)
+      .find(".string")
+      .text(),
+  ).toBe("+ line");
+});
+
+// SQL keywords
+it("highlights SQL SELECT keyword", () => {
+  expect(
+    $(<p>{highlight("SELECT id FROM users", "sql")}</p>)
+      .find(".keyword")
+      .text(),
+  ).toBe("SELECT");
+});
+
+it("highlights SQL FROM keyword", () => {
+  expect(
+    $(<p>{highlight("FROM users", "sql")}</p>)
+      .find(".keyword")
+      .text(),
+  ).toBe("FROM");
+});
+
+it("highlights SQL keywords case-insensitively", () => {
+  expect(
+    $(<p>{highlight("from users", "sql")}</p>)
+      .find(".keyword")
+      .text(),
+  ).toBe("from");
+});
+
+it("highlights SQL line comment", () => {
+  expect(
+    $(<p>{highlight("-- a comment", "sql")}</p>)
+      .find(".comment")
+      .text(),
+  ).toBe("-- a comment");
+});
+
+// Number literals: hex, binary, and underscored
+it("highlights hex number in JS", () => {
+  expect(
+    $(<p>{highlight("0xFF", "js")}</p>)
+      .find(".number")
+      .text(),
+  ).toBe("0xFF");
+});
+
+it("highlights binary number in JS", () => {
+  expect(
+    $(<p>{highlight("0b1010", "js")}</p>)
+      .find(".number")
+      .text(),
+  ).toBe("0b1010");
+});
+
+it("highlights number with underscores in JS", () => {
+  expect(
+    $(<p>{highlight("1_000_000", "js")}</p>)
+      .find(".number")
+      .text(),
+  ).toBe("1_000_000");
+});
+
+it("highlights hex number in Python", () => {
+  expect(
+    $(<p>{highlight("0xFF", "py")}</p>)
+      .find(".number")
+      .text(),
+  ).toBe("0xFF");
+});
+
+// Python decorators
+it("highlights Python decorator", () => {
+  expect(
+    $(<p>{highlight("@property", "py")}</p>)
+      .find(".keyword")
+      .text(),
+  ).toBe("@property");
+});
+
+it("highlights Python decorator with dotted name", () => {
+  expect(
+    $(<p>{highlight("@app.route", "py")}</p>)
+      .find(".keyword")
+      .text(),
+  ).toBe("@app.route");
+});
+
+// Rust attributes
+it("highlights Rust attribute opener as keyword", () => {
+  expect(
+    $(<p>{highlight("#[derive(Debug)]", "rust")}</p>)
+      .find(".keyword")
+      .text(),
+  ).toContain("#[");
+});

@@ -217,7 +217,11 @@ const patterns: { regex: RegExp; render: Render }[] = [
     render: (m, i, r) => <strong key={i}>{r(m[1])}</strong>,
   },
   {
-    regex: /(?:\*|_)(.+?)(?:\*|_)/,
+    regex: /(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/,
+    render: (m, i, r) => <em key={i}>{r(m[1])}</em>,
+  },
+  {
+    regex: /(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/,
     render: (m, i, r) => <em key={i}>{r(m[1])}</em>,
   },
   {
@@ -233,7 +237,8 @@ const patterns: { regex: RegExp; render: Render }[] = [
     ),
   },
   {
-    regex: /\[((?:[^[\]]|\[[^\]]*\])+)\]\((.+?)(?:\s+"([^"]*)")?\)/,
+    regex:
+      /\[((?:[^[\]]|\[[^\]]*\])+)\]\(((?:[^()\s"]|\s(?!\s*")|\([^()]*\))+)(?:\s+"([^"]*)")?\)/,
     render: (m, i, r) => (
       <a key={i} href={sanitize(m[2])} title={m[3] || undefined}>
         {r(m[1])}
@@ -354,10 +359,36 @@ function parseInline(
 }
 
 function parseRow(line: string) {
-  return line
-    .replace(/^\||\|$/g, "")
-    .split(/(?<!\\)\|/)
-    .map((c) => c.replace(/\\\|/g, "|").trim());
+  const trimmed = line.replace(/^\||\|$/g, "");
+  const cells: string[] = [];
+  let cell = "";
+  let i = 0;
+  while (i < trimmed.length) {
+    if (trimmed[i] === "$") {
+      const delim = trimmed[i + 1] === "$" ? "$$" : "$";
+      cell += delim;
+      i += delim.length;
+      while (i < trimmed.length) {
+        if (trimmed.startsWith(delim, i)) {
+          cell += delim;
+          i += delim.length;
+          break;
+        }
+        cell += trimmed[i++];
+      }
+    } else if (trimmed[i] === "\\" && trimmed[i + 1] === "|") {
+      cell += "|";
+      i += 2;
+    } else if (trimmed[i] === "|") {
+      cells.push(cell.trim());
+      cell = "";
+      i++;
+    } else {
+      cell += trimmed[i++];
+    }
+  }
+  cells.push(cell.trim());
+  return cells;
 }
 
 function parseAligns(sep: string): (string | undefined)[] {

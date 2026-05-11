@@ -6,6 +6,8 @@ type MathMLProps = React.DetailedHTMLProps<
 > & {
   xmlns?: string;
   linethickness?: string;
+  mathvariant?: string;
+  stretchy?: string;
 };
 
 declare namespace JSX {

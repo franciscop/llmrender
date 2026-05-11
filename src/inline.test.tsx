@@ -47,6 +47,19 @@ it("renders a link", () => {
   expect(a.attr("href")).toBe("https://example.com");
 });
 
+it("renders a link with parentheses in the URL", () => {
+  const el = $(
+    <Markdown>
+      {"[Bracket](https://en.wikipedia.org/wiki/Bracket_(mathematics))"}
+    </Markdown>,
+  );
+  const a = el.find("a");
+  expect(a.attr("href")).toBe(
+    "https://en.wikipedia.org/wiki/Bracket_(mathematics)",
+  );
+  expect(a.text()).toBe("Bracket");
+});
+
 it("renders bold and italic in same paragraph", () => {
   const $el = $(<Markdown>**bold** and *italic*</Markdown>);
   expect($el.find("p")).toHaveHtml("<strong>bold</strong> and <em>italic</em>");

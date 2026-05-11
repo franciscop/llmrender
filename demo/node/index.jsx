@@ -43,7 +43,9 @@ export default server().get("/", async () => {
     <html>
       <head>
         <meta charset="utf-8" />
-        <style>{await fsp.readFile("../../themes/marky.css", "utf-8")}</style>
+        <style>
+          {await fsp.readFile("../../themes/llmrender.css", "utf-8")}
+        </style>
         <style>{style}</style>
       </head>
       <body>

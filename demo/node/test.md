@@ -1,805 +1,794 @@
-# Markdown: Syntax
+# llmrender stress test
 
-*   [Overview](#overview)
-*   [Block Elements](#block-elements)
-    *   [Paragraphs and Line Breaks](#paragraphs-and-line-breaks)
-    *   [Headers](#headers)
-    *   [Blockquotes](#blockquotes)
-    *   [Lists](#lists)
-    *   [Code Blocks](#code-blocks)
-*   [Span Elements](#span-elements)
-    *   [Links](#links)
-    *   [Emphasis](#emphasis)
-    *   [Code](#code)
-*   [Math](#math)
-*   [Code Examples](#code-examples)
+Jump to: [Inline](#inline) · [Headings](#headings) · [Lists](#lists) · [Tables](#tables) · [Blockquotes](#blockquotes) · [Code](#code) · [Math](#math) · [Edge cases](#edge-cases)
 
-----
+---
 
-## Overview
+## Inline
 
-Markdown is intended to be as easy-to-read and easy-to-write as is feasible.
+### Bold and italic
 
-Readability, however, is emphasized above all else. A Markdown-formatted
-document should be publishable as-is, as plain text, without looking
-like it's been marked up with tags or formatting instructions.
+Plain **bold**, plain *italic*, plain ***bold italic***.
 
-## Block Elements
+Underscored __bold__, _italic_, ___bold italic___.
 
-### Paragraphs and Line Breaks
+Bold inside italic: *this is _nested_ emphasis*.
 
-A paragraph is simply one or more consecutive lines of text, separated
-by one or more blank lines. (A blank line is any line that looks like a
-blank line -- a line containing nothing but spaces or tabs is considered
-blank.) Normal paragraphs should not be indented with spaces or tabs.
+Italic inside bold: **a **double** bold** — and **bold with *italic* inside**.
 
-The implication of the "one or more consecutive lines of text" rule is
-that Markdown supports "hard-wrapped" text paragraphs. This differs
-significantly from most other text-to-HTML formatters (including Movable
-Type's "Convert Line Breaks" option) which translate every line break
-character in a paragraph into a `<br />` tag.
+Strikethrough: ~~deleted text~~, ~~**bold deleted**~~, ~~*italic deleted*~~.
 
-When you *do* want to insert a `<br />` break tag using Markdown, you
-end a line with two or more spaces, then type return.
+Bold+italic shorthand: ***three stars***, ___three underscores___.
 
-### Headers
+Adjacent markers with no space: word**bold**word, word*italic*word.
 
-Markdown supports two styles of headers, [Setext] [1] and [atx] [2].
+Multiple independent spans: **a** and **b** and *c* and *d*.
 
-Optionally, you may "close" atx-style headers. This is purely
-cosmetic -- you can use this if you think it looks better. The
-closing hashes don't even need to match the number of hashes
-used to open the header. (The number of opening hashes
-determines the header level.)
+### Code spans
 
+Inline `code`, backtick literal `` ` ``, double-backtick span `` `code` ``, code with spaces `` foo bar ``.
 
-### Blockquotes
+Code suppresses formatting: `**not bold**`, `_not italic_`, `~~not struck~~`.
 
-Markdown uses email-style `>` characters for blockquoting. If you're
-familiar with quoting passages of text in an email message, then you
-know how to create a blockquote in Markdown. It looks best if you hard
-wrap the text and put a `>` before every line:
+Code in bold: **`bold code`**, code in italic: *`italic code`*.
 
-> This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet,
-> consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.
-> Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.
-> 
-> Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse
-> id sem consectetuer libero luctus adipiscing.
+### Links
 
-Markdown allows you to be lazy and only put the `>` before the first
-line of a hard-wrapped paragraph:
+Simple link: [example](https://example.com).
 
-> This is a blockquote with two paragraphs. Lorem ipsum dolor sit amet,
-consectetuer adipiscing elit. Aliquam hendrerit mi posuere lectus.
-Vestibulum enim wisi, viverra nec, fringilla in, laoreet vitae, risus.
+Link with title: [example](https://example.com "Example site").
 
-> Donec sit amet nisl. Aliquam semper ipsum sit amet velit. Suspendisse
-id sem consectetuer libero luctus adipiscing.
+Fragment: [jump to math](#math).
 
-Blockquotes can be nested (i.e. a blockquote-in-a-blockquote) by
-adding additional levels of `>`:
+Link with parentheses in URL: [Bracket](https://en.wikipedia.org/wiki/Bracket_(mathematics)).
 
-> This is the first level of quoting.
->
-> > This is nested blockquote.
->
-> Back to the first level.
+Another paren URL: [Limit](https://en.wikipedia.org/wiki/Limit_(mathematics)).
 
-Blockquotes can contain other Markdown elements, including headers, lists,
-and code blocks:
+Auto-detected URL: https://example.com/path?q=1&r=2.
 
-> ## This is a header.
-> 
-> 1.   This is the first list item.
-> 2.   This is the second list item.
-> 
-> Here's some example code:
-> 
->     return shell_exec("echo $input | $markdown_script");
+Bold link: [**bold label**](https://example.com).
 
-Any decent text editor should make email-style quoting easy. For
-example, with BBEdit, you can make a selection and choose Increase
-Quote Level from the Text menu.
+Italic link: [*italic label*](https://example.com).
 
+Code link: [`code label`](https://example.com).
 
-### Lists
+Adjacent links: [first](https://example.com/1)[second](https://example.com/2).
 
-Markdown supports ordered (numbered) and unordered (bulleted) lists.
+Link with special chars in label: [a & b < c > d](https://example.com).
 
-Unordered lists use asterisks, pluses, and hyphens -- interchangably
--- as list markers:
+### Images
 
-*   Red
-*   Green
-*   Blue
+![Alt text](https://placehold.co/100x40 "A placeholder image").
 
-is equivalent to:
+Image inside a link: [![Alt](https://placehold.co/16x16)](https://example.com).
 
-+   Red
-+   Green
-+   Blue
+### Ruby / furigana
 
-and:
+[東京]{とうきょう}, [日本語]{にほんご}, [漢字]{かんじ}.
 
--   Red
--   Green
--   Blue
+### Escapes
 
-Ordered lists use numbers followed by periods:
+Escaped asterisk: \*not italic\*, escaped underscore: \_not italic\_.
 
-1.  Bird
-2.  McHale
-3.  Parish
+Escaped brackets: \[not a link\](https://example.com).
 
-It's important to note that the actual numbers you use to mark the
-list have no effect on the HTML output Markdown produces. The HTML
-Markdown produces from the above list is:
+Escaped backtick: \`not code\`.
 
-If you instead wrote the list in Markdown like this:
+Escaped hash: \# not a heading (when at line start).
 
-1.  Bird
-1.  McHale
-1.  Parish
+Escaped backslash: \\.
 
-or even:
+---
+
+## Headings
+
+# H1 with **bold** and *italic*
+## H2 with `inline code`
+### H3 with a [link](https://example.com)
+#### H4 plain
+##### H5 plain
+###### H6 — the smallest
+
+Consecutive headings with no gap:
+### First consecutive
+### Second consecutive
+### Third consecutive
+
+---
+
+## Lists
+
+### Unordered — all three markers
+
+* asterisk one
+* asterisk two
+* asterisk three
+
++ plus one
++ plus two
+
+- minus one
+- minus two
+
+### Ordered
+
+1. First
+2. Second
+3. Third
+
+Non-sequential numbers (output should still be ordered):
 
 3. Bird
 1. McHale
 8. Parish
 
-You'd get the exact same HTML output. The point is, if you want to,
-you can use ordinal numbers in your ordered Markdown lists, so that
-the numbers in your source match the numbers in your published HTML.
-But if you want to be lazy, you don't have to.
+### Task lists
 
-To put a blockquote within a list item, the blockquote's `>`
-delimiters need to be indented:
+- [x] Completed task
+- [ ] Pending task
+- [x] Another done item with **bold** text
+- [ ] Item with a [link](https://example.com)
 
-*   A list item with a blockquote:
+### Inline formatting in list items
 
-    > This is a blockquote
-    > inside a list item.
+* **Bold item** — important
+* *Italic item* — note
+* `code item` — literal
+* ~~struck item~~ — removed
+* Item with [a link](https://example.com "title")
 
-To put a code block within a list item, the code block needs
-to be indented *twice* -- 8 spaces or two tabs:
+### Deeply nested lists
 
-*   A list item with a code block:
+1. Level one A
+   1. Level two A
+      - Level three A
+      - Level three B
+   2. Level two B
+2. Level one B
+   - Level two C
+      1. Level three C
+      2. Level three D
 
-        <code goes here>
+### List item with a blockquote
 
-### Math
+* Item before quote
+* Item with embedded quote:
 
-Inline math: $E = mc^2$ and $a^2 + b^2 = c^2$.
+  > Quoted text inside a list item.
 
-| Expression                 | Formula                                                                     |
-| -------------------------- | --------------------------------------------------------------------------- |
-| Power                      | $$x^{2} y^{2}$$                                                             |
-| Fraction                   | $$\frac{x + y^2}{k + 1}$$                                                   |
-| Nested exponent            | $$x + y^{\frac{2}{k + 1}}$$                                                 |
-| Division                   | $$\frac{a}{b/2}$$                                                           |
-| Continued fraction (cfrac) | $$a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2 + \cfrac{1}{a_3 + \cfrac{1}{a_4}}}}$$ |
-| Continued fraction (frac)  | $$a_0 + \frac{1}{a_1 + \frac{1}{a_2 + \frac{1}{a_3 + \frac{1}{a_4}}}}$$     |
-| Binomial                   | $$\binom{n}{k/2}$$                                                          |
-| Mixed binomial             | $$\binom{p}{2} x^{2y} p^{-2}$$                                              |
-| Nested sqrt                | $$\sqrt{1 + \sqrt{1 + \sqrt{1 + \cdots}}}$$                                 |
-| Integral with limits       | $$\int_{0}^{\infty} x^2 e^{-ax} , dx$$                                      |
-| Double integral            | $$\iint_{D} (x^2 + y^2), dA$$                                               |
-| Summation with conditions  | $$\sum_{k=1}^{n} \frac{k^2}{k^2 + 1}$$                                      |
-| Product notation           | $$\prod_{i=1}^{n} (1 + x_i)$$                                               |
-| Piecewise function         | $$f(x) = \begin{cases} x^2 & x \ge 0 \ -x & x < 0 \end{cases}$$             |
-| Matrix                     | $$\begin{bmatrix} a & b \ c & d \end{bmatrix}$$                             |
-| Determinant                | $$\begin{vmatrix} x & y \ z & w \end{vmatrix} = xw - yz$$                   |
-| Partial derivatives        | $$\frac{\partial^2 f}{\partial x \partial y}$$                              |
-| Limit expression           | $$\lim_{x \to 0} \frac{\sin x}{x}$$                                         |
-| Series expansion           | $$e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!}$$                                |
+* Item after quote
 
+### List item with code block
 
+* Item before code
+* Item with embedded code:
 
-### Code blocks
+      const x = 42;
 
-Pre-formatted code blocks are used for writing about programming or
-markup source code. Rather than forming normal paragraphs, the lines
-of a code block are interpreted literally. Markdown wraps a code block
-in both `<pre>` and `<code>` tags.
+* Item after code
 
-To produce a code block in Markdown, simply indent every line of the block by at least 4 spaces or 1 tab. Or wrap them with 3 backticks + language on the first one:
+---
+
+## Tables
+
+### Basic table
+
+| Name    | Age | City          |
+| ------- | --- | ------------- |
+| Alice   | 30  | New York      |
+| Bob     | 25  | London        |
+| Charlie | 35  | Tokyo         |
+
+### Alignment
+
+| Left      | Center       | Right   |
+| :-------- | :----------: | ------: |
+| apple     | banana       | cherry  |
+| 1         | 2            | 3       |
+| longer    | cell content | x       |
+
+### Formatting in cells
+
+| Feature       | Syntax              | Result                  |
+| ------------- | ------------------- | ----------------------- |
+| Bold          | `**text**`          | **bold**                |
+| Italic        | `*text*`            | *italic*                |
+| Code          | `` `code` ``        | `code`                  |
+| Strikethrough | `~~text~~`          | ~~struck~~              |
+| Link          | `[label](url)`      | [example](https://example.com) |
+
+### Table with math
+
+| Expression | Formula |
+| ---------- | ------- |
+| Euler's identity | $e^{i\pi} + 1 = 0$ |
+| Pythagorean theorem | $a^2 + b^2 = c^2$ |
+| Quadratic formula | $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$ |
+
+### Single-column table
+
+| Item |
+| ---- |
+| one  |
+| two  |
+| three |
+
+---
+
+## Blockquotes
+
+### Simple
+
+> A single-line blockquote.
+
+### Multi-paragraph
+
+> First paragraph of the quote. Lorem ipsum dolor sit amet.
+>
+> Second paragraph. Consecutive with a blank `>` separator.
+
+### Lazy continuation
+
+> First line of a lazy blockquote.
+second line without the `>` marker.
+third line also without.
+
+### Nested blockquotes
+
+> Outer level.
+>
+> > Inner level.
+> >
+> > > Triple nested.
+> >
+> > Back to inner.
+>
+> Back to outer.
+
+### Blockquote with formatting
+
+> **Bold** and *italic* and `code` and ~~struck~~ and a [link](https://example.com).
+
+### Blockquote with a list
+
+> 1. First item
+> 2. Second item
+> 3. Third item
+
+### Blockquote with a heading and code
+
+> ## Blockquoted heading
+>
+> Here's some code inside a blockquote:
+>
+>     const answer = 42;
+
+---
+
+## Code
+
+### Fenced — language sampler
 
 ```js
-class EventEmitter {
-  #listeners = new Map();
-
-  on(event, fn) {
-    if (!this.#listeners.has(event)) {
-      this.#listeners.set(event, []);
-    }
-    this.#listeners.get(event).push(fn);
-    return () => this.off(event, fn);
-  }
-
-  off(event, fn) {
-    const fns = this.#listeners.get(event);
-    if (fns) this.#listeners.set(event, fns.filter(f => f !== fn));
-  }
-
-  emit(event, ...args) {
-    this.#listeners.get(event)?.forEach(fn => fn(...args));
-  }
+// Closures and async/await
+function makeCounter(start = 0) {
+  let n = start;
+  return {
+    inc: () => ++n,
+    dec: () => --n,
+    get: () => n,
+    reset: () => { n = start; },
+  };
 }
 
-async function fetchWithRetry(url, { retries = 3, delay = 500 } = {}) {
-  for (let attempt = 0; attempt <= retries; attempt++) {
-    try {
-      const res = await fetch(url);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      return await res.json();
-    } catch (err) {
-      if (attempt === retries) throw err;
-      await new Promise(r => setTimeout(r, delay * 2 ** attempt));
-    }
+async function retry(fn, times = 3, delay = 300) {
+  for (let i = 0; i < times; i++) {
+    try { return await fn(); }
+    catch (e) { if (i === times - 1) throw e; }
+    await new Promise(r => setTimeout(r, delay * 2 ** i));
   }
 }
 ```
 
 ```ts
+type Brand<T, B> = T & { readonly __brand: B };
+type UserId = Brand<string, "UserId">;
+type Milliseconds = Brand<number, "Milliseconds">;
+
+function userId(raw: string): UserId { return raw as UserId; }
+
 type Result<T, E = Error> =
-  | { ok: true; value: T }
+  | { ok: true;  value: T }
   | { ok: false; error: E };
 
-type DeepPartial<T> = T extends object
-  ? { [K in keyof T]?: DeepPartial<T[K]> }
-  : T;
-
-interface PaginatedResponse<T> {
-  data: T[];
-  total: number;
-  page: number;
-  pageSize: number;
-  hasMore: boolean;
-}
-
-async function fetchPage<T>(
-  url: string,
-  page: number,
-  pageSize = 20,
-): Promise<Result<PaginatedResponse<T>>> {
-  try {
-    const params = new URLSearchParams({ page: String(page), pageSize: String(pageSize) });
-    const res = await fetch(`${url}?${params}`);
-    if (!res.ok) throw new Error(`HTTP ${res.status}`);
-    const value = await res.json() as PaginatedResponse<T>;
-    return { ok: true, value };
-  } catch (error) {
-    return { ok: false, error: error as Error };
-  }
+async function fetchUser(id: UserId): Promise<Result<{ name: string }>> {
+  const res = await fetch(`/api/users/${id}`);
+  if (!res.ok) return { ok: false, error: new Error(`HTTP ${res.status}`) };
+  return { ok: true, value: await res.json() };
 }
 ```
 
 ```py
-from dataclasses import dataclass, field
-from typing import Iterator
-import heapq
+from __future__ import annotations
+from dataclasses import dataclass
+from typing import Generic, TypeVar, Iterator
 
+T = TypeVar("T")
 
-@dataclass(order=True)
-class Task:
-    priority: int
-    name: str = field(compare=False)
-    payload: dict = field(default_factory=dict, compare=False)
+@dataclass
+class Node(Generic[T]):
+    value: T
+    next: Node[T] | None = None
 
-
-class PriorityQueue:
+class LinkedList(Generic[T]):
     def __init__(self) -> None:
-        self._heap: list[Task] = []
+        self._head: Node[T] | None = None
+        self._size = 0
 
-    def push(self, task: Task) -> None:
-        heapq.heappush(self._heap, task)
+    def prepend(self, value: T) -> None:
+        self._head = Node(value, self._head)
+        self._size += 1
 
-    def pop(self) -> Task:
-        if not self._heap:
-            raise IndexError("pop from empty queue")
-        return heapq.heappop(self._heap)
+    def __iter__(self) -> Iterator[T]:
+        cur = self._head
+        while cur:
+            yield cur.value
+            cur = cur.next
 
     def __len__(self) -> int:
-        return len(self._heap)
-
-    def __iter__(self) -> Iterator[Task]:
-        snapshot = sorted(self._heap)
-        yield from snapshot
-
-
-def word_frequency(text: str) -> dict[str, int]:
-    freq: dict[str, int] = {}
-    for word in text.lower().split():
-        freq[word] = freq.get(word, 0) + 1
-    return dict(sorted(freq.items(), key=lambda kv: kv[1], reverse=True))
+        return self._size
 ```
 
 ```go
-package cache
+package main
 
 import (
-	"sync"
+	"context"
+	"errors"
 	"time"
 )
 
-type entry[V any] struct {
-	value     V
-	expiresAt time.Time
-}
+type Semaphore chan struct{}
 
-type TTLCache[K comparable, V any] struct {
-	mu      sync.RWMutex
-	items   map[K]entry[V]
-	ttl     time.Duration
-}
+func NewSemaphore(n int) Semaphore { return make(Semaphore, n) }
 
-func New[K comparable, V any](ttl time.Duration) *TTLCache[K, V] {
-	return &TTLCache[K, V]{items: make(map[K]entry[V]), ttl: ttl}
-}
-
-func (c *TTLCache[K, V]) Set(key K, value V) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	c.items[key] = entry[V]{value: value, expiresAt: time.Now().Add(c.ttl)}
-}
-
-func (c *TTLCache[K, V]) Get(key K) (V, bool) {
-	c.mu.RLock()
-	defer c.mu.RUnlock()
-	e, ok := c.items[key]
-	if !ok || time.Now().After(e.expiresAt) {
-		var zero V
-		return zero, false
+func (s Semaphore) Acquire(ctx context.Context) error {
+	select {
+	case s <- struct{}{}:
+		return nil
+	case <-ctx.Done():
+		return ctx.Err()
 	}
-	return e.value, true
 }
 
-func (c *TTLCache[K, V]) Delete(key K) {
-	c.mu.Lock()
-	defer c.mu.Unlock()
-	delete(c.items, key)
+func (s Semaphore) Release() { <-s }
+
+var ErrTimeout = errors.New("operation timed out")
+
+func withTimeout[T any](ctx context.Context, d time.Duration, fn func() (T, error)) (T, error) {
+	ctx, cancel := context.WithTimeout(ctx, d)
+	defer cancel()
+	ch := make(chan struct{ v T; e error }, 1)
+	go func() { v, e := fn(); ch <- struct{ v T; e error }{v, e} }()
+	select {
+	case r := <-ch: return r.v, r.e
+	case <-ctx.Done(): var z T; return z, ErrTimeout
+	}
 }
 ```
 
 ```rust
-use std::collections::HashMap;
-use std::hash::Hash;
+use std::sync::{Arc, Mutex};
+use std::collections::VecDeque;
 
-pub struct Graph<T> {
-    edges: HashMap<T, Vec<T>>,
+pub struct Channel<T> {
+    inner: Arc<Mutex<VecDeque<T>>>,
 }
 
-impl<T: Eq + Hash + Clone> Graph<T> {
-    pub fn new() -> Self {
-        Self { edges: HashMap::new() }
+impl<T> Channel<T> {
+    pub fn new() -> (Sender<T>, Receiver<T>) {
+        let inner = Arc::new(Mutex::new(VecDeque::new()));
+        (Sender { inner: inner.clone() }, Receiver { inner })
     }
+}
 
-    pub fn add_edge(&mut self, from: T, to: T) {
-        self.edges.entry(from).or_default().push(to);
+pub struct Sender<T> { inner: Arc<Mutex<VecDeque<T>>> }
+pub struct Receiver<T> { inner: Arc<Mutex<VecDeque<T>>> }
+
+impl<T> Sender<T> {
+    pub fn send(&self, val: T) {
+        self.inner.lock().unwrap().push_back(val);
     }
+}
 
-    pub fn bfs(&self, start: &T) -> Vec<T> {
-        let mut visited = vec![start.clone()];
-        let mut queue = std::collections::VecDeque::from([start.clone()]);
-
-        while let Some(node) = queue.pop_front() {
-            if let Some(neighbors) = self.edges.get(&node) {
-                for next in neighbors {
-                    if !visited.contains(next) {
-                        visited.push(next.clone());
-                        queue.push_back(next.clone());
-                    }
-                }
-            }
-        }
-        visited
-    }
-
-    pub fn has_cycle(&self) -> bool {
-        let mut visited = HashMap::new();
-        for node in self.edges.keys() {
-            if self.dfs_cycle(node, &mut visited) {
-                return true;
-            }
-        }
-        false
-    }
-
-    fn dfs_cycle(&self, node: &T, visited: &mut HashMap<T, bool>) -> bool {
-        match visited.get(node) {
-            Some(&true) => return true,
-            Some(&false) => return false,
-            None => {}
-        }
-        visited.insert(node.clone(), true);
-        if let Some(neighbors) = self.edges.get(node) {
-            for next in neighbors {
-                if self.dfs_cycle(next, visited) {
-                    return true;
-                }
-            }
-        }
-        visited.insert(node.clone(), false);
-        false
+impl<T> Receiver<T> {
+    pub fn recv(&self) -> Option<T> {
+        self.inner.lock().unwrap().pop_front()
     }
 }
 ```
 
 ```sql
-WITH monthly_revenue AS (
-  SELECT
-    DATE_TRUNC('month', o.created_at) AS month,
-    p.category,
-    SUM(oi.quantity * oi.unit_price) AS revenue,
-    COUNT(DISTINCT o.user_id) AS unique_buyers
-  FROM orders o
-  JOIN order_items oi ON oi.order_id = o.id
-  JOIN products p ON p.id = oi.product_id
-  WHERE o.status = 'completed'
-    AND o.created_at >= NOW() - INTERVAL '12 months'
-  GROUP BY 1, 2
-),
-ranked AS (
-  SELECT
-    *,
-    LAG(revenue) OVER (PARTITION BY category ORDER BY month) AS prev_revenue,
-    RANK() OVER (PARTITION BY month ORDER BY revenue DESC) AS rank
-  FROM monthly_revenue
+WITH RECURSIVE org_tree AS (
+  SELECT id, name, parent_id, 0 AS depth, name::text AS path
+  FROM employees
+  WHERE parent_id IS NULL
+  UNION ALL
+  SELECT e.id, e.name, e.parent_id, t.depth + 1, t.path || ' > ' || e.name
+  FROM employees e
+  JOIN org_tree t ON e.parent_id = t.id
 )
 SELECT
-  month,
-  category,
-  revenue,
-  unique_buyers,
-  ROUND(100.0 * (revenue - prev_revenue) / NULLIF(prev_revenue, 0), 2) AS mom_growth_pct
-FROM ranked
-WHERE rank <= 5
-ORDER BY month DESC, revenue DESC;
-```
-
-```css
-:root {
-  --color-bg: #ffffff;
-  --color-text: #1a1a1a;
-  --color-primary: #6366f1;
-  --color-surface: #f8f8f8;
-  --radius: 8px;
-  --shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
-}
-
-@media (prefers-color-scheme: dark) {
-  :root {
-    --color-bg: #0f0f0f;
-    --color-text: #e5e5e5;
-    --color-surface: #1a1a1a;
-    --shadow: 0 2px 8px rgba(0, 0, 0, 0.4);
-  }
-}
-
-.card {
-  background: var(--color-surface);
-  border-radius: var(--radius);
-  box-shadow: var(--shadow);
-  padding: 1.5rem;
-  display: flex;
-  flex-direction: column;
-  gap: 1rem;
-}
-
-.card__title {
-  font-size: 1.25rem;
-  font-weight: 600;
-  color: var(--color-text);
-}
-
-.card__badge {
-  display: inline-flex;
-  align-items: center;
-  padding: 0.25em 0.6em;
-  border-radius: 999px;
-  font-size: 0.75rem;
-  background: var(--color-primary);
-  color: #fff;
-}
-
-@keyframes fade-in {
-  from { opacity: 0; transform: translateY(4px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-```
-
-```html
-<!DOCTYPE html>
-<html lang="en">
-  <head>
-    <meta charset="UTF-8" />
-    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-    <title>My App</title>
-    <link rel="stylesheet" href="/styles.css" />
-  </head>
-  <body>
-    <header class="site-header">
-      <nav aria-label="Main navigation">
-        <a href="/" class="logo">Acme</a>
-        <ul role="list">
-          <li><a href="/about">About</a></li>
-          <li><a href="/blog">Blog</a></li>
-          <li><a href="/contact">Contact</a></li>
-        </ul>
-      </nav>
-    </header>
-    <main id="content">
-      <article class="post">
-        <header>
-          <h1>Hello World</h1>
-          <time datetime="2025-01-01">January 1, 2025</time>
-        </header>
-        <p>This is the first paragraph of the article.</p>
-      </article>
-    </main>
-    <script type="module" src="/app.js"></script>
-  </body>
-</html>
+  depth,
+  REPEAT('  ', depth) || name AS indented_name,
+  path,
+  COUNT(*) OVER (PARTITION BY depth) AS peers_at_level
+FROM org_tree
+ORDER BY path;
 ```
 
 ```bash
 #!/usr/bin/env bash
 set -euo pipefail
 
-DEPLOY_ENV="${1:-staging}"
-IMAGE_TAG="${2:-latest}"
-REGISTRY="ghcr.io/acme"
+# Rotate logs: keep last N compressed files
+rotate_logs() {
+  local dir="$1" keep="${2:-7}" pattern="${3:-*.log}"
+  find "$dir" -maxdepth 1 -name "$pattern" -mtime +1 | sort -r | while read -r f; do
+    gzip -f "$f" && echo "Compressed: $f"
+  done
+  find "$dir" -maxdepth 1 -name "*.log.gz" | sort -r | tail -n +$((keep + 1)) | xargs -r rm -v
+}
 
-log() { echo "[$(date +%H:%M:%S)] $*"; }
-die() { echo "ERROR: $*" >&2; exit 1; }
-
-[[ "$DEPLOY_ENV" =~ ^(staging|production)$ ]] \
-  || die "Unknown environment: $DEPLOY_ENV"
-
-log "Building image $REGISTRY/app:$IMAGE_TAG..."
-docker build \
-  --build-arg ENV="$DEPLOY_ENV" \
-  --tag "$REGISTRY/app:$IMAGE_TAG" \
-  --cache-from "$REGISTRY/app:latest" \
-  .
-
-log "Pushing to registry..."
-docker push "$REGISTRY/app:$IMAGE_TAG"
-
-log "Deploying to $DEPLOY_ENV..."
-kubectl set image deployment/app \
-  app="$REGISTRY/app:$IMAGE_TAG" \
-  --namespace="$DEPLOY_ENV"
-
-kubectl rollout status deployment/app --namespace="$DEPLOY_ENV" --timeout=120s
-
-log "Done. $DEPLOY_ENV is running $IMAGE_TAG."
+rotate_logs /var/log/myapp 14 "app-*.log"
 ```
 
 ```json
 {
-  "name": "llmrender",
-  "version": "1.0.0",
-  "description": "A tiny Markdown renderer for React",
-  "keywords": ["markdown", "react", "syntax-highlight"],
-  "license": "MIT",
-  "type": "module",
-  "main": "./index.min.js",
-  "types": "./src/index.d.ts",
-  "files": ["index.min.js", "src/index.d.ts", "*.css"],
-  "scripts": {
-    "build": "bun build src/index.tsx --outfile index.min.js --minify --external react",
-    "test": "vitest run",
-    "typecheck": "tsc --noEmit"
-  },
-  "peerDependencies": {
-    "react": ">=18"
-  },
-  "devDependencies": {
-    "typescript": "^5.0.0",
-    "vitest": "^2.0.0",
-    "react-test": "^1.0.0"
-  }
-}
-```
-
-```tsx
-import { useState, useEffect, useCallback } from "react";
-
-interface Post {
-  id: number;
-  title: string;
-  body: string;
-  userId: number;
-}
-
-interface PostListProps {
-  userId?: number;
-  pageSize?: number;
-}
-
-export function PostList({ userId, pageSize = 10 }: PostListProps) {
-  const [posts, setPosts] = useState<Post[]>([]);
-  const [page, setPage] = useState(1);
-  const [loading, setLoading] = useState(false);
-  const [error, setError] = useState<string | null>(null);
-
-  const fetchPosts = useCallback(async () => {
-    setLoading(true);
-    setError(null);
-    try {
-      const params = new URLSearchParams({
-        _page: String(page),
-        _limit: String(pageSize),
-        ...(userId ? { userId: String(userId) } : {}),
-      });
-      const res = await fetch(`/api/posts?${params}`);
-      if (!res.ok) throw new Error(`HTTP ${res.status}`);
-      const data: Post[] = await res.json();
-      setPosts(data);
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "Unknown error");
-    } finally {
-      setLoading(false);
-    }
-  }, [page, pageSize, userId]);
-
-  useEffect(() => { fetchPosts(); }, [fetchPosts]);
-
-  if (error) return <p className="error">{error}</p>;
-
-  return (
-    <div className="post-list">
-      {loading && <div className="spinner" aria-label="Loading..." />}
-      <ul>
-        {posts.map(post => (
-          <li key={post.id} className="post-item">
-            <h2>{post.title}</h2>
-            <p>{post.body}</p>
-          </li>
-        ))}
-      </ul>
-      <nav className="pagination">
-        <button onClick={() => setPage(p => Math.max(1, p - 1))} disabled={page === 1}>
-          Previous
-        </button>
-        <span>Page {page}</span>
-        <button onClick={() => setPage(p => p + 1)} disabled={posts.length < pageSize}>
-          Next
-        </button>
-      </nav>
-    </div>
-  );
-}
-```
-
-```jsx
-import { createContext, useContext, useReducer } from "react";
-
-const CartContext = createContext(null);
-
-function cartReducer(state, action) {
-  switch (action.type) {
-    case "ADD_ITEM": {
-      const existing = state.items.find(i => i.id === action.item.id);
-      if (existing) {
-        return {
-          ...state,
-          items: state.items.map(i =>
-            i.id === action.item.id ? { ...i, qty: i.qty + 1 } : i
-          ),
-        };
+  "openapi": "3.1.0",
+  "info": { "title": "Pets API", "version": "1.0.0" },
+  "paths": {
+    "/pets": {
+      "get": {
+        "summary": "List pets",
+        "parameters": [
+          { "name": "limit", "in": "query", "schema": { "type": "integer", "default": 20 } },
+          { "name": "tag",   "in": "query", "schema": { "type": "string" } }
+        ],
+        "responses": {
+          "200": {
+            "description": "OK",
+            "content": {
+              "application/json": {
+                "schema": { "$ref": "#/components/schemas/PetList" }
+              }
+            }
+          }
+        }
       }
-      return { ...state, items: [...state.items, { ...action.item, qty: 1 }] };
     }
-    case "REMOVE_ITEM":
-      return { ...state, items: state.items.filter(i => i.id !== action.id) };
-    case "CLEAR":
-      return { ...state, items: [] };
-    default:
-      return state;
+  },
+  "components": {
+    "schemas": {
+      "Pet": {
+        "type": "object",
+        "required": ["id", "name"],
+        "properties": {
+          "id":   { "type": "integer" },
+          "name": { "type": "string" },
+          "tag":  { "type": "string" }
+        }
+      },
+      "PetList": { "type": "array", "items": { "$ref": "#/components/schemas/Pet" } }
+    }
   }
-}
-
-export function CartProvider({ children }) {
-  const [state, dispatch] = useReducer(cartReducer, { items: [] });
-  const total = state.items.reduce((sum, i) => sum + i.price * i.qty, 0);
-  return (
-    <CartContext.Provider value={{ ...state, total, dispatch }}>
-      {children}
-    </CartContext.Provider>
-  );
-}
-
-export function useCart() {
-  const ctx = useContext(CartContext);
-  if (!ctx) throw new Error("useCart must be used inside CartProvider");
-  return ctx;
 }
 ```
 
-## Span Elements
+```css
+/* Custom cascade layer + container queries */
+@layer base, components, utilities;
 
-### Links
+@layer base {
+  *, *::before, *::after { box-sizing: border-box; }
+  body { margin: 0; font: 1rem/1.5 system-ui, sans-serif; }
+}
 
-Markdown supports two style of links: *inline* and *reference*.
+@layer components {
+  .card {
+    container-type: inline-size;
+    background: var(--surface, #fff);
+    border-radius: .5rem;
+    padding: 1rem;
+    box-shadow: 0 1px 3px rgb(0 0 0 / .12);
+  }
 
-In both styles, the link text is delimited by [square brackets].
+  @container (min-width: 30rem) {
+    .card { padding: 1.5rem; display: grid; grid-template-columns: auto 1fr; gap: 1rem; }
+  }
+}
 
-To create an inline link, use a set of regular parentheses immediately
-after the link text's closing square bracket. Inside the parentheses,
-put the URL where you want the link to point, along with an *optional*
-title for the link, surrounded in quotes. For example:
+@layer utilities {
+  .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0,0,0,0); }
+  .truncate { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+}
+```
 
-This is [an example](http://example.com/) inline link.
+```html
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Stress test</title>
+</head>
+<body>
+  <!-- Comment: should not show -->
+  <template id="tmpl">
+    <li class="item">
+      <span class="label"></span>
+      <button type="button" aria-label="Remove">×</button>
+    </li>
+  </template>
+  <script>
+    // This should be shown as-is inside the code block
+    document.querySelectorAll('[data-action]').forEach(el => {
+      el.addEventListener('click', e => console.log(e.currentTarget.dataset.action));
+    });
+  </script>
+</body>
+</html>
+```
 
-[This link](http://example.net/) has no title attribute.
+```yaml
+name: CI
 
-### Emphasis
+on:
+  push:
+    branches: [main]
+  pull_request:
 
-Markdown treats asterisks (`*`) and underscores (`_`) as indicators of
-emphasis. Text wrapped with one `*` or `_` will be wrapped with an
-HTML `<em>` tag; double `*`'s or `_`'s will be wrapped with an HTML
-`<strong>` tag. E.g., this input:
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        node: [18, 20, 22]
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: ${{ matrix.node }}
+          cache: npm
+      - run: npm ci
+      - run: npm test
+      - run: npm run build
+```
 
-*single asterisks*
+```diff
+--- a/src/index.tsx
++++ b/src/index.tsx
+@@ -1,7 +1,9 @@
+-import React from "react";
++import type { ReactNode } from "react";
+ 
+ export function render(md: string) {
+-  return <div>{md}</div>;
++  const nodes: ReactNode[] = parse(md);
++  return <article>{nodes}</article>;
+ }
+ 
++function parse(md: string): ReactNode[] { return []; }
+```
 
-_single underscores_
+### Indented code block (4 spaces)
 
-**double asterisks**
+This is a paragraph before.
 
-__double underscores__
+    const indented = "code block via spaces";
+    function foo() { return 42; }
 
-### Code
-
-To indicate a span of code, wrap it with backtick quotes (`` ` ``).
-Unlike a pre-formatted code block, a code span indicates code within a
-normal paragraph. For example:
-
-Use the `printf()` function.
+This is a paragraph after.
 
 ---
 
+## Math
 
-## Span Elements
+Inline: $E = mc^2$, $\hat{x} \in \mathbb{R}^n$, $\vec{v} \approx \vec{w}$, $\forall \epsilon > 0$, $\int_0^\infty e^{-x}\,dx = 1$.
 
-### Links
+Mixed with text: The area of a circle is $A = \pi r^2$ where $r$ is the radius.
 
-Markdown supports two style of links: *inline* and *reference*.
+Block display in a sentence — the Gaussian integral: $$\int_{-\infty}^{+\infty} e^{-x^2}\,dx = \sqrt{\pi}$$
 
-In both styles, the link text is delimited by [square brackets].
-
-To create an inline link, use a set of regular parentheses immediately
-after the link text's closing square bracket. Inside the parentheses,
-put the URL where you want the link to point, along with an *optional*
-title for the link, surrounded in quotes. For example:
-
-This is [an example](http://example.com/) inline link.
-
-[This link](http://example.net/) has no title attribute.
-
-### Emphasis
-
-Markdown treats asterisks (`*`) and underscores (`_`) as indicators of
-emphasis. Text wrapped with one `*` or `_` will be wrapped with an
-HTML `<em>` tag; double `*`'s or `_`'s will be wrapped with an HTML
-`<strong>` tag. E.g., this input:
-
-*single asterisks*
-
-_single underscores_
-
-**double asterisks**
-
-__double underscores__
-
-### Code
-
-To indicate a span of code, wrap it with backtick quotes (`` ` ``).
-Unlike a pre-formatted code block, a code span indicates code within a
-normal paragraph. For example:
-
-Use the `printf()` function.
+| Expression | Formula |
+| ---------- | ------- |
+| [Euler's identity](https://en.wikipedia.org/wiki/Euler%27s_identity) | $$e^{i\pi} + 1 = 0$$ |
+| [Quadratic formula](https://en.wikipedia.org/wiki/Quadratic_formula) | $$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$ |
+| [Power](https://en.wikipedia.org/wiki/Exponentiation) | $$x^{2} y^{2}$$ |
+| [Fraction](https://en.wikipedia.org/wiki/Fraction) | $$\frac{x + y^2}{k + 1}$$ |
+| [Nested exponent](https://en.wikipedia.org/wiki/Exponentiation) | $$x + y^{\frac{2}{k + 1}}$$ |
+| [Continued fraction](https://en.wikipedia.org/wiki/Continued_fraction) | $$a_0 + \cfrac{1}{a_1 + \cfrac{1}{a_2 + \cfrac{1}{a_3 + \cfrac{1}{a_4}}}}$$ |
+| [Binomial coefficient](https://en.wikipedia.org/wiki/Binomial_coefficient) | $$\binom{n}{k} = \frac{n!}{k!(n-k)!}$$ |
+| [Square root](https://en.wikipedia.org/wiki/Square_root) | $$\sqrt{1 + \sqrt{1 + \sqrt{1 + \cdots}}}$$ |
+| [nth root](https://en.wikipedia.org/wiki/Nth_root) | $$\sqrt[3]{x^2 + y^2}$$ |
+| [Summation](https://en.wikipedia.org/wiki/Summation) | $$\sum_{k=1}^{n} \frac{k^2}{k^2 + 1}$$ |
+| [Product notation](https://en.wikipedia.org/wiki/Multiplication#Product_of_a_sequence) | $$\prod_{i=1}^{n} (1 + x_i)$$ |
+| [Integral](https://en.wikipedia.org/wiki/Integral) | $$\int_{0}^{\infty} x^2 e^{-ax}\,dx$$ |
+| [Double integral](https://en.wikipedia.org/wiki/Multiple_integral) | $$\iint_{D} (x^2 + y^2)\,dA$$ |
+| [Triple integral](https://en.wikipedia.org/wiki/Multiple_integral) | $$\iiint_{V} f\,dV$$ |
+| [Contour integral](https://en.wikipedia.org/wiki/Contour_integration) | $$\oint_C \vec{F} \cdot d\vec{r}$$ |
+| [Limit](https://en.wikipedia.org/wiki/Limit_(mathematics)) | $$\lim_{x \to 0} \frac{\sin x}{x} = 1$$ |
+| [L'Hôpital](https://en.wikipedia.org/wiki/L%27H%C3%B4pital%27s_rule) | $$\lim_{x \to 0} \frac{e^x - 1}{x} = 1$$ |
+| [Taylor series](https://en.wikipedia.org/wiki/Taylor_series) | $$e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!}$$ |
+| [Partial derivative](https://en.wikipedia.org/wiki/Partial_derivative) | $$\frac{\partial^2 f}{\partial x \partial y}$$ |
+| [Gradient](https://en.wikipedia.org/wiki/Del) | $$\nabla f = \left(\frac{\partial f}{\partial x},\, \frac{\partial f}{\partial y},\, \frac{\partial f}{\partial z}\right)$$ |
+| [Greek (lowercase)](https://en.wikipedia.org/wiki/Greek_alphabet) | $$\alpha\ \beta\ \gamma\ \delta\ \varepsilon\ \zeta\ \eta\ \theta\ \iota\ \kappa\ \lambda\ \mu\ \nu\ \xi\ \pi\ \rho\ \sigma\ \tau\ \upsilon\ \phi\ \chi\ \psi\ \omega$$ |
+| [Greek (uppercase)](https://en.wikipedia.org/wiki/Greek_alphabet) | $$\Gamma\ \Delta\ \Theta\ \Lambda\ \Xi\ \Pi\ \Sigma\ \Phi\ \Psi\ \Omega$$ |
+| [Arrows](https://en.wikipedia.org/wiki/Arrow_(symbol)#In_mathematics) | $$f: A \rightarrow B,\quad g \Rightarrow h,\quad A \Leftrightarrow B,\quad x \mapsto x^2$$ |
+| [Relations](https://en.wikipedia.org/wiki/Relation_(mathematics)) | $$a \approx b,\quad x \equiv y \pmod{n},\quad p \propto q,\quad r \sim s$$ |
+| [Logic](https://en.wikipedia.org/wiki/List_of_logic_symbols) | $$\forall x\; \exists y : y > x,\quad \neg(A \wedge B) \Leftrightarrow \neg A \vee \neg B$$ |
+| [Sets](https://en.wikipedia.org/wiki/Set_(mathematics)) | $$A \cup B \subseteq C,\quad A \cap B = \emptyset,\quad x \notin \mathbb{Z}$$ |
+| [Diacritics](https://en.wikipedia.org/wiki/Mathematical_notation) | $$\hat{x},\quad \bar{x},\quad \vec{v},\quad \tilde{\omega},\quad \dot{q},\quad \ddot{q},\quad \overline{AB}$$ |
+| [Font variants](https://en.wikipedia.org/wiki/Blackboard_bold) | $$\mathbb{R},\; \mathbb{C},\; \mathbb{Z},\; \mathbf{v},\; \mathrm{d}x,\; \mathit{f},\; \mathcal{L}$$ |
+| [Text in math](https://en.wikipedia.org/wiki/Mathematical_notation) | $$f(x) = x^2 \text{ for all } x \geq 0$$ |
+| [Bracket](https://en.wikipedia.org/wiki/Bracket_(mathematics)) | $$\left(\frac{a}{b}\right)^2 = \left[\frac{a^2}{b^2}\right]$$ |
+| [Norm](https://en.wikipedia.org/wiki/Norm_(mathematics)) | $$\left\| \vec{v} \right\| = \sqrt{v_1^2 + v_2^2 + v_3^2}$$ |
+| [Set-builder](https://en.wikipedia.org/wiki/Set-builder_notation) | $$\left\{ x \in \mathbb{R} \mid x^2 < 1 \right\}$$ |
+| [2×2 matrix](https://en.wikipedia.org/wiki/Matrix_(mathematics)) | $$\begin{pmatrix} a & b \\ c & d \end{pmatrix} \begin{pmatrix} x \\ y \end{pmatrix} = \begin{pmatrix} ax+by \\ cx+dy \end{pmatrix}$$ |
+| [Identity matrix](https://en.wikipedia.org/wiki/Identity_matrix) | $$I_3 = \begin{bmatrix} 1 & 0 & 0 \\ 0 & 1 & 0 \\ 0 & 0 & 1 \end{bmatrix}$$ |
+| [Determinant](https://en.wikipedia.org/wiki/Determinant) | $$\det(A) = \begin{vmatrix} a & b \\ c & d \end{vmatrix} = ad - bc$$ |
+| [Piecewise](https://en.wikipedia.org/wiki/Piecewise_function) | $$\left|x\right| = \begin{cases} x & x \geq 0 \\ -x & x < 0 \end{cases}$$ |
+| [Subscript + superscript](https://en.wikipedia.org/wiki/Subscript_and_superscript) | $$x_i^2 + x_j^2 = r_{ij}^2$$ |
+| [Function composition](https://en.wikipedia.org/wiki/Function_composition) | $$(f \circ g)(x) = f(g(x))$$ |
+| [Bayes' theorem](https://en.wikipedia.org/wiki/Bayes%27_theorem) | $$P(A \mid B) = \frac{P(B \mid A)\,P(A)}{P(B)}$$ |
+| [Normal distribution](https://en.wikipedia.org/wiki/Normal_distribution) | $$f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{1}{2}\left(\frac{x-\mu}{\sigma}\right)^2}$$ |
 
 ---
+
+## Edge cases
+
+### Blank lines and paragraph boundaries
+
+One paragraph.
+
+Two paragraph. Same section.
+
+Third paragraph after a double blank.
+
+### Mixed inline in one paragraph
+
+**Bold** at start, then *italic*, then `code`, then ~~struck~~, then [a link](https://example.com "with title"), then **bold *italic* bold**, then plain end.
+
+### Nesting bold/italic across multiple words
+
+**this entire phrase is bold and *this part is also italic* back to just bold**.
+
+*italic wrapping **bold words** back to italic*.
+
+### Inline code next to punctuation
+
+Call `foo()`, `bar`, and `baz` — note commas and em-dash.
+
+The function `render(md: string): ReactNode` returns nodes.
+
+### Special characters
+
+Ampersand: a & b, angles: <not a tag>, quotes: "double" and 'single'.
+
+HTML entity-like text: &amp; &lt; &gt; &nbsp; (rendered as literal text, not entities).
+
+### Horizontal rules
+
+Three hyphens:
+
+---
+
+Three asterisks:
+
+***
+
+Three underscores:
+
+___
+
+### Long line
+
+This is a very long line that goes on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on and on. It should wrap gracefully and not cause any layout issues. **Bold near the end** of a long line.
+
+### Unicode
+
+Chinese: 你好世界. Japanese: こんにちは. Arabic: مرحبا. Emoji: 🎉 🚀 ✅ ❌.
+
+Math unicode directly: α β γ ∑ ∫ ≠ ≤ ≥ ∞ (no LaTeX, just plain unicode characters).
+
+### Inline math edge cases
+
+$x$ adjacent to text$y$ adjacent.
+
+Inline with operators: $a + b - c \times d \div e$.
+
+Subscript and superscript: $x_1^2 + x_2^2 = r^2$.
+
+Fraction in inline: $\frac{d}{dx}\sin x = \cos x$.
+
+### Adjacent punctuation and formatting
+
+End of sentence **bold**. Start of next.
+
+Comma after *italic*, then more.
+
+Parenthetical (*italic*) and (~~struck~~).
+
+### Empty and minimal content
+
+Inline code: `x`.
+
+Single char bold: **x**.
+
+Single char italic: *x*.
+
+Single char link: [x](https://x.com).
+
+### Links with complex labels
+
+[Link with `code` inside](https://example.com).
+
+[Link with **bold** inside](https://example.com).
+
+[A & B](https://example.com/a-and-b).
+
+[Wikipedia: Set (mathematics)](https://en.wikipedia.org/wiki/Set_(mathematics)).
+
+[Wikipedia: Limit (mathematics)](https://en.wikipedia.org/wiki/Limit_(mathematics)).
+
+### Blockquote + math
+
+> The quadratic formula is $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$.
+>
+> And Euler's identity: $$e^{i\pi} + 1 = 0$$
+
+### Table inside a section with other content
+
+Before the table, a paragraph with **bold** and *italic*.
+
+| A | B |
+|---|---|
+| 1 | 2 |
+| 3 | 4 |
+
+After the table, another paragraph with `code`.
+
+### Paragraph immediately after heading (no blank line in source)
+#### Tight heading
+This paragraph follows the heading with no blank line.
+
+### Multiple code fences back to back
+
+```js
+const a = 1;
+```
+```js
+const b = 2;
+```
+```js
+const c = 3;
+```
+
+### Code block with HTML-like content
+
+```
+<div class="example">
+  <p>This is HTML inside a code block — should not be parsed.</p>
+  <script>alert("xss")</script>
+  &amp; &lt; &gt;
+</div>
+```
+
+### Code block with markdown-like content
+
+```
+# Not a heading
+**Not bold**
+[Not a link](https://example.com)
+$Not math$
+```

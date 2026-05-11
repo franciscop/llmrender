@@ -31,7 +31,11 @@ const STRING_BASIC: Token = {
   cls: "string",
 };
 const STRING_HTML: Token = { regex: /"[^"]*"|'[^']*'/, cls: "string" };
-const NUMBER: Token = { regex: /\b\d+(\.\d+)?\b/, cls: "number" };
+const NUMBER: Token = {
+  regex:
+    /\b(0[xX][0-9a-fA-F][0-9a-fA-F_]*|0[bB][01][01_]*|0[oO][0-7][0-7_]*|\d[\d_]*(\.\d[\d_]*)?)\b/,
+  cls: "number",
+};
 const NUMBER_CSS: Token = {
   regex: /#[0-9a-fA-F]{3,8}\b|\b\d+(\.\d+)?(px|em|rem|vh|vw|%|s|ms)?\b/,
   cls: "number",
@@ -47,8 +51,19 @@ const OPERATOR_PY: Token = {
   regex: /\*\*|\/\/|->|[+\-*/%=<>!&|^~]+/,
   cls: "operator",
 };
+const DECORATOR: Token = { regex: /@[\w.]+/, cls: "keyword" };
 const FUNCTION: Token = { regex: /\b([a-z_]\w*)\s*(?=\()/, cls: "function" };
 const TYPE: Token = { regex: /\b[A-Z][a-zA-Z0-9]*\b/, cls: "type" };
+const RUST_ATTR: Token = { regex: /#!?\[/, cls: "keyword" };
+const DIFF_HUNK: Token = { regex: /^@@[^@\n]*@@.*/m, cls: "comment" };
+const DIFF_ADD: Token = { regex: /^\+.*/m, cls: "string" };
+const DIFF_DEL: Token = { regex: /^-.*/m, cls: "keyword" };
+const COMMENT_SQL: Token = { regex: /--[^\n]*/, cls: "comment" };
+const KEYWORD_SQL: Token = {
+  regex:
+    /\b(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|CROSS|ON|AND|OR|NOT|IN|EXISTS|LIKE|BETWEEN|IS|NULL|AS|GROUP|BY|ORDER|HAVING|DISTINCT|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|ALTER|DROP|INDEX|VIEW|PROCEDURE|TRIGGER|DATABASE|SCHEMA|WITH|UNION|ALL|INTERSECT|EXCEPT|CASE|WHEN|THEN|ELSE|END|LIMIT|OFFSET|RETURNING|DECLARE|BEGIN|COMMIT|ROLLBACK|TRANSACTION|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|DEFAULT|CHECK|CONSTRAINT|ADD|COLUMN|IF)\b/i,
+  cls: "keyword",
+};
 
 // --- Language definitions ---
 const KEY_JS: Token = { regex: /"[^"]*"(?=\s*:)/, cls: "function" };
@@ -65,6 +80,7 @@ const js = [
 const py = [
   COMMENT_HASH,
   STRING_PY,
+  DECORATOR,
   kw(
     `${BASE} and assert def del elif except False global is lambda None nonlocal not or pass raise self True with`,
   ),
@@ -84,6 +100,7 @@ const go = [
 ];
 const rust = [
   COMMENT_SLASH,
+  RUST_ATTR,
   STRING_JS,
   kw(
     `${BASE} crate dyn extern fn impl mod move mut pub ref self Self trait unsafe where`,
@@ -112,6 +129,8 @@ const css = [
 ];
 const html = [COMMENT_HTML, STRING_HTML, KEYWORD_HTML];
 const jsxTokens = [...html, ...js];
+const diff = [DIFF_HUNK, DIFF_ADD, DIFF_DEL];
+const sql = [COMMENT_SQL, STRING_BASIC, KEYWORD_SQL, NUMBER, FUNCTION];
 
 const languages: Record<string, Token[]> = {
   js,
@@ -141,7 +160,9 @@ const languages: Record<string, Token[]> = {
   toml: py,
   json: js,
   jsonc: js,
-  sql: js,
+  sql,
+  diff,
+  patch: diff,
   css,
   scss: css,
   less: css,

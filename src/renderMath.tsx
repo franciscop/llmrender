@@ -1,60 +1,150 @@
 import type { ReactElement } from "react";
 
 type Node =
-  | { type: "mi"; value: string }
+  | { type: "mi"; value: string; mathvariant?: string }
   | { type: "mn"; value: string }
   | { type: "mo"; value: string }
+  | { type: "mtext"; value: string }
   | { type: "mrow"; children: Node[] }
   | { type: "mfrac"; num: Node; den: Node }
   | { type: "msqrt"; value: Node }
+  | { type: "mroot"; radicand: Node; degree: Node }
   | { type: "msup"; base: Node; sup: Node }
   | { type: "msub"; base: Node; sub: Node }
   | { type: "msubsup"; base: Node; sub: Node; sup: Node }
   | { type: "munder"; base: Node; under: Node }
   | { type: "mover"; base: Node; over: Node }
   | { type: "munderover"; base: Node; under: Node; over: Node }
-  | { type: "mbinom"; top: Node; bot: Node };
+  | { type: "mbinom"; top: Node; bot: Node }
+  | { type: "mtable"; rows: Node[][] };
 
 export default function renderMath(tex: string): ReactElement {
   let i = 0;
   let groupDepth = 0;
 
   const greek: Record<string, string> = {
+    // lowercase
     alpha: "α",
     beta: "β",
     gamma: "γ",
     delta: "δ",
     epsilon: "ε",
+    zeta: "ζ",
+    eta: "η",
     theta: "θ",
+    iota: "ι",
+    kappa: "κ",
     lambda: "λ",
     mu: "μ",
+    nu: "ν",
+    xi: "ξ",
     pi: "π",
+    rho: "ρ",
     sigma: "σ",
+    tau: "τ",
+    upsilon: "υ",
     phi: "φ",
+    chi: "χ",
+    psi: "ψ",
     omega: "ω",
+    // variants
+    varepsilon: "ε",
+    varphi: "φ",
+    vartheta: "ϑ",
+    varsigma: "ς",
+    // uppercase
+    Gamma: "Γ",
+    Delta: "Δ",
+    Theta: "Θ",
+    Lambda: "Λ",
+    Xi: "Ξ",
+    Pi: "Π",
+    Sigma: "Σ",
+    Upsilon: "Υ",
+    Phi: "Φ",
+    Psi: "Ψ",
+    Omega: "Ω",
   };
 
-  const functions = new Set(["sin", "cos", "tan", "log", "ln"]);
+  const functions = new Set([
+    "sin",
+    "cos",
+    "tan",
+    "log",
+    "ln",
+    "max",
+    "min",
+    "exp",
+    "det",
+    "gcd",
+    "sup",
+    "inf",
+    "cot",
+    "sec",
+    "csc",
+    "arcsin",
+    "arccos",
+    "arctan",
+    "sinh",
+    "cosh",
+    "tanh",
+    "arg",
+    "ker",
+    "dim",
+    "deg",
+  ]);
+
+  const accents: Record<string, string> = {
+    hat: "ˆ",
+    tilde: "˜",
+    bar: "‾",
+    vec: "→",
+    dot: "˙",
+    ddot: "¨",
+    overline: "‾",
+    widehat: "ˆ",
+    widetilde: "˜",
+  };
+
+  const mathVariants: Record<string, string> = {
+    mathbb: "double-struck",
+    mathbf: "bold",
+    mathrm: "normal",
+    mathit: "italic",
+    mathcal: "script",
+    mathsf: "sans-serif",
+    mathtt: "monospace",
+  };
 
   function peek(): string {
     return tex[i] ?? "";
   }
-
   function consume(): string {
     return tex[i++] ?? "";
   }
-
   function skipWS() {
     while (/\s/.test(peek())) i++;
   }
 
+  function extractText(node: Node): string {
+    switch (node.type) {
+      case "mi":
+      case "mn":
+      case "mo":
+      case "mtext":
+        return node.value;
+      case "mrow":
+        return node.children.map(extractText).join("");
+      default:
+        return "";
+    }
+  }
+
   function parseGroup(): Node {
     skipWS();
-
     if (peek() === "{") {
       consume();
       if (groupDepth++ > 64) {
-        // Skip to matching } to avoid stack overflow on malicious input
         let nested = 1;
         while (peek() && nested > 0) {
           const c = consume();
@@ -65,60 +155,249 @@ export default function renderMath(tex: string): ReactElement {
         return { type: "mi", value: "" };
       }
       const children: Node[] = [];
-
       while (peek() && peek() !== "}") {
         children.push(parseExpression());
       }
-
       consume(); // }
       groupDepth--;
       return { type: "mrow", children };
     }
-
     return parseAtom();
+  }
+
+  function parseDelimiter(): string {
+    skipWS();
+    if (peek() === "\\") {
+      consume();
+      let dname = "";
+      while (/[a-zA-Z]/.test(peek())) dname += consume();
+      if (dname === "") {
+        const ch = consume();
+        if (ch === "{") return "{";
+        if (ch === "}") return "}";
+        if (ch === "|") return "|";
+        if (ch === ".") return "";
+        return ch;
+      }
+      const delimMap: Record<string, string> = {
+        lbrace: "{",
+        rbrace: "}",
+        vert: "|",
+        Vert: "‖",
+        lfloor: "⌊",
+        rfloor: "⌋",
+        lceil: "⌈",
+        rceil: "⌉",
+        langle: "⟨",
+        rangle: "⟩",
+      };
+      return delimMap[dname] ?? dname;
+    }
+    if (peek() === ".") {
+      consume();
+      return "";
+    }
+    return consume();
+  }
+
+  function parseEnvironment(envName: string): Node {
+    const rows: Node[][] = [];
+    let currentRow: Node[] = [];
+    let currentCell: Node[] = [];
+
+    function flushCell() {
+      currentRow.push({ type: "mrow", children: [...currentCell] });
+      currentCell = [];
+    }
+    function flushRow() {
+      flushCell();
+      if (currentRow.length > 0) rows.push([...currentRow]);
+      currentRow = [];
+    }
+
+    outer: while (i < tex.length) {
+      skipWS();
+
+      if (peek() === "&") {
+        consume();
+        flushCell();
+        continue;
+      }
+
+      if (peek() === "\\") {
+        const saved = i;
+        consume();
+
+        if (peek() === "\\") {
+          consume();
+          flushRow();
+          continue;
+        }
+
+        let n = "";
+        while (/[a-zA-Z]/.test(peek())) n += consume();
+
+        if (n === "end") {
+          skipWS();
+          if (peek() === "{") {
+            consume();
+            while (peek() && peek() !== "}") consume();
+            if (peek() === "}") consume();
+          }
+          flushRow();
+          break outer;
+        }
+
+        i = saved;
+      }
+
+      currentCell.push(parseExpression());
+    }
+
+    const delimMap: Record<string, [string, string]> = {
+      pmatrix: ["(", ")"],
+      bmatrix: ["[", "]"],
+      vmatrix: ["|", "|"],
+      Vmatrix: ["‖", "‖"],
+      cases: ["{", ""],
+      matrix: ["", ""],
+      align: ["", ""],
+      "align*": ["", ""],
+    };
+    const [open, close] = delimMap[envName] ?? ["", ""];
+
+    const tableNode: Node = { type: "mtable", rows };
+    if (!open && !close) return tableNode;
+
+    const children: Node[] = [];
+    if (open) children.push({ type: "mo", value: open });
+    children.push(tableNode);
+    if (close) children.push({ type: "mo", value: close });
+    return { type: "mrow", children };
   }
 
   function parseCommand(): Node {
     consume(); // \
 
+    if (peek() === "\\") {
+      consume();
+      return { type: "mo", value: "\n" };
+    }
+
     let name = "";
-    while (/[a-zA-Z]/.test(peek())) name += consume();
+    while (/[a-zA-Z*]/.test(peek())) name += consume();
 
     if (name === "frac" || name === "cfrac") {
-      return {
-        type: "mfrac",
-        num: parseGroup(),
-        den: parseGroup(),
-      };
+      return { type: "mfrac", num: parseGroup(), den: parseGroup() };
     }
-
     if (name === "binom") {
+      return { type: "mbinom", top: parseGroup(), bot: parseGroup() };
+    }
+    if (name === "sqrt") {
+      skipWS();
+      if (peek() === "[") {
+        consume();
+        const degNodes: Node[] = [];
+        while (peek() && peek() !== "]") degNodes.push(parseExpression());
+        if (peek() === "]") consume();
+        return {
+          type: "mroot",
+          radicand: parseGroup(),
+          degree: { type: "mrow", children: degNodes },
+        };
+      }
+      return { type: "msqrt", value: parseGroup() };
+    }
+    if (name === "text") {
+      skipWS();
+      if (peek() === "{") {
+        consume();
+        let text = "";
+        let depth = 1;
+        while (i < tex.length && depth > 0) {
+          const c = consume();
+          if (c === "{") {
+            depth++;
+            text += c;
+          } else if (c === "}") {
+            depth--;
+            if (depth > 0) text += c;
+          } else text += c;
+        }
+        return { type: "mtext", value: text };
+      }
+      return { type: "mtext", value: "" };
+    }
+    if (name === "begin") {
+      skipWS();
+      let envName = "";
+      if (peek() === "{") {
+        consume();
+        while (peek() && peek() !== "}") envName += consume();
+        if (peek() === "}") consume();
+      }
+      return parseEnvironment(envName);
+    }
+    if (name === "left") {
+      const openDelim = parseDelimiter();
+      const children: Node[] = [];
+      while (i < tex.length) {
+        skipWS();
+        if (peek() === "\\") {
+          const saved = i;
+          consume();
+          let n = "";
+          while (/[a-zA-Z]/.test(peek())) n += consume();
+          if (n === "right") {
+            const closeDelim = parseDelimiter();
+            const result: Node[] = [];
+            if (openDelim) result.push({ type: "mo", value: openDelim });
+            result.push(...children);
+            if (closeDelim) result.push({ type: "mo", value: closeDelim });
+            return { type: "mrow", children: result };
+          }
+          i = saved;
+        }
+        children.push(parseExpression());
+      }
+      const result: Node[] = [];
+      if (openDelim) result.push({ type: "mo", value: openDelim });
+      result.push(...children);
+      return { type: "mrow", children: result };
+    }
+    if (accents[name]) {
       return {
-        type: "mbinom",
-        top: parseGroup(),
-        bot: parseGroup(),
+        type: "mover",
+        base: parseGroup(),
+        over: { type: "mo", value: accents[name] },
       };
     }
-
-    if (name === "sqrt") {
+    if (mathVariants[name]) {
+      const content = parseGroup();
       return {
-        type: "msqrt",
-        value: parseGroup(),
+        type: "mi",
+        value: extractText(content),
+        mathvariant: mathVariants[name],
       };
     }
 
     if (name === "cdots") return { type: "mo", value: "⋯" };
     if (name === "ldots") return { type: "mo", value: "…" };
+    if (name === "vdots") return { type: "mo", value: "⋮" };
+    if (name === "ddots") return { type: "mo", value: "⋱" };
+    if (name === "cdot") return { type: "mo", value: "⋅" };
     if (name === "sum") return { type: "mo", value: "∑" };
     if (name === "prod") return { type: "mo", value: "∏" };
     if (name === "int") return { type: "mo", value: "∫" };
     if (name === "iint") return { type: "mo", value: "∬" };
+    if (name === "iiint") return { type: "mo", value: "∭" };
+    if (name === "oint") return { type: "mo", value: "∮" };
     if (name === "partial") return { type: "mo", value: "∂" };
     if (name === "lim") return { type: "mo", value: "lim" };
     if (name === "infty") return { type: "mo", value: "∞" };
-    if (name === "leq") return { type: "mo", value: "≤" };
-    if (name === "geq") return { type: "mo", value: "≥" };
-    if (name === "neq") return { type: "mo", value: "≠" };
+    if (name === "leq" || name === "le") return { type: "mo", value: "≤" };
+    if (name === "geq" || name === "ge") return { type: "mo", value: "≥" };
+    if (name === "neq" || name === "ne") return { type: "mo", value: "≠" };
     if (name === "pm") return { type: "mo", value: "±" };
     if (name === "mp") return { type: "mo", value: "∓" };
     if (name === "times") return { type: "mo", value: "×" };
@@ -126,14 +405,47 @@ export default function renderMath(tex: string): ReactElement {
     if (name === "in") return { type: "mo", value: "∈" };
     if (name === "notin") return { type: "mo", value: "∉" };
     if (name === "subset") return { type: "mo", value: "⊂" };
+    if (name === "subseteq") return { type: "mo", value: "⊆" };
+    if (name === "supset") return { type: "mo", value: "⊃" };
+    if (name === "supseteq") return { type: "mo", value: "⊇" };
+    if (name === "cup") return { type: "mo", value: "∪" };
+    if (name === "cap") return { type: "mo", value: "∩" };
+    if (name === "emptyset" || name === "varnothing")
+      return { type: "mo", value: "∅" };
+    if (name === "forall") return { type: "mo", value: "∀" };
+    if (name === "exists") return { type: "mo", value: "∃" };
+    if (name === "nexists") return { type: "mo", value: "∄" };
+    if (name === "nabla") return { type: "mo", value: "∇" };
+    if (name === "approx") return { type: "mo", value: "≈" };
+    if (name === "equiv") return { type: "mo", value: "≡" };
+    if (name === "propto") return { type: "mo", value: "∝" };
+    if (name === "sim") return { type: "mo", value: "∼" };
+    if (name === "simeq") return { type: "mo", value: "≃" };
+    if (name === "cong") return { type: "mo", value: "≅" };
+    if (name === "wedge" || name === "land") return { type: "mo", value: "∧" };
+    if (name === "vee" || name === "lor") return { type: "mo", value: "∨" };
+    if (name === "neg" || name === "lnot") return { type: "mo", value: "¬" };
+    if (name === "to" || name === "rightarrow")
+      return { type: "mo", value: "→" };
+    if (name === "leftarrow" || name === "gets")
+      return { type: "mo", value: "←" };
+    if (name === "Rightarrow") return { type: "mo", value: "⇒" };
+    if (name === "Leftarrow") return { type: "mo", value: "⇐" };
+    if (name === "leftrightarrow") return { type: "mo", value: "↔" };
+    if (name === "Leftrightarrow" || name === "iff")
+      return { type: "mo", value: "⟺" };
+    if (name === "mapsto") return { type: "mo", value: "↦" };
+    if (name === "perp") return { type: "mo", value: "⊥" };
+    if (name === "parallel") return { type: "mo", value: "∥" };
+    if (name === "angle") return { type: "mo", value: "∠" };
+    if (name === "oplus") return { type: "mo", value: "⊕" };
+    if (name === "otimes") return { type: "mo", value: "⊗" };
+    if (name === "circ") return { type: "mo", value: "∘" };
+    if (name === "bullet") return { type: "mo", value: "•" };
+    if (name === "mid") return { type: "mo", value: "|" };
 
-    if (functions.has(name)) {
-      return { type: "mi", value: name };
-    }
-
-    if (greek[name]) {
-      return { type: "mi", value: greek[name] };
-    }
+    if (functions.has(name)) return { type: "mi", value: name };
+    if (greek[name]) return { type: "mi", value: greek[name] };
 
     return { type: "mi", value: name };
   }
@@ -143,22 +455,17 @@ export default function renderMath(tex: string): ReactElement {
     const ch = peek();
 
     if (!ch) return { type: "mi", value: "" };
-
     if (ch === "\\") return parseCommand();
 
     if (/[0-9]/.test(ch)) {
       let num = "";
-      while (/[0-9]/.test(peek())) num += consume();
+      while (/[0-9.]/.test(peek())) num += consume();
       return { type: "mn", value: num };
     }
 
-    if (/[a-zA-Z]/.test(ch)) {
-      return { type: "mi", value: consume() };
-    }
+    if (/[a-zA-Z]/.test(ch)) return { type: "mi", value: consume() };
 
-    if ("+-=*/()[]".includes(ch)) {
-      return { type: "mo", value: consume() };
-    }
+    if ("+-=*/()[]|,;!<>".includes(ch)) return { type: "mo", value: consume() };
 
     return { type: "mi", value: consume() };
   }
@@ -170,24 +477,23 @@ export default function renderMath(tex: string): ReactElement {
     while (true) {
       skipWS();
       const ch = peek();
-
       if (ch === "_") {
         consume();
         sub = parseGroup();
         continue;
       }
-
       if (ch === "^") {
         consume();
         sup = parseGroup();
         continue;
       }
-
       break;
     }
 
-    // Big operators
-    if (base.type === "mo" && ["∑", "∏", "∫", "lim"].includes(base.value)) {
+    if (
+      base.type === "mo" &&
+      ["∑", "∏", "∫", "∬", "∭", "∮", "lim"].includes(base.value)
+    ) {
       if (sub && sup)
         return { type: "munderover", base, under: sub, over: sup };
       if (sub) return { type: "munder", base, under: sub };
@@ -198,7 +504,6 @@ export default function renderMath(tex: string): ReactElement {
     if (sub && sup) return { type: "msubsup", base, sub, sup };
     if (sub) return { type: "msub", base, sub };
     if (sup) return { type: "msup", base, sup };
-
     return base;
   }
 
@@ -209,11 +514,7 @@ export default function renderMath(tex: string): ReactElement {
 
   function parse(): Node {
     const children: Node[] = [];
-
-    while (i < tex.length) {
-      children.push(parseExpression());
-    }
-
+    while (i < tex.length) children.push(parseExpression());
     return { type: "mrow", children };
   }
 
@@ -221,16 +522,16 @@ export default function renderMath(tex: string): ReactElement {
     switch (node.type) {
       case "mi":
         return (
-          <mi key={k}>{typeof node.value === "string" ? node.value : ""}</mi>
+          <mi key={k} mathvariant={node.mathvariant}>
+            {node.value}
+          </mi>
         );
       case "mn":
-        return (
-          <mn key={k}>{typeof node.value === "string" ? node.value : ""}</mn>
-        );
+        return <mn key={k}>{node.value}</mn>;
       case "mo":
-        return (
-          <mo key={k}>{typeof node.value === "string" ? node.value : ""}</mo>
-        );
+        return <mo key={k}>{node.value}</mo>;
+      case "mtext":
+        return <mtext key={k}>{node.value}</mtext>;
 
       case "mrow":
         return <mrow key={k}>{node.children.map((c, j) => toJSX(c, j))}</mrow>;
@@ -245,6 +546,14 @@ export default function renderMath(tex: string): ReactElement {
 
       case "msqrt":
         return <msqrt key={k}>{toJSX(node.value)}</msqrt>;
+
+      case "mroot":
+        return (
+          <mroot key={k}>
+            {toJSX(node.radicand, 0)}
+            {toJSX(node.degree, 1)}
+          </mroot>
+        );
 
       case "msup":
         return (
@@ -306,6 +615,19 @@ export default function renderMath(tex: string): ReactElement {
             </mfrac>
             <mo key={2}>)</mo>
           </mrow>
+        );
+
+      case "mtable":
+        return (
+          <mtable key={k}>
+            {node.rows.map((row, ri) => (
+              <mtr key={ri}>
+                {row.map((cell, ci) => (
+                  <mtd key={ci}>{toJSX(cell)}</mtd>
+                ))}
+              </mtr>
+            ))}
+          </mtable>
         );
     }
 

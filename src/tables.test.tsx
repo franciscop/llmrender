@@ -99,3 +99,10 @@ it("renders a table with escaped pipes", () => {
   expect(cells.length).toBe(2);
   expect(cells.array("textContent")).toEqual(["Row 1", "Value | with pipe"]);
 });
+
+it("does not split table cell on | inside $$...$$", () => {
+  const src = "| Label | Formula |\n|---|---|\n| Abs | $$\\left|x\\right|$$ |";
+  const el = $(<Markdown>{src}</Markdown>);
+  expect(el.find("td").length).toBe(2);
+  expect(el.find("td").get(1)?.textContent).not.toContain("$$");
+});
