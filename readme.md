@@ -61,7 +61,7 @@ import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
 ```
 
 
-## \<Markdown math highlight rawHtml /\>
+## \<Markdown /\>
 
 ```ts
 <Markdown
