@@ -5,7 +5,7 @@ A React Markdown renderer packed with features for all your LLM output:
 ```jsx
 import Markdown from "llmrender";
 
-export default function Post({ content }) {
+export default function BlogPost({ text }) {
   return <Markdown>{text}</Markdown>;
 }
 ```
