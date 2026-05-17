@@ -97,6 +97,36 @@ it("renders bare auto-link", () => {
   expect(a.attr("href")).toBe("https://example.com");
 });
 
+it("does not truncate auto-link text under 60 chars", () => {
+  const url = "https://example.com/path/to/page";
+  const a = $(<Markdown>{url}</Markdown>).find("a");
+  expect(a.text()).toBe(url);
+  expect(a.attr("href")).toBe(url);
+});
+
+it("truncates auto-link text to 60 chars with ellipsis", () => {
+  const url = "https://example.com/" + "a".repeat(50);
+  const a = $(<Markdown>{url}</Markdown>).find("a");
+  expect(a.text()).toBe(url.slice(0, 60) + "…");
+  expect(a.attr("href")).toBe(url);
+});
+
+it("does not truncate markdown link text under 60 chars", () => {
+  const a = $(<Markdown>[short label](https://example.com)</Markdown>).find(
+    "a",
+  );
+  expect(a.text()).toBe("short label");
+});
+
+it("truncates long markdown link text to 60 chars with ellipsis", () => {
+  const longText = "a".repeat(70);
+  const a = $(<Markdown>{`[${longText}](https://example.com)`}</Markdown>).find(
+    "a",
+  );
+  expect(a.text()).toBe(longText.slice(0, 60) + "…");
+  expect(a.attr("href")).toBe("https://example.com");
+});
+
 it("does not turn explicit link URL into a second link", () => {
   const $el = $(<Markdown>{"[label](https://example.com)"}</Markdown>);
   expect($el.find("a").length).toBe(1);

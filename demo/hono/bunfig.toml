@@ -1,0 +1,4 @@
+jsx = "react-jsx"
+jsxImportSource = "hono/jsx"
+[alias]
+"react/jsx-runtime" = "hono/jsx/jsx-runtime"

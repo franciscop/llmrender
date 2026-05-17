@@ -1,0 +1,10 @@
+{
+  "name": "demo-hono",
+  "type": "module",
+  "scripts": {
+    "start": "bun ."
+  },
+  "dependencies": {
+    "hono": "latest"
+  }
+}

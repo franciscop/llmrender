@@ -1,3 +1,4 @@
+import { Fragment } from "react/jsx-runtime";
 import type { ReactNode } from "react";
 import type { RawHtml } from "./sanitize";
 import { allowTag } from "./sanitize";
@@ -364,12 +365,14 @@ export function renderBlock(
       return <hr key={key} />;
 
     case "code":
-      return (
+      return highlight ? (
+        <Fragment key={key}>
+          {highlight(block.lines.join("\n"), block.lang)}
+        </Fragment>
+      ) : (
         <pre key={key}>
           <code className={block.lang ? `language-${block.lang}` : undefined}>
-            {highlight
-              ? highlight(block.lines.join("\n"), block.lang)
-              : block.lines.join("\n")}
+            {block.lines.join("\n")}
           </code>
         </pre>
       );

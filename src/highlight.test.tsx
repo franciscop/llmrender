@@ -4,7 +4,9 @@ import Markdown from "./index";
 
 // Unit tests for highlight()
 it("returns plain text for unknown language", () => {
-  expect(highlight("hello", "unknown")).toEqual(["hello"]);
+  const $el = $(<div>{highlight("hello", "unknown")}</div>);
+  expect($el.find("pre").length).toBe(1);
+  expect($el.find("code").text()).toBe("hello");
 });
 
 it("highlights a JS keyword", () => {
@@ -231,6 +233,18 @@ it("highlights type in Python", () => {
   ).toBe("Animal");
 });
 
+it("renders custom highlight result directly without double-wrapping", () => {
+  const hl = (code: string) => (
+    <pre className="custom-pre">
+      <code className="custom-code">{code}</code>
+    </pre>
+  );
+  const $el = $(<Markdown highlight={hl}>{"```js\nhello\n```"}</Markdown>);
+  expect($el.find(".custom-pre").length).toBe(1);
+  expect($el.find(".custom-code").text()).toBe("hello");
+  expect($el.find("pre pre").length).toBe(0);
+});
+
 // Integration with Markdown
 it("highlights code blocks via Markdown", () => {
   const $el = $(<Markdown>{"```js\nconst x = 1;\n```"}</Markdown>);
@@ -248,8 +262,8 @@ it("escapes HTML tags inside inline code", () => {
     <div>{highlight("<pre><code>hello</code></pre>", "js")}</div>,
   );
 
-  expect(result.find("pre").length).toBe(0);
-  expect(result.find("code").length).toBe(0);
+  expect(result.find("pre").length).toBe(1);
+  expect(result.find("code").length).toBe(1);
   expect(result.find("span").length).toBe(6);
 
   expect(result.text()).toContain("<pre><code>hello</code></pre>");

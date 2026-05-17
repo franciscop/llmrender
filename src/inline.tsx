@@ -2,7 +2,10 @@ import type { ReactNode } from "react";
 import type { RawHtml } from "./sanitize";
 import { BLOCK_EL, allowTag, sanitize } from "./sanitize";
 
-export type HighlightFn = (code: string, lang: string) => ReactNode[];
+export type HighlightFn = (
+  code: string,
+  lang: string,
+) => ReactNode | ReactNode[];
 export type MathFn = (tex: string, block: boolean) => ReactNode;
 
 export const CHECKBOX = /^\[[x\s]\] /i;
@@ -13,6 +16,9 @@ type Render = (
   i: number,
   r: (s: string) => ReactNode[],
 ) => ReactNode;
+
+const truncate = (text: string, max = 60) =>
+  text.length > max ? text.slice(0, max) + "…" : text;
 
 const patterns: { regex: RegExp; render: Render }[] = [
   {
@@ -60,7 +66,7 @@ const patterns: { regex: RegExp; render: Render }[] = [
       /\[((?:[^[\]]|\[[^\]]*\])+)\]\(((?:[^()\s"]|\s(?!\s*")|\([^()]*\))+)(?:\s+"([^"]*)")?\)/,
     render: (m, i, r) => (
       <a key={i} href={sanitize(m[2])} title={m[3] || undefined}>
-        {r(m[1])}
+        {r(truncate(m[1]))}
       </a>
     ),
   },
@@ -77,7 +83,7 @@ const patterns: { regex: RegExp; render: Render }[] = [
     regex: /(https?:\/\/[^\s<>")\]]+)/,
     render: (m, i) => (
       <a key={i} href={m[1]}>
-        {m[1]}
+        {truncate(m[1])}
       </a>
     ),
   },

@@ -181,7 +181,7 @@ const languages: Record<string, Token[]> = {
   makefile: sh,
 };
 
-export default function highlight(code: string, lang: string): ReactNode[] {
+function tokenize(code: string, lang: string): ReactNode[] {
   const tokens = languages[lang];
   if (!tokens) return [code];
 
@@ -218,4 +218,14 @@ export default function highlight(code: string, lang: string): ReactNode[] {
   }
 
   return parts;
+}
+
+export default function highlightCode(code: string, lang: string): ReactNode {
+  return (
+    <pre>
+      <code className={lang ? `language-${lang}` : undefined}>
+        {tokenize(code, lang)}
+      </code>
+    </pre>
+  );
 }

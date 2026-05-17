@@ -14,7 +14,16 @@ export default function BlogPost({ text }) {
 - **Syntax highlighting**: 30+ languages built-in and multiple themes.
 - **Latex rendering**: transforms Mathematics into browser-native MathML.
 - **GitHub Flavored Markdown**: tables, task lists, strikethrough, callouts, auto-links.
-- **Easy styles**: renders in a `<div>`, so Tailwind, Styled Components, CSS, all work.
+- **Easy styles**: renders in a `<div>` so Tailwind, Styled Components, CSS, all work.
+
+Traditional Markdown renderers (and their officially recommended plugins) are much bigger ([see methodology](#how-were-the-sizes-measured)):
+
+| Package                 |     Base |     Math | Highlight | Sanitize | Full Size (gzip) |
+|:------------------------|---------:|---------:|----------:|---------:|-----------------:|
+| **LLMRender**           | **8 KB** | built-in |  built-in | built-in |        **10 KB** |
+| `react-markdown@10.1.0` | 33.3 KB  | +74.6 KB |   +508 KB | built-in |           340 KB |
+| `marked@18.0.3`         | 12.1 KB  | +74.6 KB |   +298 KB |  +8.7 KB |           403 KB |
+| `markdown-it@14.1.1`    | 43.3 KB  | +74.6 KB |   +298 KB |  +8.7 KB |           436 KB |
 
 ## Getting Started
 
@@ -27,7 +36,7 @@ npm i llmrender
 Pass your Markdown string as `children`:
 
 ```jsx
-import "llmrender/llmrender.css";  // Import a theme as well
+import "llmrender/themes/default.css";  // Import a theme as well
 import Markdown from "llmrender";
 
 // This would normally come from the DB, LLM output, API, or a file read
@@ -55,10 +64,10 @@ Every HTML attribute you'd put on a `<div>` — `className`, `style`, `id`, `dat
 LLMRender ships four ready-to-use themes. Import one to get syntax highlighting, callout styles, and table styling with a single line:
 
 ```js
-import "llmrender/llmrender.css";  // GitHub light (default)
-import "llmrender/dark.css";       // GitHub dark
-import "llmrender/adaptive.css";   // follows prefers-color-scheme
-import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
+import "llmrender/themes/default.css";  // GitHub light (default)
+import "llmrender/themes/dark.css";       // GitHub dark
+import "llmrender/themes/adaptive.css";   // follows prefers-color-scheme
+import "llmrender/themes/contrast.css";   // high contrast dark (WCAG AAA)
 ```
 
 
@@ -85,6 +94,9 @@ import "llmrender/contrast.css";   // high contrast dark (WCAG AAA)
 
 #### `highlight`
 
+> [!TIP]
+> We're under active development, so if you find a bug with the default syntax highlighting we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
+
 Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`. Pass `false` to avoid highlighting.
 
 ```ts
@@ -94,11 +106,30 @@ type HighlightFn = (code: string, lang: string) => ReactNode[];
 The built-in highlighter covers 30+ languages with `<span>` tokens and CSS variable colors. Swap it for any library:
 
 ```jsx
+import Prism from "prismjs";
+import "prismjs/themes/prism.css";
+
+function highlight(code, lang) {
+  const grammar = lang && Prism.languages[lang];
+  const highlighted = grammar ? Prism.highlight(code, grammar, lang) : code;
+  return (
+    <pre>
+      <code className={`language-${lang}`} dangerouslySetInnerHTML={{ __html: highlighted }} />
+    </pre>
+  );
+}
+
+<Markdown highlight={highlight}>{content}</Markdown>
+```
+
+Or Shiki for more themes and languages:
+
+```jsx
 import { codeToHtml } from "shiki";
 
 async function highlight(code, lang) {
   const html = await codeToHtml(code, { lang, theme: "github-light" });
-  return [<span key="h" dangerouslySetInnerHTML={{ __html: html }} />];
+  return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 <Markdown highlight={highlight}>{content}</Markdown>
@@ -131,7 +162,10 @@ All colors in the built-in theme are CSS variables you can override without touc
 
 #### `math`
 
-Called for every math expression. `block` is `true` for `$$…$$`, `false` for `$…$`.
+> [!TIP]
+> We're under active development, so if you find a bug with the default math rendering we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
+
+A function called for each math expression. The second parameter `block` is `true` for `$$…$$`, `false` for `$…$`:
 
 ```ts
 type MathFn = (tex: string, block: boolean) => ReactNode;
@@ -155,10 +189,10 @@ Headings render with an `id` derived from their text (e.g. `## Getting Started` 
 ### Inline formatting
 
 ```md
-**bold**  _italic_  ~~strikethrough~~  `inline code`
+**bold**, _italic_, ~~strikethrough~~, and `inline code` can be mixed **_freely_**.
 
 [link text](https://example.com)
-[link with title](https://example.com "Tooltip on hover")
+[link with title](https://example.com "Opens example.com")
 ![alt text](https://example.com/image.png)
 https://auto-linked.com
 ```
@@ -218,16 +252,21 @@ Each renders as `<blockquote class="callout-{type}">` with a `<p class="callout-
 ### Lists
 
 ```md
-- Unordered item
-- Another item
-  - Nested item
+- Apples
+- Oranges
+  - Navel
+  - Blood
+- Bananas
 
-1. Ordered item
-2. Second item
-   1. Nested
+1. Preheat oven to 200°C
+2. Mix the dry ingredients
+   1. Flour
+   2. Baking powder
+3. Fold in the wet ingredients
 
-- [ ] Unchecked task
-- [x] Checked task
+- [x] Design the API
+- [x] Write tests
+- [ ] Publish to npm
 ```
 
 Task items render with a disabled `<input type="checkbox">`.
@@ -235,9 +274,12 @@ Task items render with a disabled `<input type="checkbox">`.
 ### Code blocks
 
 ````md
-```js
-const greeting = "hello world";
-console.log(greeting);
+```ts
+async function fetchUser(id: string): Promise<User> {
+  const res = await fetch(`/api/users/${id}`);
+  if (!res.ok) throw new Error(`HTTP ${res.status}`);
+  return res.json();
+}
 ```
 ````
 
@@ -246,10 +288,11 @@ Supported languages include: `js`/`ts`/`jsx`/`tsx`, `py`, `go`, `rust`, `java`, 
 ### Tables
 
 ```md
-| Name  | Role    | Score |
-|:------|:-------:|------:|
-| Alice | Admin   |    99 |
-| Bob   | Viewer  |    42 |
+| Language   | Paradigm     | Typing  | First appeared |
+|:-----------|:------------:|--------:|---------------:|
+| TypeScript | Multi        | Static  |           2012 |
+| Python     | Multi        | Dynamic |           1991 |
+| Haskell    | Functional   | Static  |           1990 |
 ```
 
 Column alignment: `:---` left, `:---:` center, `---:` right. Inline markup and escaped pipes (`\|`) work inside cells.
@@ -259,11 +302,20 @@ Column alignment: `:---` left, `:---:` center, `---:` right. Inline markup and e
 Inline with `$…$`, display with `$$…$$`:
 
 ```md
-The formula $E = mc^2$ changed everything.
+Einstein's mass-energy equivalence $E = mc^2$ is one of the most famous equations in physics.
 
-$$\frac{a}{b} = \sqrt{1 + x^2}$$
+The quadratic formula gives the roots of $ax^2 + bx + c = 0$:
+
+$$x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$$
+
+A Gaussian integral:
+
+$$\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}$$
+
+And the sum of the first $n$ natural numbers:
+
+$$\sum_{k=1}^{n} k = \frac{n(n+1)}{2}$$
 ```
-
 
 ### Horizontal rule
 
@@ -302,9 +354,43 @@ export default function Post({ content }) {
 }
 ```
 
+### Prism.js
+
+> [!TIP]
+> We're under active development, so if you find a bug with the default syntax highlighter we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
+
+To replace the built-in highlighter with Prism:
+
+```bash
+npm i prismjs
+```
+
+```jsx
+import Markdown from "llmrender";
+import Prism from "prismjs";
+import "prismjs/themes/prism.css";
+import "prismjs/components/prism-typescript";
+import "prismjs/components/prism-python";
+
+function highlight(code, lang) {
+  const grammar = lang && Prism.languages[lang];
+  const highlighted = grammar ? Prism.highlight(code, grammar, lang) : code;
+  return (
+    <pre>
+      <code className={`language-${lang}`} dangerouslySetInnerHTML={{ __html: highlighted }} />
+    </pre>
+  );
+}
+
+<Markdown highlight={highlight}>{content}</Markdown>
+```
+
 ### KaTeX
 
-For full LaTeX — matrices, stretchy brackets, and anything beyond the built-in renderer:
+> [!TIP]
+> We're under active development, so if you find a bug with the default math renderer we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
+
+For full LaTeX beyond the built-in renderer, you can add the full Katex:
 
 ```bash
 npm i katex
@@ -389,6 +475,69 @@ export default function Chat() {
 }
 ```
 
+### Chat messages
+
+Render a conversation where each assistant message is Markdown. User messages are plain text:
+
+```jsx
+import Markdown from "llmrender";
+
+const messages = [
+  { role: "user", content: "What is the quadratic formula?" },
+  {
+    role: "assistant",
+    content:
+      "The quadratic formula solves $ax^2 + bx + c = 0$:\n\n$$x = \\frac{-b \\pm \\sqrt{b^2 - 4ac}}{2a}$$\n\nwhere $a \\neq 0$.",
+  },
+];
+
+export default function ChatThread() {
+  return (
+    <div>
+      {messages.map((m, i) => (
+        <div key={i} className={`message message-${m.role}`}>
+          {m.role === "user" ? (
+            <p>{m.content}</p>
+          ) : (
+            <Markdown>{m.content}</Markdown>
+          )}
+        </div>
+      ))}
+    </div>
+  );
+}
+```
+
+For streaming output as the AI types, see [Streaming LLM output](#streaming-llm-output).
+
+### Next.js
+
+LLMRender works as a **React Server Component** for static content — no `"use client"` needed:
+
+```tsx
+// app/blog/[slug]/page.tsx
+import Markdown from "llmrender";
+import "llmrender/themes/default.css";
+
+export default async function PostPage({ params }: { params: { slug: string } }) {
+  const post = await db.post.findUnique({ where: { slug: params.slug } });
+  return <Markdown>{post.content}</Markdown>;
+}
+```
+
+Add `"use client"` only when you need interactivity in the same component (streaming, copy buttons, live editor):
+
+```tsx
+"use client";
+import { useChat } from "@ai-sdk/react";
+import Markdown from "llmrender";
+
+export default function Chat() {
+  const { messages, input, handleInputChange, handleSubmit } = useChat();
+  // ...
+}
+```
+
 ### Live editor
 
 ```jsx
@@ -441,7 +590,7 @@ function highlight(code, lang) {
 
 ## Security
 
-LLMRender is safe to use with untrusted Markdown. Here is how that works, and what the limits are.
+LLMRender is safe to use with untrusted Markdown — including content from users, LLMs, or external APIs. Here is how XSS (cross-site scripting) and other injection attacks are prevented, and what the limits are.
 
 LLMRender never produces raw HTML strings. Every piece of content — headings, paragraphs, link text, table cells, code, image alt text — becomes a React element rendered through JSX. React automatically escapes all text children, so input like `[<script>alert(1)</script>](url)` renders the `<script>` as literal visible text, not an executed tag. This protection is unconditional and applies to every Markdown construct.
 
@@ -477,3 +626,19 @@ import Markdown, { allowTags } from "llmrender";
 ```
 
 Prefer the explicit allowlist for untrusted sources — it gives you precise control over what HTML can appear.
+
+## FAQ
+
+### How were the sizes measured?
+
+Each library was set up in an identical Vite + React TypeScript project rendering the same Markdown content — headings, bold/italic, inline and display math, a syntax-highlighted code block, and a table. Every library was configured with math (KaTeX) and syntax highlighting plus a sanitizer where required (DOMPurify for libraries that emit raw HTML strings). Each project was built with `vite build` and the gzip size of the JS bundle was recorded.
+
+For syntax highlighting, each library was paired with whatever its official documentation recommends — all as shown in their respective READMEs:
+
+- **marked**: [marked](https://marked.js.org) + [marked-highlight](https://github.com/markedjs/marked-highlight) + [highlight.js](https://highlightjs.org) + [katex](https://katex.org) + [dompurify](https://github.com/cure53/DOMPurify)
+- **react-markdown**: [react-markdown](https://github.com/remarkjs/react-markdown) + [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) + [remark-math](https://github.com/remarkjs/remark-math) + [rehype-katex](https://github.com/remarkjs/remark-math/tree/main/packages/rehype-katex)
+- **markdown-it**: [markdown-it](https://github.com/markdown-it/markdown-it) + [highlight.js](https://highlightjs.org) + [katex](https://katex.org) + [dompurify](https://github.com/cure53/DOMPurify)
+
+The sizes shown in the table are the **library overhead only** — a plain React app with no Markdown library builds to ~60 KB gzipped, and that baseline is subtracted from each result. This isolates what each Markdown solution actually adds to your bundle.
+
+Because all projects share React, some gzip savings apply across the board and are not reflected in the individual numbers. Real-world savings from shared chunks in a full app will be somewhat smaller than what the table suggests.

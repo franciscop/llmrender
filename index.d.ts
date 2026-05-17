@@ -2,10 +2,13 @@
 
 import { HTMLAttributes, ReactElement, ReactNode } from "react";
 
-declare function highlight(code: string, lang: string): ReactNode[];
+export function highlightCode(code: string, lang: string): ReactNode;
 export type RawHtml = Record<string, string[]>;
 export declare const allowTags: RawHtml;
-export type HighlightFn = (code: string, lang: string) => ReactNode[];
+export type HighlightFn = (
+  code: string,
+  lang: string,
+) => ReactNode | ReactNode[];
 export type MathFn = (tex: string, block: boolean) => ReactNode;
 declare function Markdown({
   children,
@@ -20,6 +23,6 @@ declare function Markdown({
   rawHtml?: boolean | RawHtml;
 } & HTMLAttributes<HTMLDivElement>): ReactElement;
 
-export { Markdown as default, highlight as highlightCode };
+export { Markdown as default };
 
 export {};
