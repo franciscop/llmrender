@@ -93,7 +93,26 @@ import "llmrender/themes/contrast.css";   // high contrast dark (WCAG AAA)
 | `rawHtml` | `RawHtml \| boolean` | `false` | Allow HTML tags in Markdown source — see [Security](#security) |
 | `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
 
-#### `highlight`
+### `children`
+
+The Markdown string to render. Partial strings are safe — LLMRender handles incomplete fences, unclosed math blocks, and mid-word formatting gracefully, so you can pass tokens as they stream in:
+
+```jsx
+const [text, setText] = useState("");
+// Re-render on every chunk — no buffering needed
+return <Markdown>{text}</Markdown>;
+```
+
+### `rawHtml`
+
+By default raw HTML inside Markdown is escaped to text. Set `rawHtml={true}` to render it through a built-in tag/attribute allowlist, or pass an explicit `{ tag: ["attr"] }` map for full control. See [Security](#security) for the full allowlist and rules.
+
+```jsx
+<Markdown rawHtml>{content}</Markdown>
+<Markdown rawHtml={{ mark: [], span: ["class"] }}>{content}</Markdown>
+```
+
+### `highlight`
 
 > [!TIP]
 > We're under active development, so if you find a bug with the default syntax highlighting we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
@@ -166,7 +185,7 @@ All colors in the built-in theme are CSS variables you can override without touc
 | `--llmrender-inline-bg` | `#f6f8fa` | inline code background |
 | `--llmrender-table-border` | `#d0d7de` | table borders |
 
-#### `math`
+### `math`
 
 > [!TIP]
 > We're under active development, so if you find a bug with the default math rendering we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
