@@ -42,10 +42,8 @@
     "home": "assets/home.html",
     "menu": {
       "Documentation": "/documentation",
-      "Math Test": "./assets/math-test.html",
-      "Author": "https://francisco.io/",
+      "LaTeX": "./assets/math-test.html",
       "Donate": "https://www.paypal.me/franciscopresencia/19",
-      "npm": "https://www.npmjs.com/package/llmrender",
       "Github": "https://github.com/franciscop/llmrender"
     }
   },
