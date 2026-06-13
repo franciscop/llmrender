@@ -388,4 +388,220 @@ describe("renderMath", () => {
     expect(el.find("mtable").length).toBe(1);
     expect(el.find("mtr").length).toBe(2);
   });
+
+  it("renders \\begin{vmatrix} with pipe delimiters", () => {
+    const el = $(
+      renderMath("\\begin{vmatrix} a & b \\\\ c & d \\end{vmatrix}"),
+    );
+    expect(el.find("mtable").length).toBe(1);
+    expect(
+      el.find("mo").filter((m) => m.textContent === "|").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\begin{Vmatrix} with double-bar delimiters", () => {
+    const el = $(
+      renderMath("\\begin{Vmatrix} a & b \\\\ c & d \\end{Vmatrix}"),
+    );
+    expect(el.find("mtable").length).toBe(1);
+    expect(
+      el.find("mo").filter((m) => m.textContent === "‖").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\begin{align} without delimiters", () => {
+    const el = $(renderMath("\\begin{align} x &= 1 \\\\ y &= 2 \\end{align}"));
+    expect(el.find("mtable").length).toBe(1);
+    expect(el.find("mtr").length).toBe(2);
+  });
+
+  it("renders \\begin{align*} without delimiters", () => {
+    const el = $(
+      renderMath("\\begin{align*} x &= 1 \\\\ y &= 2 \\end{align*}"),
+    );
+    expect(el.find("mtable").length).toBe(1);
+  });
+
+  it("renders unknown \\begin{env} gracefully", () => {
+    expect(() =>
+      $(renderMath("\\begin{unknown} x \\end{unknown}")),
+    ).not.toThrow();
+  });
+
+  it("renders \\\\ line break outside matrix as mo", () => {
+    const el = $(renderMath("a \\\\ b"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === "\n").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left\\| ... \\right\\| with pipe delimiter", () => {
+    const el = $(renderMath("\\left\\| x \\right\\|"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === "|").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left\\. as invisible open delimiter", () => {
+    const el = $(renderMath("\\left\\. x \\right)"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === ")").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left. (dot) as invisible open delimiter", () => {
+    const el = $(renderMath("\\left. x \\right)"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === ")").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left\\lfloor ... \\right\\rfloor", () => {
+    const el = $(renderMath("\\left\\lfloor x \\right\\rfloor"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === "⌊").length,
+    ).toBeGreaterThan(0);
+    expect(
+      el.find("mo").filter((m) => m.textContent === "⌋").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left\\langle ... \\right\\rangle", () => {
+    const el = $(renderMath("\\left\\langle x \\right\\rangle"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === "⟨").length,
+    ).toBeGreaterThan(0);
+    expect(
+      el.find("mo").filter((m) => m.textContent === "⟩").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left\\lceil ... \\right\\rceil", () => {
+    const el = $(renderMath("\\left\\lceil x \\right\\rceil"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === "⌈").length,
+    ).toBeGreaterThan(0);
+    expect(
+      el.find("mo").filter((m) => m.textContent === "⌉").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left\\vert ... \\right\\vert", () => {
+    const el = $(renderMath("\\left\\vert x \\right\\vert"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === "|").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left\\Vert ... \\right\\Vert", () => {
+    const el = $(renderMath("\\left\\Vert x \\right\\Vert"));
+    expect(
+      el.find("mo").filter((m) => m.textContent === "‖").length,
+    ).toBeGreaterThan(0);
+  });
+
+  it("renders \\left with unknown named delimiter gracefully", () => {
+    expect(() =>
+      $(renderMath("\\left\\unknown x \\right\\unknown")),
+    ).not.toThrow();
+  });
+
+  it("renders \\left with unknown single-char delimiter gracefully", () => {
+    expect(() => $(renderMath("\\left\\! x \\right\\!"))).not.toThrow();
+  });
+
+  it("handles deeply nested groups without crashing", () => {
+    const deep = "\\sqrt{".repeat(66) + "x" + "}".repeat(66);
+    expect(() => $(renderMath(deep))).not.toThrow();
+  });
+
+  it("extractText returns empty string for complex node types inside mathvariant", () => {
+    // \mathbf{x^2} — the group contains msup, hitting extractText's default branch
+    const el = $(renderMath("\\mathbf{x^2}"));
+    expect(el.find("mi").length).toBeGreaterThan(0);
+  });
+
+  it("renders \\text with nested braces", () => {
+    const el = $(renderMath("\\text{a{b}c}"));
+    expect(el.find("mtext").text()).toBe("a{b}c");
+  });
+
+  it("renders \\text without braces as empty mtext", () => {
+    const el = $(renderMath("\\text"));
+    expect(el.find("mtext").length).toBe(1);
+    expect(el.find("mtext").text()).toBe("");
+  });
+
+  it("renders unclosed \\left without matching \\right gracefully", () => {
+    expect(() => $(renderMath("\\left( x + y"))).not.toThrow();
+    const el = $(renderMath("\\left( x + y"));
+    expect(el.find("mo").length).toBeGreaterThan(0);
+  });
+
+  it("renders \\quad as mspace with 1em width", () => {
+    const el = $(renderMath("a\\quad b"));
+    expect(el.find("mspace").attr("width")).toBe("1em");
+  });
+
+  it("renders \\qquad as mspace with 2em width", () => {
+    const el = $(renderMath("a\\qquad b"));
+    expect(el.find("mspace").attr("width")).toBe("2em");
+  });
+
+  it("renders \\enspace as mspace with 0.5em width", () => {
+    const el = $(renderMath("a\\enspace b"));
+    expect(el.find("mspace").attr("width")).toBe("0.5em");
+  });
+
+  it("renders \\, as thin mspace", () => {
+    const el = $(renderMath("a\\,b"));
+    expect(el.find("mspace").attr("width")).toBe("0.1667em");
+  });
+
+  it("renders \\: as medium mspace", () => {
+    const el = $(renderMath("a\\:b"));
+    expect(el.find("mspace").attr("width")).toBe("0.2222em");
+  });
+
+  it("renders \\; as thick mspace", () => {
+    const el = $(renderMath("a\\;b"));
+    expect(el.find("mspace").attr("width")).toBe("0.2778em");
+  });
+
+  it("renders \\! as negative thin mspace", () => {
+    const el = $(renderMath("a\\!b"));
+    expect(el.find("mspace").attr("width")).toBe("-0.1667em");
+  });
+
+  it("renders \\hspace{0.5em} as mspace", () => {
+    const el = $(renderMath("a\\hspace{0.5em}b"));
+    expect(el.find("mspace").attr("width")).toBe("0.5em");
+  });
+
+  it("renders \\hspace* variant as mspace", () => {
+    const el = $(renderMath("a\\hspace*{1.2em}b"));
+    expect(el.find("mspace").attr("width")).toBe("1.2em");
+  });
+
+  it("renders \\negthinspace as negative mspace", () => {
+    const el = $(renderMath("a\\negthinspace b"));
+    expect(el.find("mspace").attr("width")).toBe("-0.1667em");
+  });
+
+  it("renders \\qquad in summation formula", () => {
+    const tex =
+      "\\sum_{k=1}^{n} k = \\frac{n(n+1)}{2}, \\qquad \\sum_{k=1}^{n} k^2 = \\frac{n(n+1)(2n+1)}{6}";
+    expect(() => $(renderMath(tex, true))).not.toThrow();
+    const el = $(renderMath(tex, true));
+    expect(el.find("mspace[width='2em']").length).toBe(1);
+    expect(el.find("mfrac").length).toBe(2);
+  });
+
+  it("renders \\, thin space in integration by parts", () => {
+    const tex = "\\int u\\,dv = uv - \\int v\\,du";
+    expect(() => $(renderMath(tex))).not.toThrow();
+    const el = $(renderMath(tex));
+    expect(el.find("mspace[width='0.1667em']").length).toBe(2);
+    expect(el.find("mo").text()).toContain("∫");
+  });
 });

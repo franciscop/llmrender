@@ -642,3 +642,7 @@ For syntax highlighting, each library was paired with whatever its official docu
 The sizes shown in the table are the **library overhead only** — a plain React app with no Markdown library builds to ~60 KB gzipped, and that baseline is subtracted from each result. This isolates what each Markdown solution actually adds to your bundle.
 
 Because all projects share React, some gzip savings apply across the board and are not reflected in the individual numbers. Real-world savings from shared chunks in a full app will be somewhat smaller than what the table suggests.
+
+## Contributing
+
+Contributions are welcome! A core goal of LLMRender is to **remain small**, so any code addition should balance the usability it brings against the code size it adds. See [contributing.md](./contributing.md) for the development setup and guidelines.

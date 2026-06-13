@@ -33,6 +33,16 @@ it("renders nothing for empty source", () => {
   expect($(<Markdown>{""}</Markdown>).text()).toBe("");
 });
 
+it("handles Windows line endings (CRLF)", () => {
+  const src =
+    "# Title\r\n\r\nfirst\r\n\r\n---\r\n\r\n| A | B |\r\n|---|---|\r\n| 1 | 2 |";
+  const $el = $(<Markdown>{src}</Markdown>);
+  expect($el.find("h1").text()).toBe("Title");
+  expect($el.find("p").text()).toBe("first");
+  expect($el.find("hr").length).toBe(1);
+  expect($el.find("td").length).toBe(2);
+});
+
 it("ignores blank-only lines", () => {
   expect($(<Markdown>{"   "}</Markdown>).find("p").length).toBe(0);
 });

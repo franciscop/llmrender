@@ -1,0 +1,402 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="initial-scale=1" />
+    <title>Math rendering comparison — LLMRender</title>
+    <link rel="icon" href="../src/favicon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet" />
+    <script type="importmap">
+      {
+        "imports": {
+          "react": "https://esm.sh/react@18.3.1",
+          "react/jsx-runtime": "https://esm.sh/react@18.3.1/jsx-runtime",
+          "react-dom": "https://esm.sh/react-dom@18.3.1",
+          "react-dom/client": "https://esm.sh/react-dom@18.3.1/client"
+        }
+      }
+    </script>
+    <script>
+      window.llmrenderTheme = "../themes/default.css";
+      window.llmrenderSrc   = "../index.min.js";
+    </script>
+    <style>
+      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+      html, body { height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
+
+      body { display: flex; flex-direction: column; background: #f6f8fa; }
+
+      /* ── header ── */
+      header {
+        display: flex; align-items: center; gap: 1.2em;
+        padding: 0 1.25em; height: 44px; flex-shrink: 0;
+        background: #24292f; color: #e6edf3;
+        font-size: 0.85em;
+      }
+      header strong { color: #fff; font-size: 1.05em; }
+      header span   { color: #8b949e; }
+
+      /* ── split ── */
+      .split {
+        display: flex; flex: 1; overflow: hidden;
+      }
+      .panel {
+        flex: 1; display: flex; flex-direction: column; overflow: hidden;
+      }
+      .panel + .panel { border-left: 1px solid #d0d7de; }
+
+      /* ── panel header ── */
+      .panel-bar {
+        display: flex; align-items: center; gap: 0.75em;
+        padding: 0 1em; height: 38px; flex-shrink: 0;
+        background: #f6f8fa; border-bottom: 1px solid #d0d7de;
+      }
+      .panel-bar label {
+        font-size: 0.72em; font-weight: 600; text-transform: uppercase;
+        letter-spacing: 0.06em; color: #57606a;
+      }
+      .panel-bar select {
+        font-size: 0.8em; padding: 0.2em 0.5em;
+        border: 1px solid #d0d7de; border-radius: 5px;
+        background: #fff; color: #24292f; cursor: pointer;
+      }
+      .panel-bar .badge {
+        margin-left: auto; font-size: 0.7em; color: #8b949e;
+      }
+
+      /* ── panel body ── */
+      .panel-body { flex: 1; overflow-y: auto; }
+
+      /* source view */
+      .panel-body.source-view {
+        background: #f6f8fa;
+        padding: 1.25em 1.5em;
+      }
+      .panel-body.source-view pre {
+        font-family: "Source Code Pro", ui-monospace, monospace;
+        font-size: 0.78em; line-height: 1.75; color: #24292f;
+        white-space: pre-wrap; word-break: break-word;
+      }
+
+      /* rendered view */
+      .panel-body.render-view { background: #fff; }
+      .panel-body.render-view .render-root {
+        min-height: 100%; padding: 1.25em 1.75em;
+      }
+      .panel-body.render-view .render-root > div > :first-child { margin-top: 0; }
+      .panel-body.render-view .render-root h1 a,
+      .panel-body.render-view .render-root h2 a,
+      .panel-body.render-view .render-root h3 a { color: inherit; text-decoration: none; }
+      .panel-body.render-view .render-root .math-block { margin: 1em 0; }
+
+      /* loading state */
+      .loading {
+        display: flex; align-items: center; justify-content: center;
+        height: 100%; color: #8b949e; font-size: 0.9em; gap: 0.5em;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <strong>LLMRender</strong>
+      <span>Math renderer comparison — 100+ equations</span>
+    </header>
+
+    <div class="split">
+      <div class="panel" id="panel-0">
+        <div class="panel-bar">
+          <label>Left</label>
+          <select data-panel="0">
+            <option value="source">Source</option>
+            <option value="llmrender" selected>LLMRender</option>
+            <option value="katex">KaTeX</option>
+            <option value="mathjax">MathJax</option>
+          </select>
+          <span class="badge" id="badge-0"></span>
+        </div>
+        <div class="panel-body" id="body-0"></div>
+      </div>
+
+      <div class="panel" id="panel-1">
+        <div class="panel-bar">
+          <label>Right</label>
+          <select data-panel="1">
+            <option value="source">Source</option>
+            <option value="llmrender">LLMRender</option>
+            <option value="katex" selected>KaTeX</option>
+            <option value="mathjax">MathJax</option>
+          </select>
+          <span class="badge" id="badge-1"></span>
+        </div>
+        <div class="panel-body" id="body-1"></div>
+      </div>
+    </div>
+
+    <!-- ── markdown source ─────────────────────────────────────────── -->
+    <script type="text/plain" id="md">
+## Algebra
+
+The quadratic formula: $x = \frac{-b \pm \sqrt{b^2 - 4ac}}{2a}$
+
+Difference of squares: $a^2 - b^2 = (a+b)(a-b)$
+
+Binomial expansion: $(x + y)^n = \sum_{k=0}^{n} \binom{n}{k} x^k y^{n-k}$
+
+Completing the square: $ax^2 + bx + c = a\left(x + \frac{b}{2a}\right)^2 + c - \frac{b^2}{4a}$
+
+$$x^3 + y^3 = (x+y)(x^2 - xy + y^2)$$
+
+$$\sum_{k=1}^{n} k = \frac{n(n+1)}{2}, \qquad \sum_{k=1}^{n} k^2 = \frac{n(n+1)(2n+1)}{6}$$
+
+$$\sum_{k=1}^{n} k^3 = \left(\frac{n(n+1)}{2}\right)^2$$
+
+## Calculus
+
+Fundamental theorem: $\frac{d}{dx}\left[\int_a^x f(t)\,dt\right] = f(x)$
+
+Definition of derivative: $f'(x) = \lim_{h \to 0} \frac{f(x+h) - f(x)}{h}$
+
+Integration by parts: $\int u\,dv = uv - \int v\,du$
+
+$$\int_a^b f'(x)\,dx = f(b) - f(a)$$
+
+$$\int_{-\infty}^{\infty} e^{-x^2}\,dx = \sqrt{\pi}$$
+
+$$\sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}$$
+
+$$\sum_{n=0}^{\infty} \frac{x^n}{n!} = e^x$$
+
+$$\lim_{n \to \infty} \left(1 + \frac{x}{n}\right)^n = e^x$$
+
+$$\frac{\partial^2 u}{\partial t^2} = c^2 \nabla^2 u$$
+
+$$\nabla^2 f = \frac{\partial^2 f}{\partial x^2} + \frac{\partial^2 f}{\partial y^2} + \frac{\partial^2 f}{\partial z^2}$$
+
+## Trigonometry
+
+Pythagorean identity: $\sin^2\theta + \cos^2\theta = 1$
+
+Euler's formula: $e^{i\theta} = \cos\theta + i\sin\theta$
+
+Euler's identity: $e^{i\pi} + 1 = 0$
+
+$$\sin(\alpha \pm \beta) = \sin\alpha\cos\beta \pm \cos\alpha\sin\beta$$
+
+$$\cos(2\theta) = \cos^2\theta - \sin^2\theta = 1 - 2\sin^2\theta$$
+
+$$e^{i\theta} + e^{-i\theta} = 2\cos\theta, \qquad \cos\theta = \frac{e^{i\theta} + e^{-i\theta}}{2}$$
+
+$$\int_0^{\pi} \sin^2\theta\,d\theta = \frac{\pi}{2}$$
+
+## Linear Algebra
+
+Eigenvalue equation: $A\mathbf{v} = \lambda\mathbf{v}$
+
+Characteristic polynomial: $\det(A - \lambda I) = 0$
+
+$$\begin{pmatrix} a & b \\ c & d \end{pmatrix}^{-1} = \frac{1}{ad-bc}\begin{pmatrix} d & -b \\ -c & a \end{pmatrix}$$
+
+$$\begin{vmatrix} a & b & c \\ d & e & f \\ g & h & i \end{vmatrix} = a(ei-fh) - b(di-fg) + c(dh-eg)$$
+
+$$\|A\|_F = \sqrt{\sum_{i,j} |a_{ij}|^2}, \qquad A = U\Sigma V^T$$
+
+$$\mathbf{a} \cdot \mathbf{b} = \|\mathbf{a}\|\|\mathbf{b}\|\cos\theta = \sum_i a_i b_i$$
+
+## Probability & Statistics
+
+Bayes' theorem: $P(A|B) = \frac{P(B|A)\,P(A)}{P(B)}$
+
+Normal distribution: $f(x) = \frac{1}{\sigma\sqrt{2\pi}} e^{-\frac{(x-\mu)^2}{2\sigma^2}}$
+
+$$\text{Var}(X) = \mathbb{E}[X^2] - (\mathbb{E}[X])^2$$
+
+$$\hat{\beta} = (X^T X)^{-1} X^T y$$
+
+$$\Phi(x) = \frac{1}{\sqrt{2\pi}} \int_{-\infty}^{x} e^{-t^2/2}\,dt$$
+
+$$\text{Cov}(X,Y) = \mathbb{E}[(X-\mu_X)(Y-\mu_Y)]$$
+
+Poisson: $P(X=k) = \frac{\lambda^k e^{-\lambda}}{k!}$
+
+## Physics
+
+Mass-energy: $E = mc^2$
+
+Schrödinger equation: $i\hbar \frac{\partial}{\partial t}\Psi = \hat{H}\Psi$
+
+Heisenberg uncertainty: $\Delta x\,\Delta p \geq \frac{\hbar}{2}$
+
+Lorentz factor: $\gamma = \frac{1}{\sqrt{1 - v^2/c^2}}$
+
+$$E = \hbar\omega, \qquad p = \hbar k$$
+
+$$\nabla \cdot \mathbf{E} = \frac{\rho}{\varepsilon_0}, \qquad \nabla \times \mathbf{B} = \mu_0\mathbf{J} + \mu_0\varepsilon_0\frac{\partial\mathbf{E}}{\partial t}$$
+
+$$S = k_B \ln W, \qquad F = -\frac{\partial U}{\partial x}$$
+
+$$\langle E \rangle = -\frac{\partial \ln Z}{\partial \beta}, \qquad Z = \sum_i e^{-\beta E_i}$$
+
+## Number Theory & Complex Analysis
+
+Fermat's little theorem: $a^{p-1} \equiv 1 \pmod{p}$
+
+Riemann zeta: $\zeta(s) = \sum_{n=1}^{\infty} \frac{1}{n^s} = \prod_p \frac{1}{1-p^{-s}}$
+
+$$\zeta(2) = \frac{\pi^2}{6}, \qquad \zeta(4) = \frac{\pi^4}{90}$$
+
+Cauchy integral: $f(z_0) = \frac{1}{2\pi i} \oint_C \frac{f(z)}{z-z_0}\,dz$
+
+$$\int_{-\infty}^{\infty} \frac{1}{1+x^2}\,dx = \pi$$
+
+$$n! \sim \sqrt{2\pi n}\left(\frac{n}{e}\right)^n$$
+
+## Special Functions & Transforms
+
+$$\Gamma(z) = \int_0^\infty t^{z-1} e^{-t}\,dt, \qquad \Gamma\!\left(\tfrac{1}{2}\right) = \sqrt{\pi}$$
+
+$$B(x,y) = \frac{\Gamma(x)\Gamma(y)}{\Gamma(x+y)}$$
+
+Fourier transform: $\hat{f}(\xi) = \int_{-\infty}^{\infty} f(x)\,e^{-2\pi ix\xi}\,dx$
+
+$$\mathcal{F}\{e^{-\pi x^2}\} = e^{-\pi\xi^2}$$
+
+$$\sum_{n=-\infty}^{\infty} e^{-\pi n^2 t} = \frac{1}{\sqrt{t}} \sum_{n=-\infty}^{\infty} e^{-\pi n^2/t}$$
+
+Taylor series: $e^x = \sum_{n=0}^{\infty} \frac{x^n}{n!}$, $\sin x = \sum_{n=0}^{\infty} \frac{(-1)^n x^{2n+1}}{(2n+1)!}$, $\cos x = \sum_{n=0}^{\infty} \frac{(-1)^n x^{2n}}{(2n)!}$
+
+Geometric series: $\sum_{n=0}^{\infty} r^n = \frac{1}{1-r}$ for $|r| < 1$
+
+## Combinatorics & Differential Equations
+
+$$\sum_{k=0}^{n} \binom{n}{k} = 2^n, \qquad \sum_{k=0}^{n}(-1)^k\binom{n}{k} = 0$$
+
+Logistic: $\frac{dP}{dt} = rP\!\left(1 - \frac{P}{K}\right)$
+
+Harmonic oscillator: $\frac{d^2x}{dt^2} + 2\zeta\omega_0\frac{dx}{dt} + \omega_0^2 x = 0$
+
+$$\frac{\partial u}{\partial t} = \alpha\frac{\partial^2 u}{\partial x^2}$$
+
+$$y'' + py' + qy = 0 \implies y = C_1 e^{r_1 x} + C_2 e^{r_2 x}$$
+    </script>
+
+    <script type="module">
+      const md = document.getElementById("md").textContent.trim();
+
+      const { createElement: h } = await import("react");
+      const { createRoot } = await import("react-dom/client");
+      const { default: Markdown } = await import(window.llmrenderSrc ?? "https://unpkg.com/llmrender/index.min.js");
+
+      // Load LLMRender theme into <head> — light DOM, no shadow needed on this page
+      const themeLink = document.createElement("link");
+      themeLink.rel = "stylesheet";
+      themeLink.href = window.llmrenderTheme ?? "https://unpkg.com/llmrender/themes/default.css";
+      document.head.appendChild(themeLink);
+
+      // ── lazy renderer modules ───────────────────────────────────────
+      const KATEX_CDN = "https://cdn.jsdelivr.net/npm/katex@0.16.11";
+      let katex = null, mathjaxReady = null;
+
+      async function loadKatex() {
+        if (!katex) {
+          katex = (await import("https://esm.sh/katex@0.16.11")).default;
+          // KaTeX CSS in <head> so fonts resolve normally
+          const link = document.createElement("link");
+          link.rel = "stylesheet";
+          link.href = `${KATEX_CDN}/dist/katex.min.css`;
+          document.head.appendChild(link);
+        }
+        return katex;
+      }
+
+      async function loadMathjax() {
+        if (!mathjaxReady) {
+          mathjaxReady = new Promise(resolve => {
+            window.MathJax = { startup: { typeset: false }, loader: { load: ["input/tex", "output/svg"] } };
+            const s = document.createElement("script");
+            s.src = "https://cdn.jsdelivr.net/npm/mathjax@3/es5/tex-svg.js";
+            s.onload = () => MathJax.startup.promise.then(resolve);
+            document.head.appendChild(s);
+          });
+        }
+        return mathjaxReady;
+      }
+
+      // ── per-panel state ─────────────────────────────────────────────
+      const panels = [null, null];
+
+      async function renderPanel(idx, mode) {
+        const body = document.getElementById(`body-${idx}`);
+        const badge = document.getElementById(`badge-${idx}`);
+
+        if (mode === "source") {
+          panels[idx]?.unmount?.();
+          panels[idx] = null;
+          body.className = "panel-body source-view";
+          body.innerHTML = `<pre></pre>`;
+          body.querySelector("pre").textContent = md;
+          badge.textContent = "";
+          return;
+        }
+
+        if (!panels[idx]) {
+          body.innerHTML = `<div class="render-root"></div>`;
+          body.className = "panel-body render-view";
+          panels[idx] = createRoot(body.querySelector(".render-root"));
+        }
+
+        badge.textContent = "loading…";
+
+        let mathProp = true;
+
+        if (mode === "katex") {
+          const k = await loadKatex();
+          mathProp = (tex, display) => {
+            try {
+              const html = k.renderToString(tex, { displayMode: display, throwOnError: false });
+              return h("span", { dangerouslySetInnerHTML: { __html: html } });
+            } catch {
+              return h("span", { style: { color: "red", fontFamily: "monospace" } }, tex);
+            }
+          };
+        } else if (mode === "mathjax") {
+          await loadMathjax();
+          mathProp = (tex, display) => {
+            try {
+              const wrapper = MathJax.tex2svg(tex, { display });
+              const svg = wrapper.querySelector("svg");
+              if (svg) {
+                if (display) { svg.style.display = "block"; svg.style.margin = "0 auto"; }
+                return h("span", { dangerouslySetInnerHTML: { __html: svg.outerHTML } });
+              }
+              return h("span", null, tex);
+            } catch {
+              return h("span", { style: { color: "red", fontFamily: "monospace" } }, tex);
+            }
+          };
+        }
+
+        panels[idx].render(h(Markdown, { math: mathProp }, md));
+        badge.textContent = "";
+      }
+
+      // ── wire selects ────────────────────────────────────────────────
+      document.querySelectorAll("select[data-panel]").forEach(sel => {
+        sel.addEventListener("change", () => {
+          const idx = Number(sel.dataset.panel);
+          const body = document.getElementById(`body-${idx}`);
+          body.innerHTML = "";
+          panels[idx] = null;
+          renderPanel(idx, sel.value);
+        });
+      });
+
+      // ── initial render ──────────────────────────────────────────────
+      await Promise.all([
+        renderPanel(0, document.querySelector('[data-panel="0"]').value),
+        renderPanel(1, document.querySelector('[data-panel="1"]').value),
+      ]);
+    </script>
+  </body>
+</html>

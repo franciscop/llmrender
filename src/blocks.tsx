@@ -178,6 +178,11 @@ export function collectBlocks(
     flushBlockquote();
     flushTable();
     if (codeLines.length > 0) flushCode();
+    if (mathLines.length > 0) {
+      blocks.push({ type: "math", lines: mathLines });
+      mathLines = [];
+      inMathBlock = false;
+    }
   }
 
   for (const line of lines) {
@@ -305,13 +310,15 @@ export function collectBlocks(
     }
 
     if (ORDERED_ITEM.test(line)) {
+      const text = line.replace(ORDERED_ITEM, "");
+      if (!text) continue;
       flushParagraph();
       if (inList && !listOrdered) flushList();
       flushBlockquote();
       flushTable();
       inList = true;
       listOrdered = true;
-      listItems.push({ text: line.replace(ORDERED_ITEM, ""), sub: [] });
+      listItems.push({ text, sub: [] });
       continue;
     }
 
@@ -328,6 +335,11 @@ export function collectBlocks(
       blockquoteLines.push(line.startsWith("> ") ? line.slice(2) : "");
       continue;
     }
+
+    // Skip bare block-start markers that are partial streaming artifacts.
+    // A lone "- " or "1. " with no content would otherwise land in paraLines
+    // and flush before the current list, corrupting render order.
+    if (/^([*+\-]|\d+\.)\s*$/.test(line)) continue;
 
     paraLines.push(
       TRAILING_BR.test(line)

@@ -23,3 +23,21 @@ it("renders inline markup inside ordered list items", () => {
       .text(),
   ).toBe("bold item");
 });
+
+it("flushes unordered list and starts ordered list when order switches", () => {
+  const el = $(<Markdown>{"- a\n- b\n1. c"}</Markdown>);
+  expect(el.find("ul").length).toBe(1);
+  expect(el.find("ol").length).toBe(1);
+  expect(el.find("ul li").length).toBe(2);
+  expect(el.find("ol li").length).toBe(1);
+  expect(el.find("ol li").text()).toBe("c");
+});
+
+it("flushes ordered list and starts unordered list when order switches", () => {
+  const el = $(<Markdown>{"1. a\n2. b\n- c"}</Markdown>);
+  expect(el.find("ol").length).toBe(1);
+  expect(el.find("ul").length).toBe(1);
+  expect(el.find("ol li").length).toBe(2);
+  expect(el.find("ul li").length).toBe(1);
+  expect(el.find("ul li").text()).toBe("c");
+});

@@ -5,6 +5,7 @@ type MathMLProps = React.DetailedHTMLProps<
   HTMLElement
 > & {
   xmlns?: string;
+  display?: string;
   linethickness?: string;
   mathvariant?: string;
   stretchy?: string;

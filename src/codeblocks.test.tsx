@@ -16,3 +16,11 @@ it("preserves newlines inside code blocks", () => {
     .get(0)!;
   expect(node.textContent).toBe("line1\nline2");
 });
+
+it("renders code block without highlight spans when highlight={false}", () => {
+  const el = $(
+    <Markdown highlight={false}>{"```js\nconst x = 1;\n```"}</Markdown>,
+  );
+  expect(el.find("pre code").text()).toBe("const x = 1;");
+  expect(el.find(".keyword").length).toBe(0);
+});

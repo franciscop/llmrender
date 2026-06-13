@@ -1,6 +1,7 @@
 /* LLMRender — adaptive theme (light by default, dark via prefers-color-scheme) */
 
-:root {
+:root,
+:host {
   --llmrender-keyword:   #cf222e;
   --llmrender-string:    #0a3069;
   --llmrender-comment:   #6e7781;
@@ -25,12 +26,14 @@
   --llmrender-callout-caution:        #d1242f;
   --llmrender-callout-caution-bg:     #ffebe9;
 
-  --llmrender-table-border:    #d0d7de;
-  --llmrender-table-header-bg: #f6f8fa;
+  --llmrender-table-border:       #d0d7de;
+  --llmrender-table-header-bg:    #f6f8fa;
+  --llmrender-table-header-color: #24292f;
 }
 
 @media (prefers-color-scheme: dark) {
-  :root {
+  :root,
+  :host {
     --llmrender-keyword:   #ff7b72;
     --llmrender-string:    #a5d6ff;
     --llmrender-comment:   #8b949e;
@@ -55,8 +58,9 @@
     --llmrender-callout-caution:        #f85149;
     --llmrender-callout-caution-bg:     #2d0202;
 
-    --llmrender-table-border:    #30363d;
-    --llmrender-table-header-bg: #161b22;
+    --llmrender-table-border:       #30363d;
+    --llmrender-table-header-bg:    #161b22;
+    --llmrender-table-header-color: #e6edf3;
   }
 }
 
@@ -95,7 +99,6 @@ pre code .operator { color: var(--llmrender-operator); }
 blockquote[class^="callout-"] {
   margin: 0;
   padding: 0.75em 1em;
-  border-radius: 6px;
 }
 
 blockquote[class^="callout-"] .callout-title {
@@ -125,5 +128,6 @@ th, td {
 
 th {
   background: var(--llmrender-table-header-bg);
+  color: var(--llmrender-table-header-color);
   font-weight: 600;
 }

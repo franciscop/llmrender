@@ -3,7 +3,7 @@ import type { ReactElement } from "react";
 type Node =
   | { type: "mi"; value: string; mathvariant?: string }
   | { type: "mn"; value: string }
-  | { type: "mo"; value: string }
+  | { type: "mo"; value: string; stretchy?: "false" }
   | { type: "mtext"; value: string }
   | { type: "mrow"; children: Node[] }
   | { type: "mfrac"; num: Node; den: Node }
@@ -16,9 +16,10 @@ type Node =
   | { type: "mover"; base: Node; over: Node }
   | { type: "munderover"; base: Node; under: Node; over: Node }
   | { type: "mbinom"; top: Node; bot: Node }
-  | { type: "mtable"; rows: Node[][] };
+  | { type: "mtable"; rows: Node[][] }
+  | { type: "mspace"; width: string };
 
-export default function renderMath(tex: string): ReactElement {
+export default function renderMath(tex: string, block = false): ReactElement {
   let i = 0;
   let groupDepth = 0;
 
@@ -287,6 +288,31 @@ export default function renderMath(tex: string): ReactElement {
     let name = "";
     while (/[a-zA-Z*]/.test(peek())) name += consume();
 
+    // single-character spacing commands: \, \: \; \! \<space>
+    if (!name) {
+      const c = peek();
+      if (c === ",") {
+        consume();
+        return { type: "mspace", width: "0.1667em" };
+      }
+      if (c === ":") {
+        consume();
+        return { type: "mspace", width: "0.2222em" };
+      }
+      if (c === ";") {
+        consume();
+        return { type: "mspace", width: "0.2778em" };
+      }
+      if (c === "!") {
+        consume();
+        return { type: "mspace", width: "-0.1667em" };
+      }
+      if (c === " ") {
+        consume();
+        return { type: "mspace", width: "0.25em" };
+      }
+    }
+
     if (name === "frac" || name === "cfrac") {
       return { type: "mfrac", num: parseGroup(), den: parseGroup() };
     }
@@ -381,6 +407,26 @@ export default function renderMath(tex: string): ReactElement {
       };
     }
 
+    if (name === "quad") return { type: "mspace", width: "1em" };
+    if (name === "qquad") return { type: "mspace", width: "2em" };
+    if (name === "enspace") return { type: "mspace", width: "0.5em" };
+    if (name === "thinspace") return { type: "mspace", width: "0.1667em" };
+    if (name === "medspace") return { type: "mspace", width: "0.2222em" };
+    if (name === "thickspace") return { type: "mspace", width: "0.2778em" };
+    if (name === "negthinspace") return { type: "mspace", width: "-0.1667em" };
+    if (name === "negmedspace") return { type: "mspace", width: "-0.2222em" };
+    if (name === "negthickspace") return { type: "mspace", width: "-0.2778em" };
+    if (name === "hspace" || name === "hspace*") {
+      skipWS();
+      let w = "";
+      if (peek() === "{") {
+        consume();
+        while (peek() && peek() !== "}") w += consume();
+        if (peek() === "}") consume();
+      }
+      return { type: "mspace", width: w || "0em" };
+    }
+
     if (name === "cdots") return { type: "mo", value: "⋯" };
     if (name === "ldots") return { type: "mo", value: "…" };
     if (name === "vdots") return { type: "mo", value: "⋮" };
@@ -465,7 +511,11 @@ export default function renderMath(tex: string): ReactElement {
 
     if (/[a-zA-Z]/.test(ch)) return { type: "mi", value: consume() };
 
-    if ("+-=*/()[]|,;!<>".includes(ch)) return { type: "mo", value: consume() };
+    if ("+-=*/()[]|,;!<>".includes(ch)) {
+      const v = consume();
+      const stretchy = "()[]|".includes(v) ? ("false" as const) : undefined;
+      return { type: "mo", value: v, stretchy };
+    }
 
     return { type: "mi", value: consume() };
   }
@@ -529,7 +579,11 @@ export default function renderMath(tex: string): ReactElement {
       case "mn":
         return <mn key={k}>{node.value}</mn>;
       case "mo":
-        return <mo key={k}>{node.value}</mo>;
+        return (
+          <mo key={k} stretchy={node.stretchy}>
+            {node.value}
+          </mo>
+        );
       case "mtext":
         return <mtext key={k}>{node.value}</mtext>;
 
@@ -617,6 +671,10 @@ export default function renderMath(tex: string): ReactElement {
           </mrow>
         );
 
+      case "mspace":
+        // eslint-disable-next-line @typescript-eslint/no-explicit-any
+        return <mspace key={k} {...({ width: node.width } as any)} />;
+
       case "mtable":
         return (
           <mtable key={k}>
@@ -635,6 +693,11 @@ export default function renderMath(tex: string): ReactElement {
   }
 
   return (
-    <math xmlns="http://www.w3.org/1998/Math/MathML">{toJSX(parse())}</math>
+    <math
+      xmlns="http://www.w3.org/1998/Math/MathML"
+      display={block ? "block" : undefined}
+    >
+      {toJSX(parse())}
+    </math>
   );
 }

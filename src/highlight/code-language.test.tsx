@@ -1,5 +1,5 @@
 import $ from "react-test";
-import Markdown from "./index";
+import Markdown from "../index";
 
 it("adds language class to fenced code block", () => {
   const code = $(<Markdown>{"```js\nconst x = 1;\n```"}</Markdown>).find(

@@ -1,6 +1,6 @@
 import $ from "react-test";
 import highlight from "./highlight";
-import Markdown from "./index";
+import Markdown from "../index";
 
 // Unit tests for highlight()
 it("returns plain text for unknown language", () => {

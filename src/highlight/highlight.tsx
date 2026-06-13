@@ -59,6 +59,10 @@ const DIFF_HUNK: Token = { regex: /^@@[^@\n]*@@.*/m, cls: "comment" };
 const DIFF_ADD: Token = { regex: /^\+.*/m, cls: "string" };
 const DIFF_DEL: Token = { regex: /^-.*/m, cls: "keyword" };
 const COMMENT_SQL: Token = { regex: /--[^\n]*/, cls: "comment" };
+const FUNCTION_SQL: Token = {
+  regex: /\b([a-zA-Z_]\w*)\s*(?=\()/,
+  cls: "function",
+};
 const KEYWORD_SQL: Token = {
   regex:
     /\b(SELECT|FROM|WHERE|JOIN|LEFT|RIGHT|INNER|OUTER|FULL|CROSS|ON|AND|OR|NOT|IN|EXISTS|LIKE|BETWEEN|IS|NULL|AS|GROUP|BY|ORDER|HAVING|DISTINCT|INSERT|INTO|VALUES|UPDATE|SET|DELETE|CREATE|TABLE|ALTER|DROP|INDEX|VIEW|PROCEDURE|TRIGGER|DATABASE|SCHEMA|WITH|UNION|ALL|INTERSECT|EXCEPT|CASE|WHEN|THEN|ELSE|END|LIMIT|OFFSET|RETURNING|DECLARE|BEGIN|COMMIT|ROLLBACK|TRANSACTION|PRIMARY|KEY|FOREIGN|REFERENCES|UNIQUE|DEFAULT|CHECK|CONSTRAINT|ADD|COLUMN|IF)\b/i,
@@ -103,7 +107,8 @@ const rust = [
   RUST_ATTR,
   STRING_JS,
   kw(
-    `${BASE} crate dyn extern fn impl mod move mut pub ref self Self trait unsafe where`,
+    `${BASE} crate dyn extern fn impl mod move mut pub ref self trait unsafe where
+     usize isize u8 u16 u32 u64 u128 i8 i16 i32 i64 i128 f32 f64 bool char str`,
   ),
   TYPE,
   FUNCTION,
@@ -130,7 +135,7 @@ const css = [
 const html = [COMMENT_HTML, STRING_HTML, KEYWORD_HTML];
 const jsxTokens = [...html, ...js];
 const diff = [DIFF_HUNK, DIFF_ADD, DIFF_DEL];
-const sql = [COMMENT_SQL, STRING_BASIC, KEYWORD_SQL, NUMBER, FUNCTION];
+const sql = [COMMENT_SQL, STRING_BASIC, KEYWORD_SQL, NUMBER, FUNCTION_SQL];
 
 const languages: Record<string, Token[]> = {
   js,

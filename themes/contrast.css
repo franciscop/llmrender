@@ -1,6 +1,7 @@
 /* LLMRender — high contrast theme (WCAG AAA) */
 
-:root {
+:root,
+:host {
   --llmrender-keyword:   #ff5555;
   --llmrender-string:    #50fa7b;
   --llmrender-comment:   #aaaaaa;
@@ -25,8 +26,9 @@
   --llmrender-callout-caution:        #ff4444;
   --llmrender-callout-caution-bg:     #1a0000;
 
-  --llmrender-table-border:    #666666;
-  --llmrender-table-header-bg: #1a1a1a;
+  --llmrender-table-border:       #666666;
+  --llmrender-table-header-bg:    #1a1a1a;
+  --llmrender-table-header-color: #ffffff;
 }
 
 /* Code blocks */
@@ -66,7 +68,6 @@ pre code .operator { color: var(--llmrender-operator); }
 blockquote[class^="callout-"] {
   margin: 0;
   padding: 0.75em 1em;
-  border-radius: 6px;
 }
 
 blockquote[class^="callout-"] .callout-title {
@@ -99,6 +100,6 @@ th, td {
 
 th {
   background: var(--llmrender-table-header-bg);
+  color: var(--llmrender-table-header-color);
   font-weight: 700;
-  color: #ffffff;
 }

@@ -1,9 +1,9 @@
 /// <reference path="./global.d.ts" />
 import type { HTMLAttributes, ReactElement } from "react";
 import { parseLines } from "./blocks";
-import highlightCode from "./highlight";
+import highlightCode from "./highlight/highlight";
 import type { HighlightFn, MathFn } from "./inline";
-import renderMath from "./renderMath";
+import renderMath from "./math/renderMath";
 import type { RawHtml } from "./sanitize";
 import { allowTags } from "./sanitize";
 
@@ -26,6 +26,6 @@ export default function Markdown({
   const m = math === true ? renderMath : math || false;
   const raw = rawHtml === true ? allowTags : rawHtml || false;
 
-  const content = parseLines(children.split("\n"), hl, m, raw);
+  const content = parseLines((children ?? "").split(/\r?\n/), hl, m, raw);
   return <div {...props}>{content}</div>;
 }

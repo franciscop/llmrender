@@ -39,7 +39,10 @@
   "documentation.page": {
     "name": "LLMRender",
     "homepage": "https://llmrender.com/",
+    "home": "assets/home.html",
     "menu": {
+      "Documentation": "/documentation",
+      "Math Test": "./assets/math-test.html",
       "Author": "https://francisco.io/",
       "Donate": "https://www.paypal.me/franciscopresencia/19",
       "npm": "https://www.npmjs.com/package/llmrender",
