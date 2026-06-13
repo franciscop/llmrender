@@ -97,10 +97,10 @@ import "llmrender/themes/contrast.css";   // high contrast dark (WCAG AAA)
 > [!TIP]
 > We're under active development, so if you find a bug with the default syntax highlighting we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
 
-Called for every fenced code block. Return an array of `ReactNode`s rendered inside `<code>`. Pass `false` to avoid highlighting.
+Called for every fenced code block. Return a `ReactNode` or `ReactNode[]` to replace the entire code block. Pass `false` to avoid highlighting.
 
 ```ts
-type HighlightFn = (code: string, lang: string) => ReactNode[];
+type HighlightFn = (code: string, lang: string) => ReactNode | ReactNode[];
 ```
 
 The built-in highlighter covers 30+ languages with `<span>` tokens and CSS variable colors. Swap it for any library:
@@ -414,7 +414,7 @@ function renderMath(tex, block) {
 Intercept ` ```mermaid ` blocks via the `highlight` prop:
 
 ```jsx
-import Markdown from "llmrender";
+import Markdown, { highlightCode } from "llmrender";
 import mermaid from "mermaid";
 import { useEffect, useRef } from "react";
 
@@ -430,7 +430,7 @@ function Diagram({ code }) {
 
 function highlight(code, lang) {
   if (lang === "mermaid") return [<Diagram code={code} key="d" />];
-  return [code];
+  return highlightCode(code, lang);
 }
 
 <Markdown highlight={highlight}>{content}</Markdown>
