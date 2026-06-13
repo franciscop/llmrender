@@ -19,8 +19,10 @@
       }
     </script>
     <script>
-      window.llmrenderTheme = "../themes/default.css";
-      window.llmrenderSrc   = "../index.min.js";
+      if (location.hostname === "localhost" || location.hostname === "127.0.0.1") {
+        window.llmrenderTheme = "../themes/default.css";
+        window.llmrenderSrc   = "../index.min.js";
+      }
     </script>
     <style>
       *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
