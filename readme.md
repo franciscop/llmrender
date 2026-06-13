@@ -21,7 +21,7 @@ Traditional Markdown renderers (and their officially recommended plugins) are mu
 
 | Package                 |     Base |     Math | Highlight | Sanitize | Full Size (gzip) |
 |:------------------------|---------:|---------:|----------:|---------:|-----------------:|
-| **LLMRender**           | **8 KB** | built-in |  built-in | built-in |        **10 KB** |
+| **LLMRender**           | **9 KB** | built-in |  built-in | built-in |        **12 KB** |
 | `react-markdown@10.1.0` | 33.3 KB  | +74.6 KB |   +508 KB | built-in |           340 KB |
 | `marked@18.0.3`         | 12.1 KB  | +74.6 KB |   +298 KB |  +8.7 KB |           403 KB |
 | `markdown-it@14.1.1`    | 43.3 KB  | +74.6 KB |   +298 KB |  +8.7 KB |           436 KB |
