@@ -427,6 +427,31 @@ export default function renderMath(tex: string, block = false): ReactElement {
       return { type: "mspace", width: w || "0em" };
     }
 
+    if (name === "pmod") {
+      const arg = parseGroup();
+      return {
+        type: "mrow",
+        children: [
+          { type: "mspace", width: "1em" },
+          { type: "mo", value: "(" },
+          { type: "mtext", value: "mod" },
+          { type: "mspace", width: "0.3333em" },
+          arg,
+          { type: "mo", value: ")" },
+        ],
+      };
+    }
+    if (name === "bmod") {
+      return {
+        type: "mrow",
+        children: [
+          { type: "mspace", width: "0.2222em" },
+          { type: "mtext", value: "mod" },
+          { type: "mspace", width: "0.2222em" },
+        ],
+      };
+    }
+
     if (name === "cdots") return { type: "mo", value: "⋯" };
     if (name === "ldots") return { type: "mo", value: "…" };
     if (name === "vdots") return { type: "mo", value: "⋮" };
@@ -480,15 +505,96 @@ export default function renderMath(tex: string, block = false): ReactElement {
     if (name === "leftrightarrow") return { type: "mo", value: "↔" };
     if (name === "Leftrightarrow" || name === "iff")
       return { type: "mo", value: "⟺" };
+    if (name === "implies" || name === "Longrightarrow")
+      return { type: "mo", value: "⟹" };
+    if (name === "impliedby" || name === "Longleftarrow")
+      return { type: "mo", value: "⟸" };
+    if (name === "Longleftrightarrow") return { type: "mo", value: "⟺" };
+    if (name === "longrightarrow") return { type: "mo", value: "⟶" };
+    if (name === "longleftarrow") return { type: "mo", value: "⟵" };
+    if (name === "longleftrightarrow") return { type: "mo", value: "⟷" };
+    if (name === "hookrightarrow") return { type: "mo", value: "↪" };
+    if (name === "hookleftarrow") return { type: "mo", value: "↩" };
+    if (name === "rightharpoonup") return { type: "mo", value: "⇀" };
+    if (name === "leftharpoonup") return { type: "mo", value: "↼" };
+    if (name === "uparrow" || name === "up") return { type: "mo", value: "↑" };
+    if (name === "downarrow" || name === "down")
+      return { type: "mo", value: "↓" };
+    if (name === "Uparrow") return { type: "mo", value: "⇑" };
+    if (name === "Downarrow") return { type: "mo", value: "⇓" };
+    if (name === "updownarrow") return { type: "mo", value: "↕" };
+    if (name === "Updownarrow") return { type: "mo", value: "⇕" };
+    if (name === "nearrow") return { type: "mo", value: "↗" };
+    if (name === "searrow") return { type: "mo", value: "↘" };
+    if (name === "swarrow") return { type: "mo", value: "↙" };
+    if (name === "nwarrow") return { type: "mo", value: "↖" };
+    if (name === "nrightarrow") return { type: "mo", value: "↛" };
+    if (name === "nleftarrow") return { type: "mo", value: "↚" };
+    if (name === "nRightarrow") return { type: "mo", value: "⇏" };
+    if (name === "nLeftarrow") return { type: "mo", value: "⇍" };
     if (name === "mapsto") return { type: "mo", value: "↦" };
-    if (name === "perp") return { type: "mo", value: "⊥" };
+    if (name === "perp" || name === "bot") return { type: "mo", value: "⊥" };
+    if (name === "top") return { type: "mo", value: "⊤" };
     if (name === "parallel") return { type: "mo", value: "∥" };
     if (name === "angle") return { type: "mo", value: "∠" };
     if (name === "oplus") return { type: "mo", value: "⊕" };
     if (name === "otimes") return { type: "mo", value: "⊗" };
+    if (name === "ominus") return { type: "mo", value: "⊖" };
+    if (name === "oslash") return { type: "mo", value: "⊘" };
     if (name === "circ") return { type: "mo", value: "∘" };
     if (name === "bullet") return { type: "mo", value: "•" };
     if (name === "mid") return { type: "mo", value: "|" };
+    if (name === "nmid") return { type: "mo", value: "∤" };
+    if (name === "ast") return { type: "mo", value: "∗" };
+    if (name === "star") return { type: "mo", value: "⋆" };
+    if (name === "diamond") return { type: "mo", value: "⋄" };
+    if (name === "setminus" || name === "backslash")
+      return { type: "mo", value: "∖" };
+    if (name === "dagger" || name === "dag") return { type: "mo", value: "†" };
+    if (name === "ddagger" || name === "ddag")
+      return { type: "mo", value: "‡" };
+    if (name === "prime") return { type: "mo", value: "′" };
+    if (name === "colon") return { type: "mo", value: ":" };
+    if (name === "therefore") return { type: "mo", value: "∴" };
+    if (name === "because") return { type: "mo", value: "∵" };
+    if (name === "ll") return { type: "mo", value: "≪" };
+    if (name === "gg") return { type: "mo", value: "≫" };
+    if (name === "prec") return { type: "mo", value: "≺" };
+    if (name === "succ") return { type: "mo", value: "≻" };
+    if (name === "preceq") return { type: "mo", value: "⪯" };
+    if (name === "succeq") return { type: "mo", value: "⪰" };
+    if (name === "vdash") return { type: "mo", value: "⊢" };
+    if (name === "dashv") return { type: "mo", value: "⊣" };
+    if (name === "models") return { type: "mo", value: "⊨" };
+    if (name === "sqsubset") return { type: "mo", value: "⊏" };
+    if (name === "sqsupset") return { type: "mo", value: "⊐" };
+    if (name === "sqsubseteq") return { type: "mo", value: "⊑" };
+    if (name === "sqsupseteq") return { type: "mo", value: "⊒" };
+    if (name === "sqcup") return { type: "mo", value: "⊔" };
+    if (name === "sqcap") return { type: "mo", value: "⊓" };
+    if (name === "uplus") return { type: "mo", value: "⊎" };
+    if (name === "triangle") return { type: "mo", value: "△" };
+    if (name === "square") return { type: "mo", value: "□" };
+    if (name === "langle") return { type: "mo", value: "⟨" };
+    if (name === "rangle") return { type: "mo", value: "⟩" };
+    if (name === "lfloor") return { type: "mo", value: "⌊" };
+    if (name === "rfloor") return { type: "mo", value: "⌋" };
+    if (name === "lceil") return { type: "mo", value: "⌈" };
+    if (name === "rceil") return { type: "mo", value: "⌉" };
+    if (name === "lbrace") return { type: "mo", value: "{" };
+    if (name === "rbrace") return { type: "mo", value: "}" };
+    if (name === "vert") return { type: "mo", value: "|" };
+    if (name === "Vert") return { type: "mo", value: "‖" };
+    if (name === "hbar") return { type: "mi", value: "ℏ" };
+    if (name === "ell") return { type: "mi", value: "ℓ" };
+    if (name === "Re") return { type: "mi", value: "ℜ" };
+    if (name === "Im") return { type: "mi", value: "ℑ" };
+    if (name === "wp") return { type: "mi", value: "℘" };
+    if (name === "aleph") return { type: "mi", value: "ℵ" };
+    if (name === "beth") return { type: "mi", value: "ℶ" };
+    if (name === "flat") return { type: "mi", value: "♭" };
+    if (name === "sharp") return { type: "mi", value: "♯" };
+    if (name === "natural") return { type: "mi", value: "♮" };
 
     if (functions.has(name)) return { type: "mi", value: name };
     if (greek[name]) return { type: "mi", value: greek[name] };
