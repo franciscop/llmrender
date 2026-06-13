@@ -54,7 +54,7 @@ const greet = (name) => \`Hello, \${name}!\`;
 <Markdown>{text}</Markdown>
 ```
 
-Every HTML attribute you'd put on a `<div>` — `className`, `style`, `id`, `data-*` — passes through:
+Every HTML attribute you'd put on a `<div>` (`className`, `style`, `id`, `data-*`) passes through:
 
 ```jsx
 <Markdown className="prose" id="content" data-testid="article">
@@ -88,18 +88,18 @@ import "llmrender/themes/contrast.css";   // high contrast dark (WCAG AAA)
 | Prop | Type | Default | Description |
 |---|---|---|---|
 | `children` | `string` | required | Markdown source to render |
-| `highlight` | `HighlightFn \| boolean` | `true` | Syntax highlighter — `false` disables, `true` uses built-in |
-| `math` | `MathFn \| boolean` | `true` | Math renderer — `false` disables, `true` uses built-in |
-| `rawHtml` | `RawHtml \| boolean` | `false` | Allow HTML tags in Markdown source — see [Security](#security) |
-| `...props` | `HTMLAttributes<HTMLDivElement>` | — | Forwarded to the wrapping `<div>` |
+| `highlight` | `HighlightFn \| boolean` | `true` | Syntax highlighter: `false` disables, `true` uses built-in |
+| `math` | `MathFn \| boolean` | `true` | Math renderer: `false` disables, `true` uses built-in |
+| `rawHtml` | `RawHtml \| boolean` | `false` | Allow HTML tags in Markdown source: see [Security](#security) |
+| `...props` | `HTMLAttributes<HTMLDivElement>` | - | Forwarded to the wrapping `<div>` |
 
 ### `children`
 
-The Markdown string to render. Partial strings are safe — LLMRender handles incomplete fences, unclosed math blocks, and mid-word formatting gracefully, so you can pass tokens as they stream in:
+The Markdown string to render. Partial strings are safe: LLMRender handles incomplete fences, unclosed math blocks, and mid-word formatting gracefully, so you can pass tokens as they stream in:
 
 ```jsx
 const [text, setText] = useState("");
-// Re-render on every chunk — no buffering needed
+// Re-render on every chunk no buffering needed
 return <Markdown>{text}</Markdown>;
 ```
 
@@ -149,7 +149,7 @@ function highlight(code, lang) {
 ```
 
 > [!NOTE]
-> The `highlight` function must be synchronous. Shiki's async `createHighlighter` won't work directly — use `createHighlighterSync` and pre-load the languages you need.
+> The `highlight` function must be synchronous. Shiki's async `createHighlighter` won't work directly; use `createHighlighterSync` and pre-load the languages you need.
 
 All colors in the built-in theme are CSS variables you can override without touching the rest:
 
@@ -187,9 +187,9 @@ Called for each math expression. `tex` is the raw LaTeX string, `block` is `true
 type MathFn = (tex: string, block: boolean) => ReactNode;
 ```
 
-By default LLMRender parses LaTeX and outputs browser-native **MathML** — no extra dependencies, no fonts to load, crisp at any zoom level, and accessible to screen readers. It covers fractions, roots, sums, integrals, Greek letters, matrices, accents, and most constructs LLMs commonly emit.
+By default LLMRender parses LaTeX and outputs browser-native **MathML**: no extra dependencies, no fonts to load, crisp at any zoom level, and accessible to screen readers. It covers fractions, roots, sums, integrals, Greek letters, matrices, accents, and most constructs LLMs commonly emit.
 
-Pass `math={false}` to treat `$…$` and `$$…$$` as plain text — useful if your content doesn't contain math and you want to avoid false positives on dollar signs.
+Pass `math={false}` to treat `$…$` and `$$…$$` as plain text, useful if your content doesn't contain math and you want to avoid false positives on dollar signs.
 
 ```jsx
 <Markdown math={false}>{content}</Markdown>
@@ -236,7 +236,7 @@ By default, HTML tags written inside Markdown source are escaped and appear as l
 This paragraph has <mark>highlighted text</mark> and a <details><summary>spoiler</summary>hidden content</details>.
 ```
 
-**`rawHtml={{ tag: ["attr", …] }}`** is the strict form — only the tags and attributes you list are rendered, everything else is dropped as text. Use this for untrusted sources where you know exactly what HTML the content may contain:
+**`rawHtml={{ tag: ["attr", …] }}`** is the strict form: only the tags and attributes you list are rendered, everything else is dropped as text. Use this for untrusted sources where you know exactly what HTML the content may contain:
 
 ```jsx
 // Only allow <mark> (no attributes) and <span class="…">
@@ -528,7 +528,7 @@ graph TD
 
 ### Streaming LLM output
 
-Render tokens as they arrive — pass the partial string and LLMRender handles incomplete Markdown gracefully:
+Render tokens as they arrive. Pass the partial string and LLMRender handles incomplete Markdown gracefully:
 
 ```jsx
 import { useChat } from "@ai-sdk/react";
@@ -593,7 +593,7 @@ For streaming output as the AI types, see [Streaming LLM output](#streaming-llm-
 
 ### Next.js
 
-LLMRender works as a **React Server Component** for static content — no `"use client"` needed:
+LLMRender works as a **React Server Component** for static content, no `"use client"` needed:
 
 ```tsx
 // app/blog/[slug]/page.tsx
@@ -671,26 +671,26 @@ function highlight(code, lang) {
 
 ## Security
 
-LLMRender is safe to use with untrusted Markdown — including content from users, LLMs, or external APIs. Here is how XSS (cross-site scripting) and other injection attacks are prevented, and what the limits are.
+LLMRender is safe to use with untrusted Markdown, including content from users, LLMs, or external APIs. Here is how XSS (cross-site scripting) and other injection attacks are prevented, and what the limits are.
 
-LLMRender never produces raw HTML strings. Every piece of content — headings, paragraphs, link text, table cells, code, image alt text — becomes a React element rendered through JSX. React automatically escapes all text children, so input like `[<script>alert(1)</script>](url)` renders the `<script>` as literal visible text, not an executed tag. This protection is unconditional and applies to every Markdown construct.
+LLMRender never produces raw HTML strings. Every piece of content (headings, paragraphs, link text, table cells, code, image alt text) becomes a React element rendered through JSX. React automatically escapes all text children, so input like `[<script>alert(1)</script>](url)` renders the `<script>` as literal visible text, not an executed tag. This protection is unconditional and applies to every Markdown construct.
 
-URL attributes (`href`, `src`, etc.) are the one place text becomes an executable value. LLMRender uses an allowlist here too: only `http:` and `https:` URLs are allowed. Relative URLs and `#` fragments have no scheme and are always allowed. Everything else — `javascript:`, `data:`, `blob:`, `ftp:`, custom app protocols, and anything new — is replaced with `#`. Control characters that browsers strip from scheme names before resolving (e.g. `java\x09script:`) are removed before the check. Auto-linked bare URLs in Markdown only match `http://` and `https://` by definition.
+URL attributes (`href`, `src`, etc.) are the one place text becomes an executable value. LLMRender uses an allowlist here too: only `http:` and `https:` URLs are allowed. Relative URLs and `#` fragments have no scheme and are always allowed. Everything else (`javascript:`, `data:`, `blob:`, `ftp:`, custom app protocols, and anything new) is replaced with `#`. Control characters that browsers strip from scheme names before resolving (e.g. `java\x09script:`) are removed before the check. Auto-linked bare URLs in Markdown only match `http://` and `https://` by definition.
 
-By default, HTML tags written inside Markdown source are not rendered — they appear as escaped text. The `rawHtml` prop opts in to rendering them.
+By default, HTML tags written inside Markdown source are not rendered: they appear as escaped text. The `rawHtml` prop opts in to rendering them.
 
-**`rawHtml={true}`** — renders tags from a built-in allowlist of known-safe content elements. Anything not on the list is silently dropped as text. The allowlist covers:
+**`rawHtml={true}`**: renders tags from a built-in allowlist of known-safe content elements. Anything not on the list is silently dropped as text. The allowlist covers:
 
 - **Inline:** `a`, `abbr`, `b`, `bdi`, `bdo`, `br`, `cite`, `code`, `data`, `dfn`, `em`, `i`, `kbd`, `mark`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `small`, `span`, `strong`, `sub`, `sup`, `time`, `u`, `var`, `wbr`
 - **Block:** `address`, `article`, `aside`, `blockquote`, `dd`, `del`, `details`, `div`, `dl`, `dt`, `figcaption`, `figure`, `footer`, `h1`–`h6`, `header`, `hr`, `ins`, `li`, `main`, `nav`, `ol`, `p`, `pre`, `section`, `summary`, `ul`
 - **Tables:** `caption`, `col`, `colgroup`, `table`, `tbody`, `td`, `th`, `thead`, `tr`
 - **Media:** `audio`, `img`, `map`, `area`, `picture`, `source`, `track`, `video`
 
-Tags not on this list — including `script`, `style`, `iframe`, `canvas`, `svg`, `form`, `input`, `dialog`, and anything new browsers add in the future — are never rendered. This allowlist model means the library stays secure by default even as the HTML spec evolves.
+Tags not on this list (including `script`, `style`, `iframe`, `canvas`, `svg`, `form`, `input`, `dialog`, and anything new browsers add in the future) are never rendered. This allowlist model means the library stays secure by default even as the HTML spec evolves.
 
 Regardless of the allowlist, these attributes are always stripped: all `on*` event handlers, `srcdoc`, `style`, `ping`. URL-bearing attributes (`href`, `src`, `action`, etc.) are sanitized to block any scheme other than `http:` and `https:`. Any `<a target="_blank">` automatically gets `rel="noopener noreferrer"` added (merged with any existing `rel` value) to prevent tabnapping.
 
-**`rawHtml={{ tag: ["attr", …] }}`** — explicit allowlist. Only the listed tags render, and only the listed attributes pass through. Use `"*"` to allow all safe attributes for a tag. The hard-blocked tags and attributes above cannot be unlocked even here:
+**`rawHtml={{ tag: ["attr", …] }}`**: explicit allowlist. Only the listed tags render, and only the listed attributes pass through. Use `"*"` to allow all safe attributes for a tag. The hard-blocked tags and attributes above cannot be unlocked even here:
 
 ```jsx
 // Allow <mark> with no attributes, and <span> with only class
@@ -706,33 +706,33 @@ import Markdown, { allowTags } from "llmrender";
 <Markdown rawHtml={{ ...allowTags, details: ["open"] }}>{content}</Markdown>
 ```
 
-Prefer the explicit allowlist for untrusted sources — it gives you precise control over what HTML can appear.
+Prefer the explicit allowlist for untrusted sources: it gives you precise control over what HTML can appear.
 
 ## FAQ
 
-### Why doesn't my complex Markdown/HTML/LaTeX render correctly?
+### Regex based rendering vs AST
 
-LLMRender uses regex-based parsing rather than a full AST. This is intentional — an AST parser would add significant weight and CPU overhead, making it impossible to stay under 10 KB. The trade-off is that a small number of pathological inputs won't render correctly.
+LLMRender uses regex-based parsing rather than a full AST. This is intentional: an AST parser would add significant weight and CPU overhead, making it impossible to stay under 10 KB. The trade-off is that a small number of inputs won't render correctly.
 
-These edge cases require *very* unusual structure to trigger. Common LLM output — headings, bold, italics, links, tables, code blocks, and standard LaTeX — all work fine. The kinds of things that can trip up the regex parser:
+Common LLM output (headings, bold, italics, links, tables, code blocks, and standard LaTeX) all works fine. The kinds of things that can trip up the regex parser:
 
-- **HTML (`rawHtml` enabled) attribute values containing `>`** (e.g. `<img alt="score: 5 > 3" src="photo.jpg">`) — the attribute parser stops at the first `>`, so the tag is matched as `<img alt="score: 5 >` with no `src`. The image renders broken, and ` 3" src="photo.jpg">` appears as literal text after it.
-- **Multi-line block HTML (`rawHtml` enabled)** — only single-line block HTML is supported. A `<div class="box">` on one line followed by content and `</div>` on subsequent lines renders the opening tag as an empty self-closing element, the content as a separate paragraph, and the closing tag as stray literal text.
-- **Deeply nested LaTeX** — something like `\frac{\frac{\frac{a}{b}}{c}}{d}` across 10+ levels of nesting hits the depth guard and the innermost groups are discarded.
+- **HTML (`rawHtml` enabled) attribute values containing `>`** (e.g. `<img alt="score: 5 > 3" src="photo.jpg">`): the attribute parser stops at the first `>`, so the tag is matched as `<img alt="score: 5 >` with no `src`. The image renders broken, and ` 3" src="photo.jpg">` appears as literal text after it.
+- **Multi-line block HTML (`rawHtml` enabled)**: only single-line block HTML is supported. A `<div class="box">` on one line followed by content and `</div>` on subsequent lines renders the opening tag as an empty self-closing element, the content as a separate paragraph, and the closing tag as stray literal text.
+- **Deeply nested LaTeX**: something like `\frac{\frac{\frac{a}{b}}{c}}{d}` across 10+ levels of nesting hits the depth guard and the innermost groups are discarded.
 
-If you run into a bug, please [open an issue](https://github.com/franciscop/llmrender/issues). We fix bugs but we're not aiming to build a fully spec-compliant HTML/Markdown/LaTeX AST parser.
+If you run into a bug, please [open an issue](https://github.com/franciscop/llmrender/issues).
 
 ### How were the sizes measured?
 
-Each library was set up in an identical Vite + React TypeScript project rendering the same Markdown content — headings, bold/italic, inline and display math, a syntax-highlighted code block, and a table. Every library was configured with math (KaTeX) and syntax highlighting plus a sanitizer where required (DOMPurify for libraries that emit raw HTML strings). Each project was built with `vite build` and the gzip size of the JS bundle was recorded.
+Each library was set up in an identical Vite + React TypeScript project rendering the same Markdown content: headings, bold/italic, inline and display math, a syntax-highlighted code block, and a table. Every library was configured with math (KaTeX) and syntax highlighting plus a sanitizer where required (DOMPurify for libraries that emit raw HTML strings). Each project was built with `vite build` and the gzip size of the JS bundle was recorded.
 
-For syntax highlighting, each library was paired with whatever its official documentation recommends — all as shown in their respective READMEs:
+For syntax highlighting, each library was paired with whatever its official documentation recommends, as shown in their respective READMEs:
 
 - **marked**: [marked](https://marked.js.org) + [marked-highlight](https://github.com/markedjs/marked-highlight) + [highlight.js](https://highlightjs.org) + [katex](https://katex.org) + [dompurify](https://github.com/cure53/DOMPurify)
 - **react-markdown**: [react-markdown](https://github.com/remarkjs/react-markdown) + [react-syntax-highlighter](https://github.com/react-syntax-highlighter/react-syntax-highlighter) + [remark-math](https://github.com/remarkjs/remark-math) + [rehype-katex](https://github.com/remarkjs/remark-math/tree/main/packages/rehype-katex)
 - **markdown-it**: [markdown-it](https://github.com/markdown-it/markdown-it) + [highlight.js](https://highlightjs.org) + [katex](https://katex.org) + [dompurify](https://github.com/cure53/DOMPurify)
 
-The sizes shown in the table are the **library overhead only** — a plain React app with no Markdown library builds to ~60 KB gzipped, and that baseline is subtracted from each result. This isolates what each Markdown solution actually adds to your bundle.
+The sizes shown in the table are the **library overhead only**: a plain React app with no Markdown library builds to ~60 KB gzipped, and that baseline is subtracted from each result. This isolates what each Markdown solution actually adds to your bundle.
 
 Because all projects share React, some gzip savings apply across the board and are not reflected in the individual numbers. Real-world savings from shared chunks in a full app will be somewhat smaller than what the table suggests.
 
