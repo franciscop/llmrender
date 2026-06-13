@@ -42,7 +42,7 @@
     "home": "assets/home.html",
     "menu": {
       "Documentation": "/documentation",
-      "LaTeX": "./assets/math-test.html",
+      "LaTeX": "./assets/latex.html",
       "Donate": "https://www.paypal.me/franciscopresencia/19",
       "Github": "https://github.com/franciscop/llmrender"
     }
