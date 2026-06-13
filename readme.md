@@ -710,6 +710,18 @@ Prefer the explicit allowlist for untrusted sources — it gives you precise con
 
 ## FAQ
 
+### Why doesn't my complex Markdown/HTML/LaTeX render correctly?
+
+LLMRender uses regex-based parsing rather than a full AST. This is intentional — an AST parser would add significant weight and CPU overhead, making it impossible to stay under 10 KB. The trade-off is that a small number of pathological inputs won't render correctly.
+
+These edge cases require *very* unusual structure to trigger. Common LLM output — headings, bold, italics, links, tables, code blocks, and standard LaTeX — all work fine. The kinds of things that can trip up the regex parser:
+
+- **HTML (`rawHtml` enabled) attribute values containing `>`** (e.g. `<img alt="score: 5 > 3" src="photo.jpg">`) — the attribute parser stops at the first `>`, so the tag is matched as `<img alt="score: 5 >` with no `src`. The image renders broken, and ` 3" src="photo.jpg">` appears as literal text after it.
+- **Multi-line block HTML (`rawHtml` enabled)** — only single-line block HTML is supported. A `<div class="box">` on one line followed by content and `</div>` on subsequent lines renders the opening tag as an empty self-closing element, the content as a separate paragraph, and the closing tag as stray literal text.
+- **Deeply nested LaTeX** — something like `\frac{\frac{\frac{a}{b}}{c}}{d}` across 10+ levels of nesting hits the depth guard and the innermost groups are discarded.
+
+If you run into a bug, please [open an issue](https://github.com/franciscop/llmrender/issues). We fix bugs but we're not aiming to build a fully spec-compliant HTML/Markdown/LaTeX AST parser.
+
 ### How were the sizes measured?
 
 Each library was set up in an identical Vite + React TypeScript project rendering the same Markdown content — headings, bold/italic, inline and display math, a syntax-highlighted code block, and a table. Every library was configured with math (KaTeX) and syntax highlighting plus a sanitizer where required (DOMPurify for libraries that emit raw HTML strings). Each project was built with `vite build` and the gzip size of the JS bundle was recorded.
