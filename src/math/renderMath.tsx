@@ -17,7 +17,8 @@ type Node =
   | { type: "munderover"; base: Node; under: Node; over: Node }
   | { type: "mbinom"; top: Node; bot: Node }
   | { type: "mtable"; rows: Node[][] }
-  | { type: "mspace"; width: string };
+  | { type: "mspace"; width: string }
+  | { type: "mstyle"; displaystyle: boolean; child: Node };
 
 export default function renderMath(tex: string, block = false): ReactElement {
   let i = 0;
@@ -478,6 +479,18 @@ export default function renderMath(tex: string, block = false): ReactElement {
 
     if (name === "frac" || name === "cfrac")
       return { type: "mfrac", num: parseGroup(), den: parseGroup() };
+    if (name === "tfrac")
+      return {
+        type: "mstyle",
+        displaystyle: false,
+        child: { type: "mfrac", num: parseGroup(), den: parseGroup() },
+      };
+    if (name === "dfrac")
+      return {
+        type: "mstyle",
+        displaystyle: true,
+        child: { type: "mfrac", num: parseGroup(), den: parseGroup() },
+      };
     if (name === "binom")
       return { type: "mbinom", top: parseGroup(), bot: parseGroup() };
     if (name === "sqrt") {
@@ -714,6 +727,13 @@ export default function renderMath(tex: string, block = false): ReactElement {
             {toJSX(node.num, 0)}
             {toJSX(node.den, 1)}
           </mfrac>
+        );
+
+      case "mstyle":
+        return (
+          <mstyle key={k} {...({ displaystyle: node.displaystyle } as {})}>
+            {toJSX(node.child, 0)}
+          </mstyle>
         );
 
       case "msqrt":

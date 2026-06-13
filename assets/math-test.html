@@ -5,9 +5,10 @@
     <meta name="viewport" content="initial-scale=1" />
     <title>Math rendering comparison — LLMRender</title>
     <link rel="icon" href="../src/favicon.png" />
+    <link rel="stylesheet" href="/style.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
-    <link href="https://fonts.googleapis.com/css2?family=Source+Code+Pro&display=swap" rel="stylesheet" />
+    <link href="https://fonts.googleapis.com/css2?family=Montserrat:wght@500&family=Open+Sans&family=Source+Code+Pro&display=swap" rel="stylesheet" />
     <script type="importmap">
       {
         "imports": {
@@ -25,24 +26,20 @@
       }
     </script>
     <style>
-      *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
-      html, body { height: 100%; overflow: hidden; font-family: system-ui, sans-serif; }
-
-      body { display: flex; flex-direction: column; background: #f6f8fa; }
-
-      /* ── header ── */
-      header {
-        display: flex; align-items: center; gap: 1.2em;
-        padding: 0 1.25em; height: 44px; flex-shrink: 0;
-        background: #24292f; color: #e6edf3;
-        font-size: 0.85em;
+      *, *::before, *::after { box-sizing: border-box; }
+      html { height: 100%; }
+      body {
+        display: flex; flex-direction: column;
+        height: 100%; overflow: hidden;
+        background: #f6f8fa; margin: 0; padding: 0;
+        font-family: "Open Sans", system-ui, sans-serif;
       }
-      header strong { color: #fff; font-size: 1.05em; }
-      header span   { color: #8b949e; }
+      /* offset fixed nav (3em tall) */
+      .page-body { display: flex; flex: 1; overflow: hidden; padding-top: 3em; }
 
       /* ── split ── */
       .split {
-        display: flex; flex: 1; overflow: hidden;
+        display: flex; flex: 1; overflow: hidden; width: 100%;
       }
       .panel {
         flex: 1; display: flex; flex-direction: column; overflow: hidden;
@@ -100,12 +97,23 @@
       }
     </style>
   </head>
-  <body>
-    <header>
-      <strong>LLMRender</strong>
-      <span>Math renderer comparison — 100+ equations</span>
-    </header>
+  <body id="top">
+    <nav>
+      <a href="/" class="brand">
+        <img class="logo" src="../src/favicon.png" alt="" />
+        <span>LLMRender</span>
+      </a>
+      <input id="bmenub" type="checkbox" class="show" />
+      <label for="bmenub" class="burger">menu</label>
+      <div class="menu">
+        <a href="/documentation">Documentation</a>
+        <a href="/math-test" aria-current="page">Math Test</a>
+        <a href="https://francisco.io/">Author</a>
+        <a href="https://github.com/franciscop/llmrender">Github</a>
+      </div>
+    </nav>
 
+    <div class="page-body">
     <div class="split">
       <div class="panel" id="panel-0">
         <div class="panel-bar">
@@ -134,6 +142,7 @@
         </div>
         <div class="panel-body" id="body-1"></div>
       </div>
+    </div>
     </div>
 
     <!-- ── markdown source ─────────────────────────────────────────── -->
