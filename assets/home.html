@@ -132,7 +132,9 @@
     width: 2.4em;
     height: 2.4em;
     border-radius: 50%;
-    background: #0969da url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 12' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6,2 2,6 6,10'/%3E%3Cpolyline points='16,2 20,6 16,10'/%3E%3C/svg%3E") no-repeat center / 50% auto;
+    background: #0969da
+      url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 22 12' fill='none' stroke='white' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpolyline points='6,2 2,6 6,10'/%3E%3Cpolyline points='16,2 20,6 16,10'/%3E%3C/svg%3E")
+      no-repeat center / 50% auto;
   }
   .lp-ba-label {
     position: absolute;
@@ -266,6 +268,17 @@
     background: #fff;
     color: #24292f;
   }
+  .lp-math-preview {
+    background: #fff;
+    border: 1px solid #d0d7de;
+    border-top: none;
+    border-radius: 0 0 6px 6px;
+    padding: 0.75em 1.25em;
+    font-size: 0.9em;
+  }
+  .lp-math-preview p {
+    margin: 0 0 0.25em;
+  }
 </style>
 
 <!-- ============================== HERO ============================== -->
@@ -294,7 +307,9 @@
   </div>
   <div>
     <div class="lp-ba" id="hero-ba">
-      <div class="lp-ba-layer" id="hero-md"><pre># Release 1.0 coming soon
+      <div class="lp-ba-layer" id="hero-md">
+        <pre>
+# Release 1.0 coming soon
 
 Now **faster** and ~~heavier~~ lighter. Even $E = mc^2$ renders inline.
 
@@ -307,7 +322,9 @@ You also have **30+ languages** supported in the default Syntax Highlighting:
 ```jsx
 import Markdown from "llmrender";
 const App = ({ text }) =&gt; &lt;Markdown&gt;{text}&lt;/Markdown&gt;;
-```</pre></div>
+```</pre
+        >
+      </div>
       <div class="lp-ba-layer" id="hero-rendered"></div>
       <div class="lp-ba-divider"></div>
       <span class="lp-ba-label" style="left: 1em">your markdown</span>
@@ -476,9 +493,7 @@ $$
       {code}
     &#x3C;/SyntaxHighlighter&#x3E;
   )}
-&#x3E;
-  {text}
-&#x3C;/Markdown&#x3E;</code></pre>
+&#x3E;</code></pre>
   </div>
 </section>
 
@@ -506,6 +521,25 @@ $$
 $$
 \sum_{n=1}^{\infty} \frac{1}{n^2} = \frac{\pi^2}{6}
 $$</code></pre>
+    <div class="lp-math-preview">
+      <p>Inline math like <math><msup><mi>e</mi><mrow><mi>i</mi><mi>π</mi></mrow></msup><mo>+</mo><mn>1</mn><mo>=</mo><mn>0</mn></math>, or display math:</p>
+      <math display="block">
+        <munderover>
+          <mo>∑</mo>
+          <mrow><mi>n</mi><mo>=</mo><mn>1</mn></mrow>
+          <mo>∞</mo>
+        </munderover>
+        <mfrac>
+          <mn>1</mn>
+          <msup><mi>n</mi><mn>2</mn></msup>
+        </mfrac>
+        <mo>=</mo>
+        <mfrac>
+          <msup><mi>π</mi><mn>2</mn></msup>
+          <mn>6</mn>
+        </mfrac>
+      </math>
+    </div>
   </div>
 </section>
 
@@ -514,9 +548,9 @@ $$</code></pre>
     <p class="lp-kicker">GitHub Flavored Markdown</p>
     <h2>The Markdown everyone actually writes</h2>
     <p>
-      From READMEs to chat replies, real-world Markdown is GitHub flavored,
-      and LLMRender renders all of it: tables with column alignment, task
-      lists with checkboxes, strikethrough, autolinks, and the
+      From READMEs to chat replies, real-world Markdown is GitHub flavored, and
+      LLMRender renders all of it: tables with column alignment, task lists with
+      checkboxes, strikethrough, autolinks, and the
       <code>[!NOTE]</code>/<code>[!TIP]</code>/<code>[!WARNING]</code>
       callouts that make documents scannable.
     </p>
@@ -580,8 +614,8 @@ return &#x3C;Markdown&#x3E;{text}&#x3C;/Markdown&#x3E;;</code></pre>
     <p class="lp-kicker">Security</p>
     <h2>Safe with untrusted content by default</h2>
     <p>
-      Whether it comes from users, files or models, Markdown can carry
-      malicious payloads, so LLMRender is
+      Whether it comes from users, files or models, Markdown can carry malicious
+      payloads, so LLMRender is
       <a href="/documentation#security">safe by default</a>:
       <code>javascript:</code> and <code>data:</code> URLs are neutralized, raw
       HTML is ignored unless you opt in, and even then it goes through a strict
@@ -663,52 +697,52 @@ import &#x22;llmrender/themes/adaptive.css&#x22;;
     >):
   </p>
   <div class="lp-compare-wrap">
-  <table class="lp-compare">
-    <thead>
-      <tr>
-        <th>Package</th>
-        <th>Base</th>
-        <th>Math</th>
-        <th>Highlight</th>
-        <th>Sanitize</th>
-        <th>Full size (gzip)</th>
-      </tr>
-    </thead>
-    <tbody>
-      <tr>
-        <td><strong>LLMRender</strong></td>
-        <td><strong>8 KB</strong></td>
-        <td>built-in</td>
-        <td>built-in</td>
-        <td>built-in</td>
-        <td><strong>10 KB</strong></td>
-      </tr>
-      <tr>
-        <td><code>react-markdown</code></td>
-        <td>33.3 KB</td>
-        <td>+74.6 KB</td>
-        <td>+508 KB</td>
-        <td>built-in</td>
-        <td>340 KB</td>
-      </tr>
-      <tr>
-        <td><code>marked</code></td>
-        <td>12.1 KB</td>
-        <td>+74.6 KB</td>
-        <td>+298 KB</td>
-        <td>+8.7 KB</td>
-        <td>403 KB</td>
-      </tr>
-      <tr>
-        <td><code>markdown-it</code></td>
-        <td>43.3 KB</td>
-        <td>+74.6 KB</td>
-        <td>+298 KB</td>
-        <td>+8.7 KB</td>
-        <td>436 KB</td>
-      </tr>
-    </tbody>
-  </table>
+    <table class="lp-compare">
+      <thead>
+        <tr>
+          <th>Package</th>
+          <th>Base</th>
+          <th>Math</th>
+          <th>Highlight</th>
+          <th>Sanitize</th>
+          <th>Full size (gzip)</th>
+        </tr>
+      </thead>
+      <tbody>
+        <tr>
+          <td><strong>LLMRender</strong></td>
+          <td><strong>8 KB</strong></td>
+          <td>built-in</td>
+          <td>built-in</td>
+          <td>built-in</td>
+          <td><strong>10 KB</strong></td>
+        </tr>
+        <tr>
+          <td><code>react-markdown</code></td>
+          <td>33.3 KB</td>
+          <td>+74.6 KB</td>
+          <td>+508 KB</td>
+          <td>built-in</td>
+          <td>340 KB</td>
+        </tr>
+        <tr>
+          <td><code>marked</code></td>
+          <td>12.1 KB</td>
+          <td>+74.6 KB</td>
+          <td>+298 KB</td>
+          <td>+8.7 KB</td>
+          <td>403 KB</td>
+        </tr>
+        <tr>
+          <td><code>markdown-it</code></td>
+          <td>43.3 KB</td>
+          <td>+74.6 KB</td>
+          <td>+298 KB</td>
+          <td>+8.7 KB</td>
+          <td>436 KB</td>
+        </tr>
+      </tbody>
+    </table>
   </div>
 </section>
 

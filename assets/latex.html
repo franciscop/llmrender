@@ -5,7 +5,6 @@
     <meta name="viewport" content="initial-scale=1" />
     <title>Math rendering comparison — LLMRender</title>
     <link rel="icon" href="../src/favicon.png" />
-    <link rel="stylesheet" href="/style.min.css" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
     <link
@@ -37,7 +36,8 @@
       *::after {
         box-sizing: border-box;
       }
-      html {
+      html,
+      body {
         height: 100%;
       }
       body {
@@ -47,8 +47,94 @@
         overflow: hidden;
         background: #f6f8fa;
         margin: 0;
-        padding: 0 !important;
+        padding: 0;
         font-family: "Open Sans", system-ui, sans-serif;
+        color: #111;
+        line-height: 1.5;
+      }
+      a {
+        color: #0074d9;
+        text-decoration: none;
+        transition: opacity 0.2s;
+      }
+      a:hover {
+        opacity: 0.75;
+      }
+
+      /* ── navbar ── */
+      nav {
+        position: fixed;
+        top: 0;
+        left: 0;
+        right: 0;
+        height: 3em;
+        padding: 0 0.6em;
+        background: #fff;
+        box-shadow: 0 0 0.2em rgba(17, 17, 17, 0.2);
+        z-index: 10;
+      }
+      nav .brand,
+      nav .menu,
+      nav .burger {
+        float: right;
+        position: relative;
+        top: 50%;
+        transform: translateY(-50%);
+      }
+      nav .brand {
+        font-weight: 700;
+        float: left;
+        padding: 0 0.6em;
+        max-width: 50%;
+        white-space: nowrap;
+        color: #111;
+        font-family: "Montserrat", system-ui, sans-serif;
+      }
+      nav .brand * {
+        vertical-align: middle;
+      }
+      nav .logo {
+        height: 2em;
+        margin-right: 0.3em;
+      }
+      nav .menu > * {
+        margin-right: 0.6em;
+        color: #111;
+        font-size: 0.95em;
+      }
+      nav .menu > [aria-current="page"] {
+        font-weight: 600;
+      }
+      nav .burger {
+        display: none;
+      }
+      @media (max-width: 60em) {
+        nav .burger {
+          display: inline-block;
+          cursor: pointer;
+        }
+        nav .burger ~ .menu {
+          position: fixed;
+          width: 0;
+          overflow: hidden;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          background: #fff;
+          transition: width 0.3s ease;
+          z-index: 11;
+        }
+        nav .show:checked ~ .menu {
+          width: 70%;
+          overflow: auto;
+          height: 100vh;
+        }
+        nav .burger ~ .menu > * {
+          display: block;
+          margin: 0.3em;
+          padding: 0.3em 0.9em;
+          text-align: left;
+        }
       }
       /* offset fixed nav (3em tall) */
       .page-body {
