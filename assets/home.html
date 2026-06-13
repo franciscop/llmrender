@@ -59,11 +59,17 @@
     min-width: 0;
   }
   @media (max-width: 900px) {
-    .lp-hero {
+    /* section.lp-hero outranks the framework's .nowrap so the hero actually
+       stacks on mobile instead of squishing into two columns. */
+    section.lp-hero {
+      flex-direction: column;
       flex-wrap: wrap;
+      align-items: stretch;
     }
     .lp-hero > div {
-      flex: 1 1 100%;
+      flex: 1 1 auto;
+      width: 100%;
+      min-width: 0;
     }
   }
   .lp-ba {
