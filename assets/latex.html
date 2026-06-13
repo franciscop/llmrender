@@ -486,7 +486,10 @@
     </script>
 
     <script type="module">
-      const md = document.getElementById("md").textContent.trim();
+      const raw = document.getElementById("md").textContent;
+      const indent = raw.split('\n').filter(l => /\S/.test(l))
+        .reduce((min, l) => Math.min(min, l.match(/^(\s*)/)[1].length), Infinity);
+      const md = raw.split('\n').map(l => l.slice(indent)).join('\n').trim();
 
       const { createElement: h } = await import("react");
       const { createRoot } = await import("react-dom/client");
