@@ -103,15 +103,6 @@ const [text, setText] = useState("");
 return <Markdown>{text}</Markdown>;
 ```
 
-### `rawHtml`
-
-By default raw HTML inside Markdown is escaped to text. Set `rawHtml={true}` to render it through a built-in tag/attribute allowlist, or pass an explicit `{ tag: ["attr"] }` map for full control. See [Security](#security) for the full allowlist and rules.
-
-```jsx
-<Markdown rawHtml>{content}</Markdown>
-<Markdown rawHtml={{ mark: [], span: ["class"] }}>{content}</Markdown>
-```
-
 ### `highlight`
 
 > [!TIP]
@@ -190,13 +181,78 @@ All colors in the built-in theme are CSS variables you can override without touc
 > [!TIP]
 > We're under active development, so if you find a bug with the default math rendering we suggest [you file a ticket](https://github.com/franciscop/llmrender/issues).
 
-A function called for each math expression. The second parameter `block` is `true` for `$$…$$`, `false` for `$…$`:
+Called for each math expression. `tex` is the raw LaTeX string, `block` is `true` for display `$$…$$` and `false` for inline `$…$`. Return a `ReactNode` to replace it:
 
 ```ts
 type MathFn = (tex: string, block: boolean) => ReactNode;
 ```
 
-The built-in renderer converts LaTeX to MathML with no extra dependencies. Pass `math={false}` to disable math parsing.
+By default LLMRender parses LaTeX and outputs browser-native **MathML** — no extra dependencies, no fonts to load, crisp at any zoom level, and accessible to screen readers. It covers fractions, roots, sums, integrals, Greek letters, matrices, accents, and most constructs LLMs commonly emit.
+
+Pass `math={false}` to treat `$…$` and `$$…$$` as plain text — useful if your content doesn't contain math and you want to avoid false positives on dollar signs.
+
+```jsx
+<Markdown math={false}>{content}</Markdown>
+```
+
+To use KaTeX or MathJax instead of the built-in renderer, pass a function. For KaTeX:
+
+```jsx
+import Markdown from "llmrender";
+import katex from "katex";
+import "katex/dist/katex.min.css";
+
+function renderMath(tex, block) {
+  const html = katex.renderToString(tex, { displayMode: block, throwOnError: false });
+  return <span dangerouslySetInnerHTML={{ __html: html }} />;
+}
+
+<Markdown math={renderMath}>{content}</Markdown>
+```
+
+The function can also add a wrapper for copy-on-click or a tooltip showing the raw LaTeX:
+
+```jsx
+function renderMath(tex, block) {
+  return (
+    <span title={tex}>
+      {/* your renderer here */}
+    </span>
+  );
+}
+```
+
+### `rawHtml`
+
+By default, HTML tags written inside Markdown source are escaped and appear as literal text. This keeps LLMRender safe with untrusted content out of the box. The `rawHtml` prop opts in to rendering them.
+
+**`rawHtml={true}`** renders HTML through a built-in allowlist of known-safe tags. Dangerous tags (`script`, `style`, `iframe`, `form`, …) and attributes (`on*` event handlers, `style`, `srcdoc`) are always stripped regardless. Useful when your content comes from a trusted source and includes intentional HTML:
+
+```jsx
+<Markdown rawHtml>{content}</Markdown>
+```
+
+```md
+This paragraph has <mark>highlighted text</mark> and a <details><summary>spoiler</summary>hidden content</details>.
+```
+
+**`rawHtml={{ tag: ["attr", …] }}`** is the strict form — only the tags and attributes you list are rendered, everything else is dropped as text. Use this for untrusted sources where you know exactly what HTML the content may contain:
+
+```jsx
+// Only allow <mark> (no attributes) and <span class="…">
+<Markdown rawHtml={{ mark: [], span: ["class"] }}>{content}</Markdown>
+```
+
+The exported `allowTags` constant is the full object used by `rawHtml={true}`. Spread it to extend rather than replace the defaults:
+
+```jsx
+import Markdown, { allowTags } from "llmrender";
+
+// Default allowlist, but allow the "open" attribute on <details>
+<Markdown rawHtml={{ ...allowTags, details: ["open"] }}>{content}</Markdown>
+```
+
+See [Security](#security) for the complete allowlist and URL sanitization rules.
 
 ## Syntax
 
