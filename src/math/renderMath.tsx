@@ -176,7 +176,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
         const ch = consume();
         if (ch === "{") return "{";
         if (ch === "}") return "}";
-        if (ch === "|") return "|";
+        if (ch === "|") return "‖";
         if (ch === ".") return "";
         return ch;
       }
@@ -310,6 +310,10 @@ export default function renderMath(tex: string, block = false): ReactElement {
       if (c === " ") {
         consume();
         return { type: "mspace", width: "0.25em" };
+      }
+      if (c === "|") {
+        consume();
+        return { type: "mo", value: "‖" };
       }
     }
 

@@ -435,10 +435,10 @@ describe("renderMath", () => {
     ).toBeGreaterThan(0);
   });
 
-  it("renders \\left\\| ... \\right\\| with pipe delimiter", () => {
+  it("renders \\left\\| ... \\right\\| as double-bar delimiters", () => {
     const el = $(renderMath("\\left\\| x \\right\\|"));
     expect(
-      el.find("mo").filter((m) => m.textContent === "|").length,
+      el.find("mo").filter((m) => m.textContent === "‖").length,
     ).toBeGreaterThan(0);
   });
 
