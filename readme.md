@@ -122,18 +122,23 @@ function highlight(code, lang) {
 <Markdown highlight={highlight}>{content}</Markdown>
 ```
 
-Or Shiki for more themes and languages:
+Or Shiki (initialize synchronously before rendering):
 
 ```jsx
-import { codeToHtml } from "shiki";
+import { createHighlighterSync } from "shiki/sync";
 
-async function highlight(code, lang) {
-  const html = await codeToHtml(code, { lang, theme: "github-light" });
+const hl = createHighlighterSync({ themes: ["github-light"], langs: ["js", "ts", "python"] });
+
+function highlight(code, lang) {
+  const html = hl.codeToHtml(code, { lang, theme: "github-light" });
   return <div dangerouslySetInnerHTML={{ __html: html }} />;
 }
 
 <Markdown highlight={highlight}>{content}</Markdown>
 ```
+
+> [!NOTE]
+> The `highlight` function must be synchronous. Shiki's async `createHighlighter` won't work directly — use `createHighlighterSync` and pre-load the languages you need.
 
 All colors in the built-in theme are CSS variables you can override without touching the rest:
 
@@ -425,7 +430,7 @@ function Diagram({ code }) {
   useEffect(() => {
     if (ref.current) mermaid.run({ nodes: [ref.current] });
   }, [code]);
-  return [<div ref={ref} className="mermaid" key="d">{code}</div>];
+  return <div ref={ref} className="mermaid">{code}</div>;
 }
 
 function highlight(code, lang) {
@@ -621,7 +626,7 @@ The exported `allowTags` constant is the exact object used by `rawHtml={true}`, 
 ```jsx
 import Markdown, { allowTags } from "llmrender";
 
-// Everything from the default allowlist, plus <details> with open attribute
+// Default allowlist, but allow the "open" attribute on <details>
 <Markdown rawHtml={{ ...allowTags, details: ["open"] }}>{content}</Markdown>
 ```
 
