@@ -33,6 +33,14 @@ it("renders image without title and has no title attribute", () => {
   expect(img.attr("title")).toBeFalsy();
 });
 
+it("renders image with empty alt text", () => {
+  const img = $(<Markdown>{"![](https://example.com/img.png)"}</Markdown>).find(
+    "img",
+  );
+  expect(img.attr("src")).toBe("https://example.com/img.png");
+  expect(img.attr("alt")).toBe("");
+});
+
 it("renders image and link in same paragraph", () => {
   const $el = $(
     <Markdown>

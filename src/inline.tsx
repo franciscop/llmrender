@@ -56,7 +56,7 @@ const patterns: { regex: RegExp; render: Render }[] = [
   { regex: /`(.+?)`/, render: (m, i) => <code key={i}>{m[1]}</code> },
   { regex: /<br\s*\/?>/i, render: (_, i) => <br key={i} /> },
   {
-    regex: /!\[(.+?)\]\((.+?)(?:\s+"([^"]*)")?\)/,
+    regex: /!\[(.*?)\]\((.+?)(?:\s+"([^"]*)")?\)/,
     render: (m, i) => (
       <img key={i} alt={m[1]} src={sanitize(m[2])} title={m[3] || undefined} />
     ),
