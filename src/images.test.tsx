@@ -41,6 +41,25 @@ it("renders image with empty alt text", () => {
   expect(img.attr("alt")).toBe("");
 });
 
+it("renders linked image (badge pattern)", () => {
+  const $el = $(
+    <Markdown>
+      {
+        "[![alt](https://img.shields.io/npm/v/react-test?label=react-test&color=greenlime)](https://www.npmjs.com/package/react-test)"
+      }
+    </Markdown>,
+  );
+  const a = $el.find("a");
+  const img = $el.find("img");
+  expect(a.length).toBe(1);
+  expect(img.length).toBe(1);
+  expect(a.attr("href")).toBe("https://www.npmjs.com/package/react-test");
+  expect(img.attr("src")).toBe(
+    "https://img.shields.io/npm/v/react-test?label=react-test&color=greenlime",
+  );
+  expect(img.attr("alt")).toBe("alt");
+});
+
 it("renders image and link in same paragraph", () => {
   const $el = $(
     <Markdown>

@@ -118,12 +118,12 @@ it("does not truncate markdown link text under 60 chars", () => {
   expect(a.text()).toBe("short label");
 });
 
-it("truncates long markdown link text to 60 chars with ellipsis", () => {
+it("does not truncate long markdown link text", () => {
   const longText = "a".repeat(70);
   const a = $(<Markdown>{`[${longText}](https://example.com)`}</Markdown>).find(
     "a",
   );
-  expect(a.text()).toBe(longText.slice(0, 60) + "…");
+  expect(a.text()).toBe(longText);
   expect(a.attr("href")).toBe("https://example.com");
 });
 

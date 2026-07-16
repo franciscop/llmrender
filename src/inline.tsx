@@ -66,7 +66,7 @@ const patterns: { regex: RegExp; render: Render }[] = [
       /\[((?:[^[\]]|\[[^\]]*\])+)\]\(((?:[^()\s"]|\s(?!\s*")|\([^()]*\))+)(?:\s+"([^"]*)")?\)/,
     render: (m, i, r) => (
       <a key={i} href={sanitize(m[2])} title={m[3] || undefined}>
-        {r(truncate(m[1]))}
+        {r(m[1])}
       </a>
     ),
   },
