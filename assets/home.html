@@ -1,4 +1,106 @@
 <style>
+  .hero,
+  .row {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 30px;
+    margin: 40px 0;
+  }
+  .hero > *,
+  .row > * {
+    flex: 1 1 100%;
+    min-width: 0;
+  }
+  @media (min-width: 700px) {
+    .hero > *,
+    .row > * {
+      flex-basis: calc(50% - 15px);
+    }
+  }
+  h1 {
+    margin: 0 0 12px;
+    font-size: 40px;
+    font-weight: 700;
+    line-height: 1.2;
+    letter-spacing: -0.02em;
+    color: var(--text);
+  }
+  h2 {
+    margin: 0 0 10px;
+    font-size: 24px;
+    font-weight: 700;
+    letter-spacing: -0.01em;
+    color: var(--text);
+  }
+  p {
+    margin: 0 0 12px;
+    color: var(--text-soft);
+    font-size: 16px;
+  }
+  a {
+    color: var(--primary);
+  }
+  .buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 12px;
+    margin-top: 12px;
+  }
+  .button {
+    display: inline-block;
+    padding: 6px 15px;
+    border-radius: 6px;
+    font-size: 14px;
+    font-weight: 600;
+    text-decoration: none;
+    background: var(--primary);
+    color: #fff;
+    border: 1px solid transparent;
+    transition: box-shadow 0.2s;
+  }
+  .button:hover {
+    box-shadow: inset 0 0 0 99em rgba(0, 0, 0, 0.12);
+  }
+  .button.ghost {
+    background: rgba(0, 0, 0, 0.06);
+    color: var(--text);
+  }
+  .button.ghost:hover {
+    box-shadow: inset 0 0 0 99em rgba(0, 0, 0, 0.05);
+  }
+  pre {
+    margin: 0;
+    background: var(--code-bg);
+    border-radius: 10px;
+    padding: 9px 11px;
+    overflow-x: auto;
+    font: 13px/1.7 var(--font-mono);
+    color: var(--text);
+  }
+  pre.install {
+    display: inline-block;
+    padding: 8px 14px;
+    font-size: 14px;
+  }
+  @media (min-width: 600px) {
+    pre {
+      padding: 16px 18px;
+    }
+  }
+  :not(pre) > code {
+    background: var(--code-bg);
+    padding: 0 5px;
+    border-radius: 5px;
+    font: 0.9em/1 var(--font-mono);
+  }
+  pre code .comment { color: #8a94a6; }
+  pre code .keyword { color: var(--primary-dark); }
+  pre code .string { color: var(--color-tip); }
+  pre code .number { color: #905; }
+  pre code .type { color: var(--color-note); }
+  pre code .function { color: #ca0029; }
+  pre code .operator { color: #a67f59; }
   .lp-tagline {
     font-size: 1.15em;
     line-height: 1.6;
@@ -282,8 +384,7 @@
   }
 </style>
 
-<!-- ============================== HERO ============================== -->
-<section class="hero flex center nowrap lp-hero">
+<section class="hero lp-hero">
   <div>
     <h1>LLMRender</h1>
     <p class="lp-tagline">
@@ -298,10 +399,10 @@
       <li><strong>Streaming-safe</strong> rendering</li>
       <li><strong>500+</strong> tests, 99.9% coverage</li>
     </ul>
-    <pre class="small">npm install llmrender</pre>
+    <pre class="install">npm install llmrender</pre>
     <div class="buttons">
       <a class="button" href="/documentation">Documentation</a>
-      <a class="pseudo button" href="https://github.com/franciscop/llmrender"
+      <a class="button ghost" href="https://github.com/franciscop/llmrender"
         >GitHub</a
       >
     </div>
@@ -343,7 +444,6 @@ const App = ({ text }) =&gt; &lt;Markdown&gt;{text}&lt;/Markdown&gt;;
   </div>
 </section>
 
-<!-- ============================== DEMO ============================== -->
 <section class="lp-section demo">
   <h2 style="text-align: center">Try it live</h2>
   <p style="text-align: center">
@@ -355,7 +455,7 @@ const App = ({ text }) =&gt; &lt;Markdown&gt;{text}&lt;/Markdown&gt;;
     <div class="demo-pane">
       <div class="demo-pane-title">
         <span>message.md</span>
-        <button id="demo-stream" class="pseudo button">▶ stream</button>
+        <button id="demo-stream" class="button ghost">▶ stream</button>
       </div>
       <textarea id="demo-input" spellcheck="false">
 # Hello, LLMRender
@@ -389,7 +489,7 @@ $$
       >
     </div>
     <div class="demo-pane">
-      <div class="demo-pane-title"><span>&#x3C;Markdown /&#x3E;</span></div>
+      <div class="demo-pane-title"><span>&lt;Markdown /&gt;</span></div>
       <div id="demo-output"></div>
     </div>
   </div>
@@ -462,9 +562,7 @@ $$
   </script>
 </section>
 
-<!-- ===================== FEATURES, IN DEPTH ===================== -->
-
-<section class="lp-section hero flex one two-900 center">
+<section class="lp-section row">
   <div>
     <p class="lp-kicker">Syntax highlighting</p>
     <h2>30+ languages, no highlighter to install</h2>
@@ -485,20 +583,20 @@ $$
   </div>
   <div>
     <pre><code class="language-js">// Built in, just write Markdown
-&#x3C;Markdown&#x3E;{text}&#x3C;/Markdown&#x3E;
+&lt;Markdown&gt;{text}&lt;/Markdown&gt;
 
 // …or bring your own highlighter
-&#x3C;Markdown
-  highlight={(code, lang) =&#x3E; (
-    &#x3C;SyntaxHighlighter language={lang}&#x3E;
+&lt;Markdown
+  highlight={(code, lang) =&gt; (
+    &lt;SyntaxHighlighter language={lang}&gt;
       {code}
-    &#x3C;/SyntaxHighlighter&#x3E;
+    &lt;/SyntaxHighlighter&gt;
   )}
-&#x3E;</code></pre>
+&gt;</code></pre>
   </div>
 </section>
 
-<section class="lp-section hero flex one two-900 center">
+<section class="lp-section row">
   <div>
     <p class="lp-kicker">LaTeX math</p>
     <h2>LaTeX in, native MathML out</h2>
@@ -552,7 +650,7 @@ $$</code></pre>
   </div>
 </section>
 
-<section class="lp-section hero flex one two-900 center">
+<section class="lp-section row">
   <div>
     <p class="lp-kicker">GitHub Flavored Markdown</p>
     <h2>The Markdown everyone actually writes</h2>
@@ -573,8 +671,8 @@ $$</code></pre>
     </ul>
   </div>
   <div>
-    <pre><code class="language-md">&#x3E; [!WARNING]
-&#x3E; Callouts render with icons and colors.
+    <pre><code class="language-md">&gt; [!WARNING]
+&gt; Callouts render with icons and colors.
 
 | Model | Score |
 |:------|------:|
@@ -586,7 +684,7 @@ $$</code></pre>
   </div>
 </section>
 
-<section class="lp-section hero flex one two-900 center">
+<section class="lp-section row">
   <div>
     <p class="lp-kicker">Streaming</p>
     <h2>Made for tokens arriving mid-sentence</h2>
@@ -605,20 +703,20 @@ $$</code></pre>
     </ul>
   </div>
   <div>
-    <pre><code class="language-js">const [text, setText] = useState(&#x22;&#x22;);
+    <pre><code class="language-js">const [text, setText] = useState(&quot;&quot;);
 
 for await (const chunk of stream) {
-  setText((t) =&#x3E; t + chunk);
+  setText((t) =&gt; t + chunk);
 }
 
 // Re-render on every chunk: unclosed
 // ``` fences and $$ blocks mid-stream
 // render gracefully, never break
-return &#x3C;Markdown&#x3E;{text}&#x3C;/Markdown&#x3E;;</code></pre>
+return &lt;Markdown&gt;{text}&lt;/Markdown&gt;;</code></pre>
   </div>
 </section>
 
-<section class="lp-section hero flex one two-900 center">
+<section class="lp-section row">
   <div>
     <p class="lp-kicker">Security</p>
     <h2>Safe with untrusted content by default</h2>
@@ -645,24 +743,24 @@ return &#x3C;Markdown&#x3E;{text}&#x3C;/Markdown&#x3E;;</code></pre>
   <div>
     <pre><code class="language-js">// Safe by default: HTML ignored,
 // dangerous URLs neutralized
-&#x3C;Markdown&#x3E;{untrusted}&#x3C;/Markdown&#x3E;
+&lt;Markdown&gt;{untrusted}&lt;/Markdown&gt;
 
 // Opt in to a safe HTML allowlist
-&#x3C;Markdown rawHtml&#x3E;{untrusted}&#x3C;/Markdown&#x3E;
+&lt;Markdown rawHtml&gt;{untrusted}&lt;/Markdown&gt;
 
 // …or define exactly what's allowed
-&#x3C;Markdown rawHtml={{ b: [], a: [&#x22;href&#x22;] }}&#x3E;
+&lt;Markdown rawHtml={{ b: [], a: [&quot;href&quot;] }}&gt;
   {untrusted}
-&#x3C;/Markdown&#x3E;</code></pre>
+&lt;/Markdown&gt;</code></pre>
   </div>
 </section>
 
-<section class="lp-section hero flex one two-900 center">
+<section class="lp-section row">
   <div>
     <p class="lp-kicker">Styling</p>
-    <h2>It's just a &#x3C;div&#x3E;, style it your way</h2>
+    <h2>It's just a &lt;div&gt;, style it your way</h2>
     <p>
-      The output is a plain <code>&#x3C;div&#x3E;</code> with semantic HTML
+      The output is a plain <code>&lt;div&gt;</code> with semantic HTML
       inside, so Tailwind Typography, Styled Components, CSS Modules or plain
       stylesheets all work with zero adapters.
     </p>
@@ -674,27 +772,26 @@ return &#x3C;Markdown&#x3E;{text}&#x3C;/Markdown&#x3E;;</code></pre>
       </li>
       <li>Theme colors exposed as <code>--llmrender-*</code> CSS variables</li>
       <li>
-        Every <code>&#x3C;div&#x3E;</code> attribute passes through:
+        Every <code>&lt;div&gt;</code> attribute passes through:
         <code>className</code>, <code>style</code>, <code>data-*</code>…
       </li>
     </ul>
   </div>
   <div>
     <pre><code class="language-js">// Pick a theme…
-import &#x22;llmrender/themes/adaptive.css&#x22;;
+import &quot;llmrender/themes/adaptive.css&quot;;
 
 // …then style it like any other div
-&#x3C;Markdown
-  className=&#x22;prose dark:prose-invert&#x22;
-  id=&#x22;answer&#x22;
-  data-testid=&#x22;chat-message&#x22;
-&#x3E;
+&lt;Markdown
+  className=&quot;prose dark:prose-invert&quot;
+  id=&quot;answer&quot;
+  data-testid=&quot;chat-message&quot;
+&gt;
   {text}
-&#x3C;/Markdown&#x3E;</code></pre>
+&lt;/Markdown&gt;</code></pre>
   </div>
 </section>
 
-<!-- ============================== SIZE ============================== -->
 <section class="lp-section">
   <p class="lp-kicker" style="text-align: center">Bundle size</p>
   <h2 style="text-align: center">A fraction of the usual stack</h2>
@@ -755,13 +852,12 @@ import &#x22;llmrender/themes/adaptive.css&#x22;;
   </div>
 </section>
 
-<!-- ============================== CTA ============================== -->
 <section class="lp-cta">
   <h2>Install it now</h2>
-  <pre class="small">npm install llmrender</pre>
+  <pre class="install">npm install llmrender</pre>
   <div class="buttons">
     <a class="button" href="/documentation">Read the documentation</a>
-    <a class="pseudo button" href="https://github.com/franciscop/llmrender"
+    <a class="button ghost" href="https://github.com/franciscop/llmrender"
       >Star on GitHub</a
     >
   </div>
