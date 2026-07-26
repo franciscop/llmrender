@@ -52,3 +52,33 @@ it("escaped character does not affect surrounding markdown", () => {
     $(<Markdown>{"**bold \\* still bold**"}</Markdown>).find("p"),
   ).toHaveHtml("<strong>bold * still bold</strong>");
 });
+
+it("renders escaped angle brackets as literal characters", () => {
+  expect(
+    $(<Markdown>{"\\<div\\>"}</Markdown>)
+      .find("p")
+      .text(),
+  ).toBe("<div>");
+});
+
+it("renders escaped hash as literal character, not heading", () => {
+  const $el = $(<Markdown>{"\\# not a heading"}</Markdown>);
+  expect($el.find("h1").length).toBe(0);
+  expect($el.find("p").text()).toBe("# not a heading");
+});
+
+it("renders escaped asterisks as literal characters, not italic", () => {
+  expect(
+    $(<Markdown>{"\\*not italic\\*"}</Markdown>)
+      .find("p")
+      .text(),
+  ).toBe("*not italic*");
+});
+
+it("renders escaped brackets as literal characters, not link", () => {
+  expect(
+    $(<Markdown>{"\\[not a link\\]"}</Markdown>)
+      .find("p")
+      .text(),
+  ).toBe("[not a link]");
+});

@@ -22,7 +22,7 @@ const truncate = (text: string, max = 60) =>
 
 const patterns: { regex: RegExp; render: Render }[] = [
   {
-    regex: /\\([\\`*_{}\[\]()#+\-.!|~])/,
+    regex: /\\([\\`*_{}\[\]()#+\-.!|~<>])/,
     render: (m) => m[1],
   },
   {
