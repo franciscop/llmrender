@@ -89,3 +89,16 @@ it("preserves Greek characters in heading id", () => {
       .attr("id"),
   ).toBe("ελληνικά");
 });
+
+it("appends -1 to duplicate heading ids", () => {
+  const $el = $(<Markdown>{"## Foo\n\n## Foo"}</Markdown>);
+  expect(($el.find("h2").get(0) as HTMLElement).id).toBe("foo");
+  expect(($el.find("h2").get(1) as HTMLElement).id).toBe("foo-1");
+});
+
+it("appends -2 for a third duplicate heading", () => {
+  const $el = $(<Markdown>{"## Foo\n\n## Foo\n\n## Foo"}</Markdown>);
+  expect(($el.find("h2").get(0) as HTMLElement).id).toBe("foo");
+  expect(($el.find("h2").get(1) as HTMLElement).id).toBe("foo-1");
+  expect(($el.find("h2").get(2) as HTMLElement).id).toBe("foo-2");
+});

@@ -358,13 +358,17 @@ export function renderBlock(
   highlight: HighlightFn | false,
   math: MathFn | false | undefined,
   raw: RawHtml | boolean | undefined,
+  seen: Map<string, number> = new Map(),
 ): ReactNode {
   switch (block.type) {
     case "paragraph":
       return <p key={key}>{parseInline(block.lines.join(" "), math, raw)}</p>;
 
     case "heading": {
-      const id = slugify(block.text);
+      const base = slugify(block.text);
+      const count = seen.get(base) ?? 0;
+      seen.set(base, count + 1);
+      const id = count === 0 ? base : `${base}-${count}`;
       const Tag = `h${block.level}` as keyof JSX.IntrinsicElements;
       return (
         <Tag key={key} id={id}>
@@ -429,7 +433,7 @@ export function renderBlock(
       const callout = CALLOUT.exec(block.lines[0] ?? "");
       const contentLines = callout ? block.lines.slice(1) : block.lines;
       const inner = collectBlocks(contentLines, !!math, raw).map((b, i) =>
-        renderBlock(b, i, highlight, math, raw),
+        renderBlock(b, i, highlight, math, raw, seen),
       );
       if (callout) {
         const type = callout[1].toLowerCase();
@@ -511,7 +515,8 @@ export function parseLines(
   math?: MathFn | false,
   raw?: RawHtml | boolean,
 ): ReactNode[] {
+  const seen = new Map<string, number>();
   return collectBlocks(lines, !!math, raw).map((block, i) =>
-    renderBlock(block, i, highlight, math, raw),
+    renderBlock(block, i, highlight, math, raw, seen),
   );
 }
