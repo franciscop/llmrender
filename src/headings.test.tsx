@@ -102,3 +102,27 @@ it("appends -2 for a third duplicate heading", () => {
   expect(($el.find("h2").get(1) as HTMLElement).id).toBe("foo-1");
   expect(($el.find("h2").get(2) as HTMLElement).id).toBe("foo-2");
 });
+
+it("allows up to three spaces before a heading", () => {
+  expect(
+    $(<Markdown>{"   ### Indented"}</Markdown>)
+      .find("h3")
+      .text(),
+  ).toBe("Indented");
+});
+
+it("strips a closing sequence of hashes", () => {
+  expect(
+    $(<Markdown>{"## Foo ##"}</Markdown>)
+      .find("h2")
+      .text(),
+  ).toBe("Foo");
+});
+
+it("keeps hashes that are part of the heading text", () => {
+  expect(
+    $(<Markdown>{"## Foo #bar"}</Markdown>)
+      .find("h2")
+      .text(),
+  ).toBe("Foo #bar");
+});

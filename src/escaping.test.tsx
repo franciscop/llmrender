@@ -82,3 +82,27 @@ it("renders escaped brackets as literal characters, not link", () => {
       .text(),
   ).toBe("[not a link]");
 });
+
+it("escapes any ASCII punctuation", () => {
+  for (const ch of [
+    '"',
+    "'",
+    "/",
+    ":",
+    ";",
+    "=",
+    "?",
+    "@",
+    "^",
+    "$",
+    "%",
+    "&",
+    ",",
+  ]) {
+    expect(
+      $(<Markdown>{"\\" + ch}</Markdown>)
+        .find("p")
+        .text(),
+    ).toBe(ch);
+  }
+});

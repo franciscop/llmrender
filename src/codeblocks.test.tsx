@@ -24,3 +24,17 @@ it("renders code block without highlight spans when highlight={false}", () => {
   expect(el.find("pre code").text()).toBe("const x = 1;");
   expect(el.find(".keyword").length).toBe(0);
 });
+
+it("keeps indented code before a following paragraph", () => {
+  expect($(<Markdown>{"    indented code\ntext after"}</Markdown>)).toHaveHtml(
+    "<pre><code>indented code</code></pre><p>text after</p>",
+  );
+});
+
+it("keeps indented code before a following table", () => {
+  expect(
+    $(<Markdown>{"    indented code\n| a |\n|---|\n| b |"}</Markdown>)
+      .find("pre")
+      .get(0)!.nextSibling!.nodeName,
+  ).toBe("TABLE");
+});

@@ -5,8 +5,9 @@ import { allowTag } from "./sanitize";
 import type { HighlightFn, MathFn } from "./inline";
 import { parseInline, renderItem } from "./inline";
 
-const HEADER = /^#{1,6} /;
-const HR = /^(-{3,}|\*{3,}|_{3,})$/;
+const HEADER = /^ {0,3}(#{1,6}) /;
+const HEADER_TRAIL = /\s+#+\s*$/;
+const HR = /^([-*_])(?:[ \t]*\1){2,}[ \t]*$/;
 const DISPLAY_MATH = /^\$\$(.+)\$\$$/;
 const CALLOUT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i;
 const BLOCK_HTML_START = /^<[a-zA-Z]/;
@@ -19,7 +20,8 @@ const SUB_LIST_ITEM = /^\s{2,4}[*+-]\s+(.+)/;
 const INDENTED_CODE = /^ {4,}/;
 const ORDERED_ITEM = /^\d+\. /;
 const ORDERED_SUB_ITEM = /^   \d+\. /;
-const TRAILING_BR = / {2,}$/;
+// A hard line break is two trailing spaces or a trailing backslash.
+const TRAILING_BR = / {2,}$|\\$/;
 
 const slugify = (text: string) =>
   text
@@ -129,6 +131,9 @@ export function collectBlocks(
 
   function flushParagraph() {
     if (paraLines.length) {
+      // A hard break on the final line has nothing to break to, so drop it.
+      const last = paraLines.length - 1;
+      paraLines[last] = paraLines[last].replace(/<br>$/, "");
       blocks.push({ type: "paragraph", lines: paraLines });
       paraLines = [];
     }
@@ -234,10 +239,19 @@ export function collectBlocks(
       continue;
     }
 
-    if (HEADER.test(line)) {
+    // Indented code accumulates across lines but is flushed last in flushAll(),
+    // so a later paragraph or table would be pushed ahead of it. Flush it as
+    // soon as a non-indented line arrives to keep blocks in source order.
+    if (codeLines.length > 0 && !INDENTED_CODE.test(line)) flushCode();
+
+    const headerMatch = HEADER.exec(line);
+    if (headerMatch) {
       flushAll();
-      const level = line.match(HEADER)![0].length - 1;
-      blocks.push({ type: "heading", level, text: line.replace(HEADER, "") });
+      blocks.push({
+        type: "heading",
+        level: headerMatch[1].length,
+        text: line.replace(HEADER, "").replace(HEADER_TRAIL, ""),
+      });
       continue;
     }
 

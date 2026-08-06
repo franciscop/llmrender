@@ -22,15 +22,21 @@ const truncate = (text: string, max = 60) =>
 
 const patterns: { regex: RegExp; render: Render }[] = [
   {
-    regex: /\\([\\`*_{}\[\]()#+\-.!|~<>])/,
+    // Any ASCII punctuation is escapable, per CommonMark.
+    regex: /\\([!-\/:-@\[-`{-~])/,
     render: (m) => m[1],
   },
   {
     regex: /~~(.+?)~~/,
     render: (m, i, r) => <del key={i}>{r(m[1])}</del>,
   },
+  // Emphasis follows CommonMark's flanking rules: a delimiter cannot open when
+  // followed by whitespace, nor close when preceded by it. Underscore also
+  // cannot open or close inside a word, so `snake_case_name` stays literal
+  // while `*` is still allowed intraword. Asterisk and underscore are separate
+  // patterns because only underscore carries the intraword restriction.
   {
-    regex: /(?:\*\*\*|___)(.+?)(?:\*\*\*|___)/,
+    regex: /\*\*\*(?!\s)(.+?)(?<!\s)\*\*\*/,
     render: (m, i, r) => (
       <strong key={i}>
         <em>{r(m[1])}</em>
@@ -38,15 +44,28 @@ const patterns: { regex: RegExp; render: Render }[] = [
     ),
   },
   {
-    regex: /(?:\*\*|__)(.+?)(?:\*\*|__)/,
+    regex: /(?<![^\s\p{P}\p{S}])___(?!\s)(.+?)(?<!\s)___(?![^\s\p{P}\p{S}])/u,
+    render: (m, i, r) => (
+      <strong key={i}>
+        <em>{r(m[1])}</em>
+      </strong>
+    ),
+  },
+  {
+    regex: /\*\*(?!\s)(.+?)(?<!\s)\*\*/,
     render: (m, i, r) => <strong key={i}>{r(m[1])}</strong>,
   },
   {
-    regex: /(?<!\*)\*(?!\*)(.+?)(?<!\*)\*(?!\*)/,
+    regex: /(?<![^\s\p{P}\p{S}])__(?!\s)(.+?)(?<!\s)__(?![^\s\p{P}\p{S}])/u,
+    render: (m, i, r) => <strong key={i}>{r(m[1])}</strong>,
+  },
+  {
+    regex: /(?<!\*)\*(?!\*)(?!\s)(.+?)(?<!\s)(?<!\*)\*(?!\*)/,
     render: (m, i, r) => <em key={i}>{r(m[1])}</em>,
   },
   {
-    regex: /(?<!_)_(?!_)(.+?)(?<!_)_(?!_)/,
+    regex:
+      /(?<!_)(?<![^\s\p{P}\p{S}])_(?!_)(?!\s)(.+?)(?<!\s)(?<!_)_(?!_)(?![^\s\p{P}\p{S}])/u,
     render: (m, i, r) => <em key={i}>{r(m[1])}</em>,
   },
   {
@@ -56,14 +75,14 @@ const patterns: { regex: RegExp; render: Render }[] = [
   { regex: /`(.+?)`/, render: (m, i) => <code key={i}>{m[1]}</code> },
   { regex: /<br\s*\/?>/i, render: (_, i) => <br key={i} /> },
   {
-    regex: /!\[(.*?)\]\((.+?)(?:\s+"([^"]*)")?\)/,
+    regex: /!\[(.*?)\]\((.*?)(?:\s+"([^"]*)")?\)/,
     render: (m, i) => (
       <img key={i} alt={m[1]} src={sanitize(m[2])} title={m[3] || undefined} />
     ),
   },
   {
     regex:
-      /\[((?:[^[\]]|\[[^\]]*\])+)\]\(((?:[^()\s"]|\s(?!\s*")|\([^()]*\))+)(?:\s+"([^"]*)")?\)/,
+      /\[((?:[^[\]]|\[[^\]]*\])*)\]\(((?:[^()\s"]|\s(?!\s*")|\([^()]*\))*)(?:\s+"([^"]*)")?\)/,
     render: (m, i, r) => (
       <a key={i} href={sanitize(m[2])} title={m[3] || undefined}>
         {r(m[1])}

@@ -185,3 +185,46 @@ it("renders a hard line break with two trailing spaces", () => {
   const $el = $(<Markdown>{"line one  \nline two"}</Markdown>);
   expect($el.find("p")).toHaveHtml("line one<br> line two");
 });
+
+it("does not emphasise underscores inside a word", () => {
+  expect($(<Markdown>{"snake_case_name"}</Markdown>).find("em").length).toBe(0);
+  expect(
+    $(<Markdown>{"snake_case_name"}</Markdown>)
+      .find("p")
+      .text(),
+  ).toBe("snake_case_name");
+});
+
+it("still emphasises underscores at word boundaries", () => {
+  expect(
+    $(<Markdown>{"an _italic_ word"}</Markdown>)
+      .find("em")
+      .text(),
+  ).toBe("italic");
+});
+
+it("allows asterisk emphasis inside a word", () => {
+  expect(
+    $(<Markdown>{"foo*bar*baz"}</Markdown>)
+      .find("em")
+      .text(),
+  ).toBe("bar");
+});
+
+it("does not open emphasis before whitespace", () => {
+  expect($(<Markdown>{"a * foo bar*"}</Markdown>).find("em").length).toBe(0);
+});
+
+it("does not pair mismatched bold delimiters", () => {
+  expect($(<Markdown>{"**foo__"}</Markdown>).find("strong").length).toBe(0);
+});
+
+it("renders a hard line break with a trailing backslash", () => {
+  expect(
+    $(<Markdown>{"line one\\\nline two"}</Markdown>).find("br").length,
+  ).toBe(1);
+});
+
+it("drops a hard line break at the end of a paragraph", () => {
+  expect($(<Markdown>{"only line  "}</Markdown>).find("br").length).toBe(0);
+});
