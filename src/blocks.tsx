@@ -122,7 +122,7 @@ export function collectBlocks(
   let inFencedCode = false;
   let fenceChar = "";
   let fenceSize = 0;
-  let fenceIndent = 0;
+  let fenceDedent = /^/;
   let codeLang = "";
   let codeLines: string[] = [];
 
@@ -246,7 +246,7 @@ export function collectBlocks(
         flushCode();
         inFencedCode = false;
       } else {
-        codeLines.push(line.replace(new RegExp(`^ {0,${fenceIndent}}`), ""));
+        codeLines.push(line.replace(fenceDedent, ""));
       }
       continue;
     }
@@ -268,7 +268,7 @@ export function collectBlocks(
       inFencedCode = true;
       fenceChar = fence[2][0];
       fenceSize = fence[2].length;
-      fenceIndent = fence[1].length;
+      fenceDedent = new RegExp(`^ {0,${fence[1].length}}`);
       codeLang = fence[3].trim().split(/\s+/)[0] ?? "";
       continue;
     }
