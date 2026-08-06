@@ -50,7 +50,6 @@ const greek: Record<string, string> = {
   varepsilon: "ε",
   varphi: "φ",
   vartheta: "ϑ",
-  varsigma: "ς",
   // uppercase
   Gamma: "Γ",
   Delta: "Δ",
@@ -68,9 +67,7 @@ const greek: Record<string, string> = {
   ell: "ℓ",
   Re: "ℜ",
   Im: "ℑ",
-  wp: "℘",
   aleph: "ℵ",
-  beth: "ℶ",
   flat: "♭",
   sharp: "♯",
   natural: "♮",
@@ -163,8 +160,6 @@ const operators: Record<string, string> = {
   longleftrightarrow: "⟷",
   hookrightarrow: "↪",
   hookleftarrow: "↩",
-  rightharpoonup: "⇀",
-  leftharpoonup: "↼",
   uparrow: "↑",
   up: "↑",
   downarrow: "↓",
@@ -177,10 +172,6 @@ const operators: Record<string, string> = {
   searrow: "↘",
   swarrow: "↙",
   nwarrow: "↖",
-  nrightarrow: "↛",
-  nleftarrow: "↚",
-  nRightarrow: "⇏",
-  nLeftarrow: "⇍",
   mapsto: "↦",
   perp: "⊥",
   bot: "⊥",
@@ -189,12 +180,9 @@ const operators: Record<string, string> = {
   angle: "∠",
   oplus: "⊕",
   otimes: "⊗",
-  ominus: "⊖",
-  oslash: "⊘",
   circ: "∘",
   bullet: "•",
   mid: "|",
-  nmid: "∤",
   ast: "∗",
   star: "⋆",
   diamond: "⋄",
@@ -691,21 +679,22 @@ export default function renderMath(tex: string, block = false): ReactElement {
 
     switch (node.type) {
       case "mi":
-        return (
-          <mi key={k} mathvariant={node.mathvariant}>
-            {node.value}
-          </mi>
-        );
       case "mn":
-        return <mn key={k}>{node.value}</mn>;
       case "mo":
+      case "mtext": {
+        const Tag = node.type;
         return (
-          <mo key={k} stretchy={node.stretchy}>
+          <Tag
+            key={k}
+            {...({
+              mathvariant: (node as { mathvariant?: string }).mathvariant,
+              stretchy: (node as { stretchy?: string }).stretchy,
+            } as object)}
+          >
             {node.value}
-          </mo>
+          </Tag>
         );
-      case "mtext":
-        return <mtext key={k}>{node.value}</mtext>;
+      }
 
       case "mrow":
         return <mrow key={k}>{node.children.map((c, j) => toJSX(c, j))}</mrow>;

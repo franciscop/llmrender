@@ -63,3 +63,7 @@ it("does not let a decoded entity become a tag", () => {
   expect($el.find("script").length).toBe(0);
   expect($el.find("p").text()).toBe("<script>alert(1)</script>");
 });
+
+it("leaves a cut entity as literal text", () => {
+  expect(text("5 &micro;m")).toBe("5 &micro;m");
+});

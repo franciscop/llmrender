@@ -76,36 +76,33 @@ export function parseAligns(sep: string): (string | undefined)[] {
     .split("|")
     .map((c) => {
       c = c.trim();
-      const STARTS_WITH = c.at(0) === ":";
-      const ENDS_WITH = c.at(-1) === ":";
-      if (STARTS_WITH && ENDS_WITH) return "center";
-      if (ENDS_WITH) return "right";
-      if (STARTS_WITH) return "left";
-      return undefined;
+      const l = c.startsWith(":");
+      const r = c.endsWith(":");
+      return l && r ? "center" : r ? "right" : l ? "left" : undefined;
     });
 }
 
 export type Block =
-  | { type: "paragraph"; lines: string[] }
-  | { type: "heading"; level: number; text: string }
-  | { type: "hr" }
-  | { type: "code"; lang: string; lines: string[] }
-  | { type: "math"; content: string }
+  | { type: "P"; lines: string[] }
+  | { type: "H"; level: number; text: string }
+  | { type: "R" }
+  | { type: "C"; lang: string; lines: string[] }
+  | { type: "M"; content: string }
   | {
-      type: "list";
+      type: "L";
       ordered: boolean;
       start?: number;
       items: { text: string; sub: string[] }[];
     }
-  | { type: "blockquote"; lines: string[] }
+  | { type: "Q"; lines: string[] }
   | {
-      type: "table";
+      type: "T";
       headers: string[];
       rows: string[][];
       aligns: (string | undefined)[];
     }
   | {
-      type: "rawHtml";
+      type: "X";
       tag: string;
       attrs: Record<string, string | boolean>;
       content?: string;
@@ -152,7 +149,7 @@ export function collectBlocks(
     if (paraLines.length) {
       const last = paraLines.length - 1;
       paraLines[last] = clearBreak(paraLines[last]);
-      blocks.push({ type: "paragraph", lines: paraLines });
+      blocks.push({ type: "P", lines: paraLines });
       paraLines = [];
     }
   }
@@ -160,7 +157,7 @@ export function collectBlocks(
   function flushList() {
     if (inList) {
       blocks.push({
-        type: "list",
+        type: "L",
         ordered: listOrdered,
         start: listStart,
         items: listItems,
@@ -173,7 +170,7 @@ export function collectBlocks(
 
   function flushBlockquote() {
     if (inBlockquote) {
-      blocks.push({ type: "blockquote", lines: blockquoteLines });
+      blocks.push({ type: "Q", lines: blockquoteLines });
       inBlockquote = false;
       blockquoteLines = [];
     }
@@ -182,7 +179,7 @@ export function collectBlocks(
   function flushTable() {
     if (inTable) {
       blocks.push({
-        type: "table",
+        type: "T",
         headers: tableHeaders,
         rows: tableRows,
         aligns: tableAligns,
@@ -196,7 +193,7 @@ export function collectBlocks(
   }
 
   function flushCode() {
-    blocks.push({ type: "code", lang: codeLang, lines: codeLines });
+    blocks.push({ type: "C", lang: codeLang, lines: codeLines });
     codeLines = [];
     codeLang = "";
   }
@@ -209,7 +206,7 @@ export function collectBlocks(
     if (except !== "table") flushTable();
     if (except !== "code" && codeLines.length > 0) flushCode();
     if (mathLines.length > 0) {
-      blocks.push({ type: "math", content: mathLines.join("\n") });
+      blocks.push({ type: "M", content: mathLines.join("\n") });
       mathLines = [];
       inMathBlock = false;
     }
@@ -253,7 +250,7 @@ export function collectBlocks(
 
     if (inMathBlock) {
       if (line.trim() === "$$") {
-        blocks.push({ type: "math", content: mathLines.join("\n") });
+        blocks.push({ type: "M", content: mathLines.join("\n") });
         mathLines = [];
         inMathBlock = false;
       } else {
@@ -283,7 +280,7 @@ export function collectBlocks(
       const dm = DISPLAY_MATH.exec(line.trim());
       if (dm) {
         flushAll();
-        blocks.push({ type: "math", content: dm[1].trim() });
+        blocks.push({ type: "M", content: dm[1].trim() });
         continue;
       }
     }
@@ -328,7 +325,7 @@ export function collectBlocks(
     if (headerMatch) {
       flushAll();
       blocks.push({
-        type: "heading",
+        type: "H",
         level: headerMatch[1].length,
         text: line.replace(HEADER, "").replace(HEADER_TRAIL, "").trim(),
       });
@@ -341,7 +338,7 @@ export function collectBlocks(
       const last = paraLines.length - 1;
       paraLines[last] = clearBreak(paraLines[last]);
       blocks.push({
-        type: "heading",
+        type: "H",
         level: setext[1][0] === "=" ? 1 : 2,
         text: paraLines.join(" "),
       });
@@ -351,7 +348,7 @@ export function collectBlocks(
 
     if (HR.test(line)) {
       flushAll();
-      blocks.push({ type: "hr" });
+      blocks.push({ type: "R" });
       continue;
     }
 
@@ -364,7 +361,7 @@ export function collectBlocks(
         if (attrs) {
           flushAll();
           blocks.push({
-            type: "rawHtml",
+            type: "X",
             tag: match[1].toLowerCase(),
             attrs,
             content: pair ? pair[3] : undefined,
@@ -455,12 +452,12 @@ export function renderBlock(
   defs?: RefMap,
 ): ReactNode {
   switch (block.type) {
-    case "paragraph":
+    case "P":
       return (
         <p key={key}>{parseInline(block.lines.join(" "), math, raw, defs)}</p>
       );
 
-    case "heading": {
+    case "H": {
       const base = slugify(block.text);
       const count = seen.get(base) ?? 0;
       seen.set(base, count + 1);
@@ -473,10 +470,10 @@ export function renderBlock(
       );
     }
 
-    case "hr":
+    case "R":
       return <hr key={key} />;
 
-    case "code":
+    case "C":
       return highlight ? (
         <Fragment key={key}>
           {highlight(block.lines.join("\n"), block.lang)}
@@ -489,14 +486,14 @@ export function renderBlock(
         </pre>
       );
 
-    case "math":
+    case "M":
       return math ? (
         <div key={key} className="math-block">
           {math(block.content, true)}
         </div>
       ) : null;
 
-    case "list": {
+    case "L": {
       const Tag = (block.ordered ? "ol" : "ul") as keyof JSX.IntrinsicElements;
       return (
         <Tag
@@ -521,7 +518,7 @@ export function renderBlock(
       );
     }
 
-    case "blockquote": {
+    case "Q": {
       const callout = CALLOUT.exec(block.lines[0] ?? "");
       const contentLines = callout ? block.lines.slice(1) : block.lines;
       const inner = collectBlocks(contentLines, !!math, raw).map((b, i) =>
@@ -540,57 +537,34 @@ export function renderBlock(
       return <blockquote key={key}>{inner}</blockquote>;
     }
 
-    case "table":
+    case "T": {
+      const cell = (Tag: "th" | "td", text: string, i: number) => (
+        <Tag
+          key={i}
+          style={
+            block.aligns[i]
+              ? { textAlign: block.aligns[i] as "left" | "center" | "right" }
+              : undefined
+          }
+        >
+          {parseInline(text, math, raw, defs)}
+        </Tag>
+      );
       return (
         <table key={key}>
           <thead>
-            <tr>
-              {block.headers.map((h, i) => (
-                <th
-                  key={i}
-                  style={
-                    block.aligns[i]
-                      ? {
-                          textAlign: block.aligns[i] as
-                            | "left"
-                            | "center"
-                            | "right",
-                        }
-                      : undefined
-                  }
-                >
-                  {parseInline(h, math, raw, defs)}
-                </th>
-              ))}
-            </tr>
+            <tr>{block.headers.map((h, i) => cell("th", h, i))}</tr>
           </thead>
           <tbody>
             {block.rows.map((row, i) => (
-              <tr key={i}>
-                {row.map((cell, j) => (
-                  <td
-                    key={j}
-                    style={
-                      block.aligns[j]
-                        ? {
-                            textAlign: block.aligns[j] as
-                              | "left"
-                              | "center"
-                              | "right",
-                          }
-                        : undefined
-                    }
-                  >
-                    {parseInline(cell, math, raw, defs)}
-                  </td>
-                ))}
-              </tr>
+              <tr key={i}>{row.map((c, j) => cell("td", c, j))}</tr>
             ))}
           </tbody>
         </table>
       );
+    }
 
-    case "rawHtml": {
+    case "X": {
       const Tag = block.tag as keyof JSX.IntrinsicElements;
       return (
         <Tag key={key} {...(block.attrs as any)}>

@@ -605,3 +605,45 @@ describe("renderMath", () => {
     expect(el.find("mo").text()).toContain("∫");
   });
 });
+
+describe("leaf element attributes", () => {
+  it("marks parens as non-stretchy mo", () => {
+    const el = $(renderMath("(x)"));
+    expect(el.find("mo[stretchy='false']").length).toBe(2);
+  });
+
+  it("does not mark plain operators as stretchy", () => {
+    expect($(renderMath("a + b")).find("mo").attr("stretchy")).toBe(null);
+  });
+
+  it("renders numbers as bare mn", () => {
+    const el = $(renderMath("42"));
+    expect(el.find("mn").text()).toBe("42");
+    expect(el.find("mn").attr("stretchy")).toBe(null);
+    expect(el.find("mn").attr("mathvariant")).toBe(null);
+  });
+
+  it("does not leak mathvariant onto mo or mn", () => {
+    const el = $(renderMath("\\mathbb{R} + 1"));
+    expect(el.find("mi").attr("mathvariant")).toBe("double-struck");
+    expect(el.find("mo").attr("mathvariant")).toBe(null);
+    expect(el.find("mn").attr("mathvariant")).toBe(null);
+  });
+
+  it("renders identifiers without stray attributes", () => {
+    const el = $(renderMath("x"));
+    expect(el.find("mi").attr("mathvariant")).toBe(null);
+    expect(el.find("mi").attr("stretchy")).toBe(null);
+  });
+
+  it("renders mtext without stray attributes", () => {
+    const el = $(renderMath("\\text{hi}"));
+    expect(el.find("mtext").attr("mathvariant")).toBe(null);
+  });
+});
+
+describe("unknown commands degrade to literal", () => {
+  it("renders an unrecognized command as its name", () => {
+    expect($(renderMath("\\nosuchcmd")).find("mi").text()).toBe("nosuchcmd");
+  });
+});
