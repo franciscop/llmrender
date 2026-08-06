@@ -260,52 +260,40 @@ const mathVariants: Record<string, string> = {
   mathtt: "monospace",
 };
 
-const delimMap: Record<string, string> = {
-  lbrace: "{",
-  rbrace: "}",
-  vert: "|",
-  Vert: "‖",
-  lfloor: "⌊",
-  rfloor: "⌋",
-  lceil: "⌈",
-  rceil: "⌉",
-  langle: "⟨",
-  rangle: "⟩",
+const ENV_DELIMS: Record<string, [string, string]> = {
+  pmatrix: ["(", ")"],
+  bmatrix: ["[", "]"],
+  vmatrix: ["|", "|"],
+  Vmatrix: ["‖", "‖"],
+  cases: ["{", ""],
+  matrix: ["", ""],
+  align: ["", ""],
+  "align*": ["", ""],
 };
+
+// Nodes whose only difference is the tag and which fields become children.
+const SLOTS: Record<string, string[]> = {
+  mfrac: ["num", "den"],
+  mroot: ["radicand", "degree"],
+  msup: ["base", "sup"],
+  msub: ["base", "sub"],
+  msubsup: ["base", "sub", "sup"],
+  munder: ["base", "under"],
+  mover: ["base", "over"],
+  munderover: ["base", "under", "over"],
+};
+
+const functions = new Set(
+  "sin cos tan log ln max min exp det gcd sup inf cot sec csc arcsin arccos arctan sinh cosh tanh arg ker dim deg".split(
+    " ",
+  ),
+);
 
 export default function renderMath(tex: string, block = false): ReactElement {
   let i = 0;
   let groupDepth = 0;
 
   // Single-char keys handle \, \: \; \! and "\ "
-
-  const functions = new Set([
-    "sin",
-    "cos",
-    "tan",
-    "log",
-    "ln",
-    "max",
-    "min",
-    "exp",
-    "det",
-    "gcd",
-    "sup",
-    "inf",
-    "cot",
-    "sec",
-    "csc",
-    "arcsin",
-    "arccos",
-    "arctan",
-    "sinh",
-    "cosh",
-    "tanh",
-    "arg",
-    "ker",
-    "dim",
-    "deg",
-  ]);
 
   function peek(): string {
     return tex[i] ?? "";
@@ -370,7 +358,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
         if (ch === ".") return "";
         return ch;
       }
-      return delimMap[dname] ?? dname;
+      return operators[dname] ?? dname;
     }
     if (peek() === ".") {
       consume();
@@ -433,17 +421,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
       currentCell.push(parseExpression());
     }
 
-    const delimMap: Record<string, [string, string]> = {
-      pmatrix: ["(", ")"],
-      bmatrix: ["[", "]"],
-      vmatrix: ["|", "|"],
-      Vmatrix: ["‖", "‖"],
-      cases: ["{", ""],
-      matrix: ["", ""],
-      align: ["", ""],
-      "align*": ["", ""],
-    };
-    const [open, close] = delimMap[envName] ?? ["", ""];
+    const [open, close] = ENV_DELIMS[envName] ?? ["", ""];
 
     const tableNode: Node = { type: "mtable", rows };
     if (!open && !close) return tableNode;
@@ -703,6 +681,14 @@ export default function renderMath(tex: string, block = false): ReactElement {
   }
 
   function toJSX(node: Node, k?: number): ReactElement {
+    const slots = SLOTS[node.type];
+    if (slots) {
+      const Tag = node.type as "msup";
+      return (
+        <Tag key={k}>{slots.map((f, i) => toJSX((node as never)[f], i))}</Tag>
+      );
+    }
+
     switch (node.type) {
       case "mi":
         return (
@@ -724,14 +710,6 @@ export default function renderMath(tex: string, block = false): ReactElement {
       case "mrow":
         return <mrow key={k}>{node.children.map((c, j) => toJSX(c, j))}</mrow>;
 
-      case "mfrac":
-        return (
-          <mfrac key={k}>
-            {toJSX(node.num, 0)}
-            {toJSX(node.den, 1)}
-          </mfrac>
-        );
-
       case "mstyle":
         return (
           <mstyle key={k} {...({ displaystyle: node.displaystyle } as {})}>
@@ -741,64 +719,6 @@ export default function renderMath(tex: string, block = false): ReactElement {
 
       case "msqrt":
         return <msqrt key={k}>{toJSX(node.value)}</msqrt>;
-
-      case "mroot":
-        return (
-          <mroot key={k}>
-            {toJSX(node.radicand, 0)}
-            {toJSX(node.degree, 1)}
-          </mroot>
-        );
-
-      case "msup":
-        return (
-          <msup key={k}>
-            {toJSX(node.base, 0)}
-            {toJSX(node.sup, 1)}
-          </msup>
-        );
-
-      case "msub":
-        return (
-          <msub key={k}>
-            {toJSX(node.base, 0)}
-            {toJSX(node.sub, 1)}
-          </msub>
-        );
-
-      case "msubsup":
-        return (
-          <msubsup key={k}>
-            {toJSX(node.base, 0)}
-            {toJSX(node.sub, 1)}
-            {toJSX(node.sup, 2)}
-          </msubsup>
-        );
-
-      case "munder":
-        return (
-          <munder key={k}>
-            {toJSX(node.base, 0)}
-            {toJSX(node.under, 1)}
-          </munder>
-        );
-
-      case "mover":
-        return (
-          <mover key={k}>
-            {toJSX(node.base, 0)}
-            {toJSX(node.over, 1)}
-          </mover>
-        );
-
-      case "munderover":
-        return (
-          <munderover key={k}>
-            {toJSX(node.base, 0)}
-            {toJSX(node.under, 1)}
-            {toJSX(node.over, 2)}
-          </munderover>
-        );
 
       case "mbinom":
         return (

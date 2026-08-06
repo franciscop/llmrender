@@ -11,92 +11,16 @@ const BLOCKED_TAGS =
 const URL_ATTRS = /^(href|src|action|formaction|data|cite|poster|background)$/;
 
 // Default allowlist for rawHtml={true}: known-safe content elements only.
-const DEFAULT_TAGS = new Set([
-  // inline
-  "a",
-  "abbr",
-  "b",
-  "bdi",
-  "bdo",
-  "br",
-  "cite",
-  "code",
-  "data",
-  "dfn",
-  "em",
-  "i",
-  "kbd",
-  "mark",
-  "q",
-  "rp",
-  "rt",
-  "ruby",
-  "s",
-  "samp",
-  "small",
-  "span",
-  "strong",
-  "sub",
-  "sup",
-  "time",
-  "u",
-  "var",
-  "wbr",
-  // block
-  "address",
-  "article",
-  "aside",
-  "blockquote",
-  "dd",
-  "del",
-  "details",
-  "div",
-  "dl",
-  "dt",
-  "figcaption",
-  "figure",
-  "footer",
-  "h1",
-  "h2",
-  "h3",
-  "h4",
-  "h5",
-  "h6",
-  "header",
-  "hr",
-  "ins",
-  "li",
-  "main",
-  "nav",
-  "ol",
-  "p",
-  "pre",
-  "section",
-  "summary",
-  "ul",
-  // tables
-  "caption",
-  "col",
-  "colgroup",
-  "table",
-  "tbody",
-  "td",
-  "th",
-  "thead",
-  "tr",
-  // media (URL attrs still sanitized via URL_ATTRS)
-  "audio",
-  "img",
-  "map",
-  "area",
-  "picture",
-  "source",
-  "track",
-  "video",
-]);
+// Grouped inline, block, tables, media.
+const DEFAULT_TAGS = (
+  "a abbr b bdi bdo br cite code data dfn em i kbd mark q rp rt ruby s samp small span strong sub sup time u var wbr " +
+  "address article aside blockquote dd del details div dl dt figcaption figure footer h1 h2 h3 h4 h5 h6 header hr ins li main nav ol p pre section summary ul " +
+  "caption col colgroup table tbody td th thead tr " +
+  "audio img map area picture source track video"
+).split(" ");
 
 export const allowTags: RawHtml = Object.fromEntries(
-  [...DEFAULT_TAGS].map((tag) => [tag, ["*"]]),
+  DEFAULT_TAGS.map((tag) => [tag, ["*"]]),
 );
 
 // Elements that are block-level and cannot appear as <p> descendants.

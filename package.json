@@ -20,7 +20,7 @@
   ],
   "scripts": {
     "build": "npm run build:library && npm run build:types && npm run build:prettier",
-    "build:library": "vite build && mv dist/index.min.js . && rm -rf dist",
+    "build:library": "vite build && mv dist/index.min.js . && rm -rf dist && node -e \"const fs=require('fs'),f='index.min.js';fs.writeFileSync(f,fs.readFileSync(f,'utf8').replaceAll('/* @__PURE__ */',''))\"",
     "build:types": "dts-bundle-generator --out-file index.d.ts src/index.tsx",
     "build:prettier": "prettier src *.ts *.json --write",
     "lint": "tsc",
