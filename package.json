@@ -1,6 +1,6 @@
 {
   "name": "llmrender",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "A fully featured Markdown renderer for React",
   "homepage": "https://llmrender.com/",
   "repository": "github:franciscop/llmrender",
