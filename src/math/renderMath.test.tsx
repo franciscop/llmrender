@@ -555,22 +555,22 @@ describe("renderMath", () => {
 
   it("renders \\, as thin mspace", () => {
     const el = $(renderMath("a\\,b"));
-    expect(el.find("mspace").attr("width")).toBe("0.1667em");
+    expect(el.find("mspace").attr("width")).toBe("0.17em");
   });
 
   it("renders \\: as medium mspace", () => {
     const el = $(renderMath("a\\:b"));
-    expect(el.find("mspace").attr("width")).toBe("0.2222em");
+    expect(el.find("mspace").attr("width")).toBe("0.22em");
   });
 
   it("renders \\; as thick mspace", () => {
     const el = $(renderMath("a\\;b"));
-    expect(el.find("mspace").attr("width")).toBe("0.2778em");
+    expect(el.find("mspace").attr("width")).toBe("0.28em");
   });
 
   it("renders \\! as negative thin mspace", () => {
     const el = $(renderMath("a\\!b"));
-    expect(el.find("mspace").attr("width")).toBe("-0.1667em");
+    expect(el.find("mspace").attr("width")).toBe("-0.17em");
   });
 
   it("renders \\hspace{0.5em} as mspace", () => {
@@ -585,7 +585,7 @@ describe("renderMath", () => {
 
   it("renders \\negthinspace as negative mspace", () => {
     const el = $(renderMath("a\\negthinspace b"));
-    expect(el.find("mspace").attr("width")).toBe("-0.1667em");
+    expect(el.find("mspace").attr("width")).toBe("-0.17em");
   });
 
   it("renders \\qquad in summation formula", () => {
@@ -601,7 +601,7 @@ describe("renderMath", () => {
     const tex = "\\int u\\,dv = uv - \\int v\\,du";
     expect(() => $(renderMath(tex))).not.toThrow();
     const el = $(renderMath(tex));
-    expect(el.find("mspace[width='0.1667em']").length).toBe(2);
+    expect(el.find("mspace[width='0.17em']").length).toBe(2);
     expect(el.find("mo").text()).toContain("∫");
   });
 });

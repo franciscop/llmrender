@@ -89,3 +89,9 @@ it("renders a * list with nested * items containing links", () => {
     "Paragraphs",
   ]);
 });
+
+it("starts a new list when the bullet marker changes", () => {
+  const $el = $(<Markdown>{"- foo\n- bar\n+ baz"}</Markdown>);
+  expect($el.find("ul").length).toBe(2);
+  expect($el.find("li").length).toBe(3);
+});

@@ -5,7 +5,7 @@ import spec from "./spec.commonmark.json";
 // Compliance scoreboard against the CommonMark 0.31.2 spec suite. Full
 // compliance is a non-goal (it needs an AST parser), so this asserts the pass
 // count never drops. Raise BASELINE whenever a change improves it.
-const BASELINE = 233;
+const BASELINE = 371;
 
 type Example = {
   markdown: string;

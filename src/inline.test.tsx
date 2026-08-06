@@ -228,3 +228,39 @@ it("renders a hard line break with a trailing backslash", () => {
 it("drops a hard line break at the end of a paragraph", () => {
   expect($(<Markdown>{"only line  "}</Markdown>).find("br").length).toBe(0);
 });
+
+it("does not leak the hard-break marker into a code span", () => {
+  const $el = $(<Markdown>{"`code  \nspan`"}</Markdown>);
+  expect($el.find("code").text()).toBe("code span");
+  expect($el.find("br").length).toBe(0);
+});
+
+it("renders a code span delimited by three backticks", () => {
+  expect(
+    $(<Markdown>{"``` foo ```"}</Markdown>)
+      .find("code")
+      .text(),
+  ).toBe("foo");
+});
+
+it("keeps a shorter backtick run inside a longer code span", () => {
+  expect(
+    $(<Markdown>{"`` a ` b ``"}</Markdown>)
+      .find("code")
+      .text(),
+  ).toBe("a ` b");
+});
+
+it("keeps angle brackets out of an angle autolink", () => {
+  const $el = $(<Markdown>{"<https://example.com>"}</Markdown>);
+  expect($el.find("a").attr("href")).toBe("https://example.com");
+  expect($el.find("p").text()).toBe("https://example.com");
+});
+
+it("neutralizes a non-http scheme in an angle autolink", () => {
+  expect(
+    $(<Markdown>{"<javascript:alert(1)>"}</Markdown>)
+      .find("a")
+      .attr("href"),
+  ).toBe("#");
+});

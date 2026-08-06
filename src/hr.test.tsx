@@ -28,3 +28,15 @@ it("renders a horizontal rule with spaces between the markers", () => {
 it("does not treat a spaced rule as a list item", () => {
   expect($(<Markdown>{"- - -"}</Markdown>).find("li").length).toBe(0);
 });
+
+it("does not treat an indented rule as a horizontal rule", () => {
+  const $el = $(<Markdown>{"    ***"}</Markdown>);
+  expect($el.find("hr").length).toBe(0);
+  expect($el.find("pre code").text()).toBe("***");
+});
+
+it("does not let an indented rule interrupt a paragraph", () => {
+  const $el = $(<Markdown>{"Foo\n    ***"}</Markdown>);
+  expect($el.find("hr").length).toBe(0);
+  expect($el.find("p").text()).toBe("Foo ***");
+});

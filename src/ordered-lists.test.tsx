@@ -41,3 +41,29 @@ it("flushes ordered list and starts unordered list when order switches", () => {
   expect(el.find("ul li").length).toBe(1);
   expect(el.find("ul li").text()).toBe("c");
 });
+
+it("starts an ordered list at the first number", () => {
+  const ol = $(<Markdown>{"3. first\n4. second"}</Markdown>).find("ol");
+  expect(ol.attr("start")).toBe("3");
+  expect(ol.find("li").length).toBe(2);
+});
+
+it("omits start when the list begins at 1", () => {
+  expect(
+    $(<Markdown>{"1. one\n2. two"}</Markdown>)
+      .find("ol")
+      .attr("start"),
+  ).toBeFalsy();
+});
+
+it("accepts a closing paren as an ordered delimiter", () => {
+  const $el = $(<Markdown>{"1) foo\n2) bar"}</Markdown>);
+  expect($el.find("li").length).toBe(2);
+  expect($el.find("li").array("textContent")).toEqual(["foo", "bar"]);
+});
+
+it("starts a new list when the ordered delimiter changes", () => {
+  expect(
+    $(<Markdown>{"1. foo\n2. bar\n3) baz"}</Markdown>).find("ol").length,
+  ).toBe(2);
+});

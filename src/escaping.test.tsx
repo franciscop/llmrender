@@ -106,3 +106,11 @@ it("escapes any ASCII punctuation", () => {
     ).toBe(ch);
   }
 });
+
+it("keeps a trailing backslash at the end of a document", () => {
+  expect(
+    $(<Markdown>{"foo\\"}</Markdown>)
+      .find("p")
+      .text(),
+  ).toBe("foo\\");
+});

@@ -1,12 +1,27 @@
+import { Fragment } from "react/jsx-runtime";
 import type { ReactNode } from "react";
 import type { RawHtml } from "./sanitize";
 import { BLOCK_EL, allowTag, sanitize } from "./sanitize";
+import {
+  COMMENT,
+  HARD_BREAK,
+  HTML_PAIR,
+  HTML_VOID,
+  breakToSpace,
+} from "./utils";
 
 export type HighlightFn = (
   code: string,
   lang: string,
 ) => ReactNode | ReactNode[];
 export type MathFn = (tex: string, block: boolean) => ReactNode;
+
+/** Destinations collected from `[label]: url "title"` lines. */
+export type RefMap = Map<string, { url: string; title?: string }>;
+
+/** Reference labels match case-insensitively and ignore whitespace runs. */
+export const refLabel = (raw: string) =>
+  raw.trim().replace(/\s+/g, " ").toLowerCase();
 
 export const CHECKBOX = /^\[[x\s]\] /i;
 export const IS_CHECKED = /^\[[x]\] /i;
@@ -17,24 +32,100 @@ type Render = (
   r: (s: string) => ReactNode[],
 ) => ReactNode;
 
+// Common subset; the full HTML5 list is ~2000 names.
+const NAMED: Record<string, string> = {
+  amp: "&",
+  lt: "<",
+  gt: ">",
+  quot: '"',
+  apos: "'",
+  nbsp: "\u00a0",
+  copy: "©",
+  reg: "®",
+  trade: "™",
+  deg: "°",
+  micro: "µ",
+  para: "¶",
+  sect: "§",
+  middot: "·",
+  bull: "•",
+  hellip: "…",
+  mdash: "—",
+  ndash: "–",
+  minus: "−",
+  lsquo: "‘",
+  rsquo: "’",
+  ldquo: "“",
+  rdquo: "”",
+  laquo: "«",
+  raquo: "»",
+  dagger: "†",
+  Dagger: "‡",
+  prime: "′",
+  times: "×",
+  divide: "÷",
+  plusmn: "±",
+  euro: "€",
+  pound: "£",
+  yen: "¥",
+  cent: "¢",
+};
+
+const ENTITY = /&(#\d{1,7}|#[xX][\da-fA-F]{1,6}|[a-zA-Z][a-zA-Z\d]{1,31});/g;
+
+// Safe because the result is a React text child, which React escapes, so a
+// decoded "<" cannot open a tag. Code never reaches here.
+const decodeEntities = (text: string) =>
+  text.includes("&")
+    ? text.replace(ENTITY, (whole, body: string) => {
+        if (body[0] !== "#") return NAMED[body] ?? whole;
+        const code =
+          body[1] === "x" || body[1] === "X"
+            ? parseInt(body.slice(2), 16)
+            : +body.slice(1);
+        return code > 0 && code <= 0x10ffff ? String.fromCodePoint(code) : "�";
+      })
+    : text;
+
 const truncate = (text: string, max = 60) =>
   text.length > max ? text.slice(0, max) + "…" : text;
 
+// One space is stripped from each end unless the span is all spaces.
+const stripSpan = (text: string) =>
+  text.length > 2 && text.startsWith(" ") && text.endsWith(" ") && text.trim()
+    ? text.slice(1, -1)
+    : text;
+
+// Stays literal, but its contents are still inline markdown.
+const unresolved = (
+  m: RegExpExecArray,
+  i: number,
+  r: (s: string) => ReactNode[],
+  prefix: string,
+) => (
+  <Fragment key={i}>
+    {prefix + "["}
+    {r(m[1])}
+    {"]" + (m[2] === undefined ? "" : "[" + m[2] + "]")}
+  </Fragment>
+);
+
 const patterns: { regex: RegExp; render: Render }[] = [
   {
-    // Any ASCII punctuation is escapable, per CommonMark.
     regex: /\\([!-\/:-@\[-`{-~])/,
     render: (m) => m[1],
+  },
+  {
+    // Dropped in every mode. A code span matches earlier, so it keeps its own.
+    regex: COMMENT,
+    render: () => null,
   },
   {
     regex: /~~(.+?)~~/,
     render: (m, i, r) => <del key={i}>{r(m[1])}</del>,
   },
-  // Emphasis follows CommonMark's flanking rules: a delimiter cannot open when
-  // followed by whitespace, nor close when preceded by it. Underscore also
-  // cannot open or close inside a word, so `snake_case_name` stays literal
-  // while `*` is still allowed intraword. Asterisk and underscore are separate
-  // patterns because only underscore carries the intraword restriction.
+  // CommonMark flanking rules. Split by delimiter because only underscore
+  // carries the intraword restriction, keeping `snake_case_name` literal.
   {
     regex: /\*\*\*(?!\s)(.+?)(?<!\s)\*\*\*/,
     render: (m, i, r) => (
@@ -69,11 +160,11 @@ const patterns: { regex: RegExp; render: Render }[] = [
     render: (m, i, r) => <em key={i}>{r(m[1])}</em>,
   },
   {
-    regex: /``\s*(.+?)\s*``/,
-    render: (m, i) => <code key={i}>{m[1]}</code>,
+    // Closed by a run of exactly the same length.
+    regex: /(?<!`)(`+)(?!`)([\s\S]*?)(?<!`)\1(?!`)/,
+    render: (m, i) => <code key={i}>{stripSpan(breakToSpace(m[2]))}</code>,
   },
-  { regex: /`(.+?)`/, render: (m, i) => <code key={i}>{m[1]}</code> },
-  { regex: /<br\s*\/?>/i, render: (_, i) => <br key={i} /> },
+  { regex: HARD_BREAK, render: (_, i) => <br key={i} /> },
   {
     regex: /!\[(.*?)\]\((.*?)(?:\s+"([^"]*)")?\)/,
     render: (m, i) => (
@@ -99,6 +190,16 @@ const patterns: { regex: RegExp; render: Render }[] = [
     ),
   },
   {
+    // Any scheme matches so the brackets never leak, but sanitize() still
+    // reduces anything outside http/https to "#".
+    regex: /<([a-zA-Z][a-zA-Z0-9+.-]{1,31}:[^\s<>]*)>/,
+    render: (m, i) => (
+      <a key={i} href={sanitize(m[1])}>
+        {m[1]}
+      </a>
+    ),
+  },
+  {
     regex: /(https?:\/\/[^\s<>")\]]+)/,
     render: (m, i) => (
       <a key={i} href={m[1]}>
@@ -112,10 +213,45 @@ export function parseInline(
   text: string,
   math?: MathFn | false,
   rawHtml?: RawHtml | boolean,
+  defs?: RefMap,
 ): ReactNode[] {
   const parts: ReactNode[] = [];
   let remaining = text;
   let index = 0;
+
+  // Built here, not in `patterns`, because they need the document's
+  // definitions, and cost nothing when there are none.
+  const refPatterns: typeof patterns = defs?.size
+    ? [
+        {
+          regex: /!\[((?:[^[\]]|\[[^\]]*\])*)\](?:\[([^\]]*)\])?/,
+          render: (m, i, r) => {
+            const def = defs.get(refLabel(m[2] || m[1]));
+            if (!def) return unresolved(m, i, r, "!");
+            return (
+              <img
+                key={i}
+                alt={m[1].replace(/[*_`~]/g, "")}
+                src={sanitize(def.url)}
+                title={def.title}
+              />
+            );
+          },
+        },
+        {
+          regex: /\[((?:[^[\]]|\[[^\]]*\])+)\](?:\[([^\]]*)\])?/,
+          render: (m, i, r) => {
+            const def = defs.get(refLabel(m[2] || m[1]));
+            if (!def) return unresolved(m, i, r, "");
+            return (
+              <a key={i} href={sanitize(def.url)} title={def.title}>
+                {r(m[1])}
+              </a>
+            );
+          },
+        },
+      ]
+    : [];
 
   const mathPatterns: typeof patterns = math
     ? [
@@ -142,7 +278,7 @@ export function parseInline(
     ? [
         {
           // paired tags: <tag attrs>content</tag>
-          regex: /<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*)?>(.+?)<\/\1>/,
+          regex: HTML_PAIR,
           render: (m, i) => {
             const tag = m[1].toLowerCase();
             if (BLOCK_EL.test(tag)) return m[0];
@@ -151,14 +287,14 @@ export function parseInline(
             const Tag = tag as keyof JSX.IntrinsicElements;
             return (
               <Tag key={i} {...(attrs as any)}>
-                {parseInline(m[3], math, rawHtml)}
+                {parseInline(m[3], math, rawHtml, defs)}
               </Tag>
             );
           },
         },
         {
           // void / self-closing: <tag attrs /> or <tag attrs>
-          regex: /<([a-zA-Z][a-zA-Z0-9]*)(\s[^>]*)?\s*\/?>/,
+          regex: HTML_VOID,
           render: (m, i) => {
             const tag = m[1].toLowerCase();
             if (BLOCK_EL.test(tag)) return m[0];
@@ -171,7 +307,12 @@ export function parseInline(
       ]
     : [];
 
-  const activePatterns = [...mathPatterns, ...patterns, ...htmlPatterns];
+  const activePatterns = [
+    ...mathPatterns,
+    ...patterns,
+    ...refPatterns,
+    ...htmlPatterns,
+  ];
 
   while (remaining.length > 0) {
     let earliest: RegExpExecArray | null = null;
@@ -186,14 +327,16 @@ export function parseInline(
     }
 
     if (!earliest || !earliestPattern) {
-      parts.push(remaining);
+      parts.push(decodeEntities(remaining));
       break;
     }
 
-    if (earliest.index > 0) parts.push(remaining.slice(0, earliest.index));
+    if (earliest.index > 0) {
+      parts.push(decodeEntities(remaining.slice(0, earliest.index)));
+    }
     parts.push(
       earliestPattern.render(earliest, index++, (s) =>
-        parseInline(s, math, rawHtml),
+        parseInline(s, math, rawHtml, defs),
       ),
     );
     remaining = remaining.slice(earliest.index + earliest[0].length);
@@ -206,13 +349,14 @@ export function renderItem(
   text: string,
   math?: MathFn | false,
   raw?: RawHtml | boolean,
+  defs?: RefMap,
 ) {
   return (
     <>
       {CHECKBOX.test(text) && (
         <input type="checkbox" disabled checked={IS_CHECKED.test(text)} />
       )}
-      {parseInline(text.replace(CHECKBOX, ""), math, raw)}
+      {parseInline(text.replace(CHECKBOX, ""), math, raw, defs)}
     </>
   );
 }

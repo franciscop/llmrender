@@ -52,3 +52,38 @@ it("renders nested blockquotes", () => {
   expect(inner.length).toBe(1);
   expect(inner.find("p").text()).toBe("inner");
 });
+
+it("continues a blockquote across a line with no marker", () => {
+  const $el = $(<Markdown>{"> bar\nbaz"}</Markdown>);
+  expect($el.find("blockquote").find("p").text()).toBe("bar baz");
+  expect($el.find("blockquote").length).toBe(1);
+});
+
+it("ends a blockquote at a blank quoted line", () => {
+  const $el = $(<Markdown>{"> bar\n>\nbaz"}</Markdown>);
+  expect($el.find("blockquote").find("p").text()).toBe("bar");
+  expect($el.find("p").array("textContent")).toContain("baz");
+});
+
+it("keeps a blockquote before the paragraph that follows it", () => {
+  const node = $(<Markdown>{"> bar\n\nbaz"}</Markdown>)
+    .find("blockquote")
+    .get(0)!;
+  expect(node.nextSibling!.nodeName).toBe("P");
+});
+
+it("accepts a blockquote marker with no space after it", () => {
+  expect(
+    $(<Markdown>{">bar"}</Markdown>)
+      .find("blockquote")
+      .text(),
+  ).toBe("bar");
+});
+
+it("accepts a blockquote indented up to three spaces", () => {
+  expect(
+    $(<Markdown>{"   > bar"}</Markdown>)
+      .find("blockquote")
+      .text(),
+  ).toBe("bar");
+});
