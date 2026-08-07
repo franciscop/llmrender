@@ -254,6 +254,37 @@ import Markdown, { allowTags } from "llmrender";
 
 See [Security](#security) for the complete allowlist and URL sanitization rules.
 
+#### HTML across multiple lines
+
+HTML elements must open and close on the same line:
+
+```md
+This <mark>works</mark>, and so does <span class="badge">this</span>.
+```
+
+`<details>` is the one exception, because collapsible sections are too useful in a README to lose. It may span as many lines as you like, an optional `<summary>` becomes the clickable label, and everything between the tags is parsed as Markdown:
+
+```md
+<details>
+<summary>Show the <code>config</code> example</summary>
+
+Any **Markdown** works in here:
+
+- lists
+- tables
+- fenced code
+
+</details>
+```
+
+Add `open` to expand it by default. Every other multi-line element still breaks apart:
+
+```md
+<div class="box">
+This does not work.
+</div>
+```
+
 ## Syntax
 
 ### Headings
@@ -682,7 +713,7 @@ By default, HTML tags written inside Markdown source are not rendered: they appe
 **`rawHtml={true}`**: renders tags from a built-in allowlist of known-safe content elements. Anything not on the list is silently dropped as text. The allowlist covers:
 
 - **Inline:** `a`, `abbr`, `b`, `bdi`, `bdo`, `br`, `cite`, `code`, `data`, `dfn`, `em`, `i`, `kbd`, `mark`, `q`, `rp`, `rt`, `ruby`, `s`, `samp`, `small`, `span`, `strong`, `sub`, `sup`, `time`, `u`, `var`, `wbr`
-- **Block:** `address`, `article`, `aside`, `blockquote`, `dd`, `del`, `details`, `div`, `dl`, `dt`, `figcaption`, `figure`, `footer`, `h1`–`h6`, `header`, `hr`, `ins`, `li`, `main`, `nav`, `ol`, `p`, `pre`, `section`, `summary`, `ul`
+- **Block:** `address`, `article`, `aside`, `blockquote`, `dd`, `del`, `details`, `div`, `dl`, `dt`, `figcaption`, `figure`, `footer`, `h1` to `h6`, `header`, `hr`, `ins`, `li`, `main`, `nav`, `ol`, `p`, `pre`, `section`, `summary`, `ul`
 - **Tables:** `caption`, `col`, `colgroup`, `table`, `tbody`, `td`, `th`, `thead`, `tr`
 - **Media:** `audio`, `img`, `map`, `area`, `picture`, `source`, `track`, `video`
 
@@ -717,7 +748,7 @@ LLMRender uses regex-based parsing rather than a full AST. This is intentional: 
 Common LLM output (headings, bold, italics, links, tables, code blocks, and standard LaTeX) all works fine. The kinds of things that can trip up the regex parser:
 
 - **HTML (`rawHtml` enabled) attribute values containing `>`** (e.g. `<img alt="score: 5 > 3" src="photo.jpg">`): the attribute parser stops at the first `>`, so the tag is matched as `<img alt="score: 5 >` with no `src`. The image renders broken, and ` 3" src="photo.jpg">` appears as literal text after it.
-- **Multi-line block HTML (`rawHtml` enabled)**: only single-line block HTML is supported. A `<div class="box">` on one line followed by content and `</div>` on subsequent lines renders the opening tag as an empty self-closing element, the content as a separate paragraph, and the closing tag as stray literal text.
+- **Multi-line block HTML (`rawHtml` enabled)**: only single-line block HTML is supported, with `<details>` as the sole exception (see [HTML across multiple lines](#html-across-multiple-lines)). A `<div class="box">` on one line followed by content and `</div>` on subsequent lines renders the opening tag as an empty self-closing element, the content as a separate paragraph, and the closing tag as stray literal text.
 - **Deeply nested LaTeX**: something like `\frac{\frac{\frac{a}{b}}{c}}{d}` across 10+ levels of nesting hits the depth guard and the innermost groups are discarded.
 
 If you run into a bug, please [open an issue](https://github.com/franciscop/llmrender/issues).

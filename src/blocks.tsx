@@ -21,6 +21,10 @@ const REF_DEF = /^ {0,3}\[([^\]]+)\]:\s*(\S+)(?:\s+["'(](.*)["')])?\s*$/;
 const DISPLAY_MATH = /^\$\$(.+)\$\$$/;
 const CALLOUT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i;
 const BLOCK_HTML_START = /^<[a-zA-Z]/;
+// The one multi-line HTML construct we support. Everything else must fit on a
+// single line; see readme.
+const DETAILS = /^ {0,3}<details(\s[^>]*)?>([\s\S]*?)(?:<\/details>|$)/i;
+const SUMMARY = /<summary(?:\s[^>]*)?>([\s\S]*?)<\/summary>/i;
 const FENCE = /^( {0,3})(`{3,}|~{3,})([^`]*)$/;
 const TABLE_ROW = /^\|.+\|$/;
 const TABLE_SEP = /^\|[\s|:-]+\|$/;
@@ -101,6 +105,7 @@ export type Block =
       rows: string[][];
       aligns: (string | undefined)[];
     }
+  | { type: "G"; open: boolean; lines: string[] }
   | {
       type: "X";
       tag: string;
@@ -352,6 +357,18 @@ export function collectBlocks(
       continue;
     }
 
+    if (raw && DETAILS.test(line)) {
+      flushAll();
+      const d = DETAILS.exec(lines.slice(index).join("\n"))!;
+      blocks.push({
+        type: "G",
+        open: /\bopen\b/i.test(d[1] ?? ""),
+        lines: d[2].split("\n"),
+      });
+      index += d[0].split("\n").length - 1;
+      continue;
+    }
+
     if (raw && BLOCK_HTML_START.test(line)) {
       const pair = HTML_PAIR_LINE.exec(line);
       const voidEl = HTML_VOID_LINE.exec(line);
@@ -521,7 +538,7 @@ export function renderBlock(
     case "Q": {
       const callout = CALLOUT.exec(block.lines[0] ?? "");
       const contentLines = callout ? block.lines.slice(1) : block.lines;
-      const inner = collectBlocks(contentLines, !!math, raw).map((b, i) =>
+      const inner = collectBlocks(contentLines, !!math, raw, defs).map((b, i) =>
         renderBlock(b, i, highlight, math, raw, seen, defs),
       );
       if (callout) {
@@ -561,6 +578,22 @@ export function renderBlock(
             ))}
           </tbody>
         </table>
+      );
+    }
+
+    case "G": {
+      const joined = block.lines.join("\n");
+      const sm = SUMMARY.exec(joined);
+      return (
+        <details key={key} open={block.open}>
+          {sm && <summary>{parseInline(sm[1], math, raw, defs)}</summary>}
+          {collectBlocks(
+            joined.replace(SUMMARY, "").split("\n"),
+            !!math,
+            raw,
+            defs,
+          ).map((x, i) => renderBlock(x, i, highlight, math, raw, seen, defs))}
+        </details>
       );
     }
 
