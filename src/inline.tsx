@@ -1,4 +1,3 @@
-import { Fragment } from "react/jsx-runtime";
 import type { ReactNode } from "react";
 import type { RawHtml } from "./sanitize";
 import { BLOCK_EL, allowTag, sanitize } from "./sanitize";
@@ -86,16 +85,14 @@ const stripSpan = (text: string) =>
 // Stays literal, but its contents are still inline markdown.
 const unresolved = (
   m: RegExpExecArray,
-  i: number,
+  _i: number,
   r: (s: string) => ReactNode[],
   prefix: string,
-) => (
-  <Fragment key={i}>
-    {prefix + "["}
-    {r(m[1])}
-    {"]" + (m[2] === undefined ? "" : "[" + m[2] + "]")}
-  </Fragment>
-);
+): ReactNode => [
+  prefix + "[",
+  ...r(m[1]),
+  "]" + (m[2] === undefined ? "" : "[" + m[2] + "]"),
+];
 
 const patterns: { regex: RegExp; render: Render }[] = [
   {

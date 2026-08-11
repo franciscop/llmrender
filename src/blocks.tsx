@@ -1,5 +1,4 @@
-import { Fragment } from "react/jsx-runtime";
-import type { ReactNode } from "react";
+import type { ReactElement, ReactNode } from "react";
 import type { RawHtml } from "./sanitize";
 import { allowTag } from "./sanitize";
 import type { HighlightFn, MathFn, RefMap } from "./inline";
@@ -11,6 +10,9 @@ import {
   clearBreak,
   markBreak,
 } from "./utils";
+
+// Fragment of whichever JSX runtime is configured, without naming a package.
+const Frag = (<></>).type as (p: { children?: ReactNode }) => ReactElement;
 
 const HEADER = /^ {0,3}(#{1,6})(?: |$)/;
 const HEADER_TRAIL = /(^|\s)#+\s*$/;
@@ -492,9 +494,7 @@ export function renderBlock(
 
     case "C":
       return highlight ? (
-        <Fragment key={key}>
-          {highlight(block.lines.join("\n"), block.lang)}
-        </Fragment>
+        <Frag key={key}>{highlight(block.lines.join("\n"), block.lang)}</Frag>
       ) : (
         <pre key={key}>
           <code className={block.lang ? `language-${block.lang}` : undefined}>
