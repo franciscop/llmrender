@@ -647,3 +647,37 @@ describe("unknown commands degrade to literal", () => {
     expect($(renderMath("\\nosuchcmd")).find("mi").text()).toBe("nosuchcmd");
   });
 });
+
+describe("primes", () => {
+  it("renders a prime as a superscript", () => {
+    const el = $(renderMath("m'"));
+    expect(el.find("msup").length).toBe(1);
+    expect(el.find("msup").find("mo").text()).toBe("′");
+  });
+
+  it("does not leave a straight apostrophe in the output", () => {
+    expect($(renderMath("m'")).text()).not.toContain("'");
+  });
+
+  it("renders a double prime", () => {
+    expect($(renderMath("x''")).find("msup").find("mo").text()).toBe("′′");
+  });
+
+  it("keeps the base identifier alongside the prime", () => {
+    const el = $(renderMath("f'(x)"));
+    expect(el.find("msup").find("mi").text()).toBe("f");
+    expect(el.text()).toContain("(");
+    expect(el.text()).toContain("x");
+  });
+
+  it("combines a prime with a subscript", () => {
+    const el = $(renderMath("m'_1"));
+    expect(el.find("msubsup").length).toBe(1);
+  });
+
+  it("renders a prime inside a larger expression", () => {
+    const el = $(renderMath("n(0)\\exp(-m'ghN_A/RT)"));
+    expect(el.find("msup").find("mo").text()).toBe("′");
+    expect(el.text()).not.toContain("'");
+  });
+});

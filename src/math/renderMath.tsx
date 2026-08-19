@@ -637,6 +637,16 @@ export default function renderMath(tex: string, block = false): ReactElement {
         sup = parseGroup();
         continue;
       }
+      // A run of apostrophes is a prime superscript: m' is m to the prime.
+      if (ch === "'") {
+        let marks = "";
+        while (peek() === "'") {
+          consume();
+          marks += "′";
+        }
+        sup = { type: "mo", value: marks };
+        continue;
+      }
       break;
     }
 
