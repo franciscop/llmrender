@@ -642,6 +642,82 @@ describe("leaf element attributes", () => {
   });
 });
 
+describe("brace groups and escapes", () => {
+  it("renders a bare brace group without literal braces", () => {
+    expect($(renderMath("1{,}000")).text()).toBe("1,000");
+  });
+
+  it("applies scripts to a bare brace group", () => {
+    const el = $(renderMath("{a+b}^2"));
+    expect(el.find("msup").length).toBe(1);
+    expect(el.text()).toBe("a+b2");
+  });
+
+  it("renders escaped braces as operators", () => {
+    const el = $(renderMath("\\{ x \\}"));
+    expect(el.text()).toBe("{x}");
+    expect(el.find("mo").length).toBe(2);
+  });
+
+  it("renders escaped specials literally", () => {
+    expect($(renderMath("50\\% \\_ \\#")).text()).toBe("50%_#");
+    expect($(renderMath("a\\_b")).find("msub").length).toBe(0);
+  });
+
+  it("keeps the spaces at the edges of \\text", () => {
+    const el = $(renderMath("x \\text{ if } y"));
+    expect(el.find("mtext").html()).toContain("&nbsp;if&nbsp;");
+  });
+});
+
+describe("commands", () => {
+  it("sets displaystyle for \\tfrac and \\dfrac", () => {
+    expect(
+      $(renderMath("\\tfrac{1}{2}")).find("mstyle").attr("displaystyle"),
+    ).toBe("false");
+    expect(
+      $(renderMath("\\dfrac{1}{2}")).find("mstyle").attr("displaystyle"),
+    ).toBe("true");
+  });
+
+  it("takes one digit per unbraced fraction argument", () => {
+    const el = $(renderMath("\\tfrac12 x"));
+    expect(el.find("mfrac mn:nth-child(1)").text()).toBe("1");
+    expect(el.find("mfrac mn:nth-child(2)").text()).toBe("2");
+    expect(el.find("mstyle + mi").text()).toBe("x");
+  });
+
+  it("renders \\operatorname upright as one identifier", () => {
+    const el = $(renderMath("\\operatorname{rank} A"));
+    expect(el.find("mi[mathvariant=normal]").text()).toBe("rank");
+  });
+
+  it("negates the next symbol with \\not", () => {
+    expect($(renderMath("a \\not= b")).find("mo").text()).toBe("≠");
+    expect($(renderMath("x \\not\\in A")).find("mo").text()).toBe("∉");
+  });
+
+  it("maps \\boldsymbol and \\mathfrak to mathvariants", () => {
+    expect(
+      $(renderMath("\\boldsymbol{x}")).find("mi").attr("mathvariant"),
+    ).toBe("bold-italic");
+    expect($(renderMath("\\mathfrak{g}")).find("mi").attr("mathvariant")).toBe(
+      "fraktur",
+    );
+  });
+
+  it("renders \\nmid", () => {
+    expect($(renderMath("a \\nmid b")).find("mo").text()).toBe("∤");
+  });
+
+  it("puts limits under and over \\bigcup and \\bigcap", () => {
+    expect(
+      $(renderMath("\\bigcup_{i=1}^n A_i")).find("munderover > mo").text(),
+    ).toBe("⋃");
+    expect($(renderMath("\\bigcap_i A_i")).find("munder mo").text()).toBe("⋂");
+  });
+});
+
 describe("unknown commands degrade to literal", () => {
   it("renders an unrecognized command as its name", () => {
     expect($(renderMath("\\nosuchcmd")).find("mi").text()).toBe("nosuchcmd");

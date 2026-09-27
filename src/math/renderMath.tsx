@@ -224,6 +224,9 @@ const operators: Record<string, string> = {
   rbrace: "}",
   vert: "|",
   Vert: "‖",
+  nmid: "∤",
+  bigcup: "⋃",
+  bigcap: "⋂",
 };
 
 const accents: Record<string, string> = {
@@ -241,6 +244,8 @@ const accents: Record<string, string> = {
 const mathVariants: Record<string, string> = {
   mathbb: "double-struck",
   mathbf: "bold",
+  boldsymbol: "bold-italic",
+  mathfrak: "fraktur",
   mathrm: "normal",
   mathit: "italic",
   mathcal: "script",
@@ -329,6 +334,8 @@ export default function renderMath(tex: string, block = false): ReactElement {
       groupDepth--;
       return { type: "mrow", children };
     }
+    // An unbraced argument is one token, so \frac12 is 1 over 2
+    if (/[0-9]/.test(peek())) return { type: "mn", value: consume() };
     return parseAtom();
   }
 
@@ -432,18 +439,14 @@ export default function renderMath(tex: string, block = false): ReactElement {
     let name = "";
     while (/[a-zA-Z*]/.test(peek())) name += consume();
 
-    // single-character commands: \, \: \; \! \<space> \|
+    // single-character commands: \, \: \; \! \<space> \| and escapes like \{ \%
     if (!name) {
-      const c = peek();
-      if (c === "|") {
-        consume();
-        return { type: "mo", value: "‖", stretchy: "false" };
-      }
-      if (spaces[c]) {
-        consume();
-        return { type: "mspace", width: spaces[c] };
-      }
-      return { type: "mi", value: "" };
+      const c = consume();
+      if (c === "|") return { type: "mo", value: "‖", stretchy: "false" };
+      if (spaces[c]) return { type: "mspace", width: spaces[c] };
+      if (c === "{" || c === "}")
+        return { type: "mo", value: c, stretchy: "false" };
+      return { type: "mi", value: c };
     }
 
     if (name === "frac" || name === "cfrac")
@@ -493,7 +496,11 @@ export default function renderMath(tex: string, block = false): ReactElement {
             if (depth > 0) text += c;
           } else text += c;
         }
-        return { type: "mtext", value: text };
+        // MathML trims edge whitespace, which would glue "x \text{ if } y" together
+        return {
+          type: "mtext",
+          value: text.replace(/^ +| +$/g, (m) => "\u00a0".repeat(m.length)),
+        };
       }
       return { type: "mtext", value: "" };
     }
@@ -558,6 +565,17 @@ export default function renderMath(tex: string, block = false): ReactElement {
       }
       return { type: "mspace", width: w || "0em" };
     }
+    if (name === "operatorname" || name === "operatorname*")
+      return {
+        type: "mi",
+        value: extractText(parseGroup()),
+        mathvariant: "normal",
+      };
+    if (name === "not") {
+      const { value = "" } = parseAtom() as { value?: string };
+      // NFC turns = plus the combining slash into ≠, ∈ into ∉, etc.
+      return { type: "mo", value: (value + "\u0338").normalize() };
+    }
     if (name === "pmod") {
       const arg = parseGroup();
       return {
@@ -602,6 +620,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
 
     if (!ch) return { type: "mi", value: "" };
     if (ch === "\\") return parseCommand();
+    if (ch === "{") return parseGroup();
 
     if (/[0-9]/.test(ch)) {
       let num = "";
@@ -652,7 +671,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
 
     if (
       base.type === "mo" &&
-      ["∑", "∏", "∫", "∬", "∭", "∮", "lim"].includes(base.value)
+      ["∑", "∏", "⋃", "⋂", "∫", "∬", "∭", "∮", "lim"].includes(base.value)
     ) {
       if (sub && sup)
         return { type: "munderover", base, under: sub, over: sup };
@@ -711,7 +730,10 @@ export default function renderMath(tex: string, block = false): ReactElement {
 
       case "mstyle":
         return (
-          <mstyle key={k} {...({ displaystyle: node.displaystyle } as {})}>
+          <mstyle
+            key={k}
+            {...({ displaystyle: String(node.displaystyle) } as {})}
+          >
             {toJSX(node.child, 0)}
           </mstyle>
         );
