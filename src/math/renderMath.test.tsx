@@ -308,9 +308,10 @@ describe("renderMath", () => {
     expect(el.find("mi").text()).toBe("R");
   });
 
-  it("renders \\mathbf with bold variant", () => {
-    const el = $(renderMath("\\mathbf{x}"));
-    expect(el.find("mi").attr("mathvariant")).toBe("bold");
+  it("renders \\mathbf as Unicode bold letters and digits", () => {
+    const el = $(renderMath("\\mathbf{Az09}"));
+    expect(el.find("mi").text()).toBe("𝐀𝐳𝟎𝟗");
+    expect(el.find("mi").attr("mathvariant")).toBe(null);
   });
 
   it("renders \\mathrm with normal variant", () => {
@@ -516,7 +517,7 @@ describe("renderMath", () => {
   });
 
   it("extractText returns empty string for complex node types inside mathvariant", () => {
-    // \mathbf{x^2} — the group contains msup, hitting extractText's default branch
+    // \mathbf{x^2}: the group contains msup, hitting extractText's default branch
     const el = $(renderMath("\\mathbf{x^2}"));
     expect(el.find("mi").length).toBeGreaterThan(0);
   });

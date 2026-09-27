@@ -178,8 +178,7 @@ describe("font variants", () => {
 
   it("\\mathbf{v} gives bold v", () => {
     const el = $(renderMath("\\mathbf{v}"));
-    expect(el.find("mi").attr("mathvariant")).toBe("bold");
-    expect(el.find("mi").text()).toBe("v");
+    expect(el.find("mi").text()).toBe("𝐯");
   });
 
   it("\\mathcal{L} gives script L", () => {

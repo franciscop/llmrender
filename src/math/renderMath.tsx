@@ -212,7 +212,6 @@ const accents: Record<string, string> = {
 
 const mathVariants: Record<string, string> = {
   mathbb: "double-struck",
-  mathbf: "bold",
   boldsymbol: "bold-italic",
   mathfrak: "fraktur",
   mathrm: "normal",
@@ -465,6 +464,17 @@ export default function renderMath(tex: string, block = false): ReactElement {
         type: "mover",
         base: parseGroup(),
         over: { type: "mo", value: accents[name] },
+      };
+    if (name === "mathbf")
+      // Chromium ignores mathvariant="bold", so use the Unicode bold characters
+      return {
+        type: "mi",
+        value: extractText(parseGroup()).replace(/[A-Za-z0-9]/g, (c) =>
+          String.fromCodePoint(
+            c.charCodeAt(0) +
+              (c < "A" ? 0x1d7ce - 48 : c < "a" ? 0x1d400 - 65 : 0x1d41a - 97),
+          ),
+        ),
       };
     if (mathVariants[name]) {
       const content = parseGroup();
