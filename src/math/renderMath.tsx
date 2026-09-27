@@ -20,49 +20,11 @@ type Node =
   | { type: "mspace"; width: string }
   | { type: "mstyle"; displaystyle: boolean; child: Node };
 
-// Hoisted: rebuilding 229 entries per expression is wasted during streaming.
+// Hoisted: rebuilding these per expression is wasted during streaming.
 const greek: Record<string, string> = {
-  // lowercase
-  alpha: "α",
-  beta: "β",
-  gamma: "γ",
-  delta: "δ",
-  epsilon: "ε",
-  zeta: "ζ",
-  eta: "η",
-  theta: "θ",
-  iota: "ι",
-  kappa: "κ",
-  lambda: "λ",
-  mu: "μ",
-  nu: "ν",
-  xi: "ξ",
-  pi: "π",
-  rho: "ρ",
-  sigma: "σ",
-  tau: "τ",
-  upsilon: "υ",
-  phi: "φ",
-  chi: "χ",
-  psi: "ψ",
-  omega: "ω",
-  // variants
   varepsilon: "ε",
   varphi: "φ",
   vartheta: "ϑ",
-  // uppercase
-  Gamma: "Γ",
-  Delta: "Δ",
-  Theta: "Θ",
-  Lambda: "Λ",
-  Xi: "Ξ",
-  Pi: "Π",
-  Sigma: "Σ",
-  Upsilon: "Υ",
-  Phi: "Φ",
-  Psi: "Ψ",
-  Omega: "Ω",
-  // other letter-like symbols
   hbar: "ℏ",
   ell: "ℓ",
   Re: "ℜ",
@@ -72,6 +34,13 @@ const greek: Record<string, string> = {
   sharp: "♯",
   natural: "♮",
 };
+// Greek is contiguous in Unicode, capitals 32 code points below lowercase.
+"alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho varsigma sigma tau upsilon phi chi psi omega"
+  .split(" ")
+  .forEach((name, i) => {
+    greek[name] = String.fromCharCode(945 + i);
+    greek[name[0].toUpperCase() + name.slice(1)] = String.fromCharCode(913 + i);
+  });
 
 const spaces: Record<string, string> = {
   ",": "0.17em",
@@ -259,9 +228,6 @@ const ENV_DELIMS: Record<string, [string, string]> = {
   vmatrix: ["|", "|"],
   Vmatrix: ["‖", "‖"],
   cases: ["{", ""],
-  matrix: ["", ""],
-  align: ["", ""],
-  "align*": ["", ""],
 };
 
 // Nodes whose only difference is the tag and which fields become children.
@@ -297,6 +263,28 @@ export default function renderMath(tex: string, block = false): ReactElement {
   function skipWS() {
     while (/\s/.test(peek())) i++;
   }
+  function readName(): string {
+    let name = "";
+    while (/[a-zA-Z*]/.test(peek())) name += consume();
+    return name;
+  }
+  // Raw contents of a braced argument, nested braces kept.
+  function readRaw(): string {
+    skipWS();
+    if (peek() !== "{") return "";
+    consume();
+    let text = "";
+    let depth = 1;
+    while (i < tex.length) {
+      const c = consume();
+      if (c === "{") depth++;
+      else if (c === "}" && --depth === 0) break;
+      text += c;
+    }
+    return text;
+  }
+  // An empty delimiter (\left.) emits nothing, not a spaced empty operator.
+  const delim = (d: string): Node[] => (d ? [{ type: "mo", value: d }] : []);
 
   function extractText(node: Node): string {
     switch (node.type) {
@@ -341,25 +329,14 @@ export default function renderMath(tex: string, block = false): ReactElement {
 
   function parseDelimiter(): string {
     skipWS();
-    if (peek() === "\\") {
-      consume();
-      let dname = "";
-      while (/[a-zA-Z]/.test(peek())) dname += consume();
-      if (dname === "") {
-        const ch = consume();
-        if (ch === "{") return "{";
-        if (ch === "}") return "}";
-        if (ch === "|") return "‖";
-        if (ch === ".") return "";
-        return ch;
-      }
-      return operators[dname] ?? dname;
+    let d = consume();
+    if (d === "\\") {
+      const name = readName();
+      if (name) return operators[name] ?? name;
+      d = consume();
+      if (d === "|") return "‖";
     }
-    if (peek() === ".") {
-      consume();
-      return "";
-    }
-    return consume();
+    return d === "." ? "" : d;
   }
 
   function parseEnvironment(envName: string): Node {
@@ -377,7 +354,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
       currentRow = [];
     }
 
-    outer: while (i < tex.length) {
+    while (i < tex.length) {
       skipWS();
 
       if (peek() === "&") {
@@ -386,46 +363,29 @@ export default function renderMath(tex: string, block = false): ReactElement {
         continue;
       }
 
-      if (peek() === "\\") {
-        const saved = i;
-        consume();
-
+      const saved = i;
+      if (consume() === "\\") {
         if (peek() === "\\") {
           consume();
           flushRow();
           continue;
         }
-
-        let n = "";
-        while (/[a-zA-Z]/.test(peek())) n += consume();
-
-        if (n === "end") {
-          skipWS();
-          if (peek() === "{") {
-            consume();
-            while (peek() && peek() !== "}") consume();
-            if (peek() === "}") consume();
-          }
+        if (readName() === "end") {
+          readRaw();
           flushRow();
-          break outer;
+          break;
         }
-
-        i = saved;
       }
+      i = saved;
 
       currentCell.push(parseExpression());
     }
 
-    const [open, close] = ENV_DELIMS[envName] ?? ["", ""];
-
-    const tableNode: Node = { type: "mtable", rows };
-    if (!open && !close) return tableNode;
-
-    const children: Node[] = [];
-    if (open) children.push({ type: "mo", value: open });
-    children.push(tableNode);
-    if (close) children.push({ type: "mo", value: close });
-    return { type: "mrow", children };
+    const [open = "", close = ""] = ENV_DELIMS[envName] ?? [];
+    const table: Node = { type: "mtable", rows };
+    return open
+      ? { type: "mrow", children: [...delim(open), table, ...delim(close)] }
+      : table;
   }
 
   function parseCommand(): Node {
@@ -436,8 +396,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
       return { type: "mo", value: "\n" };
     }
 
-    let name = "";
-    while (/[a-zA-Z*]/.test(peek())) name += consume();
+    const name = readName();
 
     // single-character commands: \, \: \; \! \<space> \| and escapes like \{ \%
     if (!name) {
@@ -480,66 +439,26 @@ export default function renderMath(tex: string, block = false): ReactElement {
       }
       return { type: "msqrt", value: parseGroup() };
     }
-    if (name === "text") {
-      skipWS();
-      if (peek() === "{") {
-        consume();
-        let text = "";
-        let depth = 1;
-        while (i < tex.length && depth > 0) {
-          const c = consume();
-          if (c === "{") {
-            depth++;
-            text += c;
-          } else if (c === "}") {
-            depth--;
-            if (depth > 0) text += c;
-          } else text += c;
-        }
-        // MathML trims edge whitespace, which would glue "x \text{ if } y" together
-        return {
-          type: "mtext",
-          value: text.replace(/^ +| +$/g, (m) => "\u00a0".repeat(m.length)),
-        };
-      }
-      return { type: "mtext", value: "" };
-    }
-    if (name === "begin") {
-      skipWS();
-      let envName = "";
-      if (peek() === "{") {
-        consume();
-        while (peek() && peek() !== "}") envName += consume();
-        if (peek() === "}") consume();
-      }
-      return parseEnvironment(envName);
-    }
+    if (name === "text")
+      // MathML trims edge whitespace, which would glue "x \text{ if } y" together
+      return {
+        type: "mtext",
+        value: readRaw().replace(/^ +| +$/g, (m) => "\u00a0".repeat(m.length)),
+      };
+    if (name === "begin") return parseEnvironment(readRaw());
     if (name === "left") {
-      const openDelim = parseDelimiter();
-      const children: Node[] = [];
+      const children = delim(parseDelimiter());
       while (i < tex.length) {
         skipWS();
-        if (peek() === "\\") {
-          const saved = i;
-          consume();
-          let n = "";
-          while (/[a-zA-Z]/.test(peek())) n += consume();
-          if (n === "right") {
-            const closeDelim = parseDelimiter();
-            const result: Node[] = [];
-            if (openDelim) result.push({ type: "mo", value: openDelim });
-            result.push(...children);
-            if (closeDelim) result.push({ type: "mo", value: closeDelim });
-            return { type: "mrow", children: result };
-          }
-          i = saved;
+        const saved = i;
+        if (consume() === "\\" && readName() === "right") {
+          children.push(...delim(parseDelimiter()));
+          break;
         }
+        i = saved;
         children.push(parseExpression());
       }
-      const result: Node[] = [];
-      if (openDelim) result.push({ type: "mo", value: openDelim });
-      result.push(...children);
-      return { type: "mrow", children: result };
+      return { type: "mrow", children };
     }
     if (accents[name])
       return {
@@ -555,16 +474,8 @@ export default function renderMath(tex: string, block = false): ReactElement {
         mathvariant: mathVariants[name],
       };
     }
-    if (name === "hspace" || name === "hspace*") {
-      skipWS();
-      let w = "";
-      if (peek() === "{") {
-        consume();
-        while (peek() && peek() !== "}") w += consume();
-        if (peek() === "}") consume();
-      }
-      return { type: "mspace", width: w || "0em" };
-    }
+    if (name === "hspace" || name === "hspace*")
+      return { type: "mspace", width: readRaw() || "0em" };
     if (name === "operatorname" || name === "operatorname*")
       return {
         type: "mi",
