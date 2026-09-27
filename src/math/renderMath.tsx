@@ -151,7 +151,7 @@ const operators: Record<string, string> = {
   otimes: "⊗",
   circ: "∘",
   bullet: "•",
-  mid: "|",
+  mid: "∣",
   ast: "∗",
   star: "⋆",
   diamond: "⋄",
@@ -192,6 +192,8 @@ const operators: Record<string, string> = {
   lbrace: "{",
   rbrace: "}",
   vert: "|",
+  lvert: "|",
+  rvert: "|",
   Vert: "‖",
   nmid: "∤",
   bigcup: "⋃",
@@ -639,6 +641,9 @@ export default function renderMath(tex: string, block = false): ReactElement {
             {...({
               mathvariant: (node as { mathvariant?: string }).mathvariant,
               stretchy: (node as { stretchy?: string }).stretchy,
+              // A mid-row | would get infix (relation) spacing; TeX's | has none
+              lspace: node.value === "|" ? "0" : undefined,
+              rspace: node.value === "|" ? "0" : undefined,
             } as object)}
           >
             {node.value}

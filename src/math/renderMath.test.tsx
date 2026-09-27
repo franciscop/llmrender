@@ -672,6 +672,23 @@ describe("brace groups and escapes", () => {
 });
 
 describe("commands", () => {
+  it("renders absolute value bars without operator spacing", () => {
+    for (const tex of ["|v| = v", "\\vert v \\vert = v", "\\lvert v \\rvert"]) {
+      const bars = $(renderMath(tex))
+        .find("mo")
+        .filter((el) => el.textContent === "|");
+      expect(bars.length).toBe(2);
+      expect(bars.attr("lspace")).toBe("0");
+      expect(bars.attr("rspace")).toBe("0");
+    }
+  });
+
+  it("renders \\mid as a spaced relation", () => {
+    const mo = $(renderMath("x \\mid y")).find("mo");
+    expect(mo.text()).toBe("∣");
+    expect(mo.attr("lspace")).toBe(null);
+  });
+
   it("sets displaystyle for \\tfrac and \\dfrac", () => {
     expect(
       $(renderMath("\\tfrac{1}{2}")).find("mstyle").attr("displaystyle"),
