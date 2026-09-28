@@ -51,15 +51,14 @@ describe("Gaussian integral", () => {
     renderMath("\\int_{-\\infty}^{+\\infty} e^{-x^2}\\,dx = \\sqrt{\\pi}"),
   );
 
-  it("integral has munderover", () => {
-    expect(el.find("munderover mo").length).toBeGreaterThanOrEqual(1);
-    expect(
-      [...el.find("munderover mo")].some((n) => n.textContent === "∫"),
-    ).toBe(true);
+  it("integral keeps its limits at the side", () => {
+    expect([...el.find("msubsup mo")].some((n) => n.textContent === "∫")).toBe(
+      true,
+    );
   });
 
   it("lower limit contains ∞", () => {
-    expect([...el.find("mo")].some((n) => n.textContent === "∞")).toBe(true);
+    expect([...el.find("mi")].some((n) => n.textContent === "∞")).toBe(true);
   });
 
   it("has a sqrt wrapping π", () => {

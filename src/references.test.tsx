@@ -92,3 +92,9 @@ it("sanitizes a dangerous reference destination", () => {
       .attr("href"),
   ).toBe("#");
 });
+
+it("leaves footnotes as text instead of a broken link", () => {
+  const $el = $(<Markdown>{"Text[^1]\n\n[^1]: Note"}</Markdown>);
+  expect($el.find("a").length).toBe(0);
+  expect($el.text()).toContain("[^1]: Note");
+});

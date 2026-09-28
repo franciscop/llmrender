@@ -93,11 +93,12 @@ describe("renderMath", () => {
     expect(el.find("munder mi").text()).toBe("x");
   });
 
-  it("renders int with sub and sup as munderover", () => {
+  it("renders int with sub and sup at the side", () => {
     const el = $(renderMath("\\int_0^1"));
-    expect(el.find("munderover mo").text()).toBe("∫");
-    expect(el.find("munderover mn:nth-child(2)").text()).toBe("0");
-    expect(el.find("munderover mn:nth-child(3)").text()).toBe("1");
+    expect(el.find("munderover").length).toBe(0);
+    expect(el.find("msubsup mo").text()).toBe("∫");
+    expect(el.find("msubsup mn:nth-child(2)").text()).toBe("0");
+    expect(el.find("msubsup mn:nth-child(3)").text()).toBe("1");
   });
 
   it("renders cfrac same as frac", () => {
@@ -208,7 +209,7 @@ describe("renderMath", () => {
     expect($(renderMath("\\nabla")).find("mo").text()).toBe("∇");
     expect($(renderMath("\\cup")).find("mo").text()).toBe("∪");
     expect($(renderMath("\\cap")).find("mo").text()).toBe("∩");
-    expect($(renderMath("\\emptyset")).find("mo").text()).toBe("∅");
+    expect($(renderMath("\\emptyset")).find("mi").text()).toBe("∅");
     expect($(renderMath("\\wedge")).find("mo").text()).toBe("∧");
     expect($(renderMath("\\vee")).find("mo").text()).toBe("∨");
     expect($(renderMath("\\neg")).find("mo").text()).toBe("¬");
@@ -743,10 +744,10 @@ describe("unknown commands degrade to literal", () => {
 });
 
 describe("primes", () => {
-  it("renders a prime as a superscript", () => {
+  it("renders a prime inline after its base, not as a superscript", () => {
     const el = $(renderMath("m'"));
-    expect(el.find("msup").length).toBe(1);
-    expect(el.find("msup").find("mo").text()).toBe("′");
+    expect(el.find("msup").length).toBe(0);
+    expect(el.text()).toBe("m′");
   });
 
   it("does not leave a straight apostrophe in the output", () => {
@@ -754,24 +755,52 @@ describe("primes", () => {
   });
 
   it("renders a double prime", () => {
-    expect($(renderMath("x''")).find("msup").find("mo").text()).toBe("′′");
+    expect($(renderMath("x''")).text()).toBe("x′′");
   });
 
   it("keeps the base identifier alongside the prime", () => {
     const el = $(renderMath("f'(x)"));
-    expect(el.find("msup").find("mi").text()).toBe("f");
-    expect(el.text()).toContain("(");
-    expect(el.text()).toContain("x");
+    expect(el.text()).toBe("f′(x)");
   });
 
   it("combines a prime with a subscript", () => {
     const el = $(renderMath("m'_1"));
-    expect(el.find("msubsup").length).toBe(1);
+    expect(el.find("msub").length).toBe(1);
+    expect(el.text()).toBe("m1′");
   });
 
   it("renders a prime inside a larger expression", () => {
     const el = $(renderMath("n(0)\\exp(-m'ghN_A/RT)"));
-    expect(el.find("msup").find("mo").text()).toBe("′");
+    expect(el.text()).toContain("m′");
     expect(el.text()).not.toContain("'");
   });
+});
+
+describe("function names", () => {
+  it("puts a thin space after \\sin before its argument", () => {
+    const el = $(renderMath("\\sin x"));
+    expect(el.find("mspace").attr("width")).toBe("0.17em");
+  });
+
+  it("adds no space before parentheses or at the end", () => {
+    for (const tex of ["\\sin(x)", "\\sin\\left(x\\right)", "\\log"]) {
+      expect($(renderMath(tex)).find("mspace").length).toBe(0);
+    }
+  });
+
+  it("spaces after the scripts of \\log_2 n", () => {
+    const el = $(renderMath("\\log_2 n"));
+    expect(el.find("msub + mspace").length).toBe(1);
+  });
+});
+
+it("renders minus as the math minus sign", () => {
+  expect($(renderMath("a - b")).find("mo").text()).toBe("−");
+  expect($(renderMath("x^{-1}")).text()).not.toContain("-");
+});
+
+it("renders \\infty as an ordinary symbol, so -\\infty has no gap", () => {
+  const el = $(renderMath("-\\infty"));
+  expect(el.find("mi").text()).toBe("∞");
+  expect(el.find("mo").text()).toBe("−");
 });

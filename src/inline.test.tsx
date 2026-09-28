@@ -264,3 +264,10 @@ it("neutralizes a non-http scheme in an angle autolink", () => {
       .attr("href"),
   ).toBe("#");
 });
+
+it("leaves trailing punctuation out of a bare URL", () => {
+  const a = $(
+    <Markdown>{"See https://example.com/page. Or this."}</Markdown>,
+  ).find("a");
+  expect(a.attr("href")).toBe("https://example.com/page");
+});

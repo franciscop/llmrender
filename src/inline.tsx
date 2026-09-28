@@ -22,6 +22,12 @@ export type RefMap = Map<string, { url: string; title?: string }>;
 export const refLabel = (raw: string) =>
   raw.trim().replace(/\s+/g, " ").toLowerCase();
 
+// Pandoc's rule keeps prices literal: "$5 and $10" is not math, because the
+// closing $ follows a space and precedes a digit. Only \( \) captures; inline
+// \[ stays an escaped bracket, and \[ \] display math is a block.
+export const MATH_INLINE = /\$(?!\s)[^$\n]+?(?<!\s)\$(?!\d)|\\\((.+?)\\\)/;
+export const MATH_DISPLAY = /\$\$[^$]+?\$\$/;
+
 export const CHECKBOX = /^\[[x\s]\] /i;
 export const IS_CHECKED = /^\[[x]\] /i;
 
@@ -184,7 +190,7 @@ const patterns: { regex: RegExp; render: Render }[] = [
     ),
   },
   {
-    regex: /(https?:\/\/[^\s<>")\]]+)/,
+    regex: /(https?:\/\/[^\s<>")\]]*[^\s<>")\].,;:!?])/,
     render: (m, i) => (
       <a key={i} href={m[1]}>
         {truncate(m[1])}
@@ -240,18 +246,18 @@ export function parseInline(
   const mathPatterns: typeof patterns = math
     ? [
         {
-          regex: /\$\$([^$]+?)\$\$/,
+          regex: MATH_DISPLAY,
           render: (m, i) => (
             <span key={i} className="math-display">
-              {math(m[1], true)}
+              {math(m[0].slice(2, -2), true)}
             </span>
           ),
         },
         {
-          regex: /\$([^$\n]+?)\$/,
+          regex: MATH_INLINE,
           render: (m, i) => (
             <span key={i} className="math-inline">
-              {math(m[1], false)}
+              {math(m[1] ?? m[0].slice(1, -1), false)}
             </span>
           ),
         },

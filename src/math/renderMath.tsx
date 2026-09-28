@@ -33,6 +33,10 @@ const greek: Record<string, string> = {
   flat: "♭",
   sharp: "♯",
   natural: "♮",
+  // Ordinary symbols: as operators they would get spacing, as in "− ∞".
+  infty: "∞",
+  emptyset: "∅",
+  varnothing: "∅",
 };
 // Greek is contiguous in Unicode, capitals 32 code points below lowercase.
 "alpha beta gamma delta epsilon zeta eta theta iota kappa lambda mu nu xi omicron pi rho varsigma sigma tau upsilon phi chi psi omega"
@@ -73,7 +77,6 @@ const operators: Record<string, string> = {
   oint: "∮",
   partial: "∂",
   lim: "lim",
-  infty: "∞",
   leq: "≤",
   le: "≤",
   geq: "≥",
@@ -92,8 +95,6 @@ const operators: Record<string, string> = {
   supseteq: "⊇",
   cup: "∪",
   cap: "∩",
-  emptyset: "∅",
-  varnothing: "∅",
   forall: "∀",
   exists: "∃",
   nexists: "∄",
@@ -556,7 +557,8 @@ export default function renderMath(tex: string, block = false): ReactElement {
     if ("+-=*/()[]|,;!<>".includes(ch)) {
       const v = consume();
       const stretchy = "()[]|".includes(v) ? ("false" as const) : undefined;
-      return { type: "mo", value: v, stretchy };
+      // U+2212 is the math minus; the hyphen gets infix spacing even in -\infty.
+      return { type: "mo", value: v === "-" ? "−" : v, stretchy };
     }
 
     return { type: "mi", value: consume() };
@@ -565,6 +567,7 @@ export default function renderMath(tex: string, block = false): ReactElement {
   function parseScripts(base: Node): Node {
     let sub: Node | null = null;
     let sup: Node | null = null;
+    let marks = "";
 
     while (true) {
       skipWS();
@@ -579,39 +582,45 @@ export default function renderMath(tex: string, block = false): ReactElement {
         sup = parseGroup();
         continue;
       }
-      // A run of apostrophes is a prime superscript: m' is m to the prime.
       if (ch === "'") {
-        let marks = "";
-        while (peek() === "'") {
-          consume();
-          marks += "′";
-        }
-        sup = { type: "mo", value: marks };
+        consume();
+        marks += "′";
         continue;
       }
       break;
     }
 
+    let node = base;
+    // Integrals keep their limits at the side, as in TeX.
     if (
       base.type === "mo" &&
-      ["∑", "∏", "⋃", "⋂", "∫", "∬", "∭", "∮", "lim"].includes(base.value)
+      ["∑", "∏", "⋃", "⋂", "lim"].includes(base.value)
     ) {
       if (sub && sup)
-        return { type: "munderover", base, under: sub, over: sup };
-      if (sub) return { type: "munder", base, under: sub };
-      if (sup) return { type: "mover", base, over: sup };
-      return base;
-    }
+        node = { type: "munderover", base, under: sub, over: sup };
+      else if (sub) node = { type: "munder", base, under: sub };
+      else if (sup) node = { type: "mover", base, over: sup };
+    } else if (sub && sup) node = { type: "msubsup", base, sub, sup };
+    else if (sub) node = { type: "msub", base, sub };
+    else if (sup) node = { type: "msup", base, sup };
 
-    if (sub && sup) return { type: "msubsup", base, sub, sup };
-    if (sub) return { type: "msub", base, sub };
-    if (sup) return { type: "msup", base, sup };
-    return base;
+    // ′ is already raised, so as a superscript it would float above f in f'.
+    return marks
+      ? { type: "mrow", children: [node, { type: "mi", value: marks }] }
+      : node;
   }
 
   function parseExpression(): Node {
     const base = parseAtom();
-    return parseScripts(base);
+    const node = parseScripts(base);
+    // TeX puts a thin space after \sin x, but not before \sin(x).
+    return base.type === "mi" &&
+      functions.has(base.value) &&
+      peek() &&
+      peek() !== "(" &&
+      !tex.startsWith("\\left", i)
+      ? { type: "mrow", children: [node, { type: "mspace", width: "0.17em" }] }
+      : node;
   }
 
   function parse(): Node {

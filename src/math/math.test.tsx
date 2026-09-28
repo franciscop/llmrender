@@ -80,3 +80,39 @@ it("uses a custom highlight function", () => {
   const el = $(<Markdown highlight={hl}>{"```py\nprint(1)\n```"}</Markdown>);
   expect(el.find(".lang-py").text()).toBe("print(1)");
 });
+
+it("leaves dollar amounts as text", () => {
+  for (const src of [
+    "It costs $5 and $10.",
+    "$1,000 and $2,000",
+    "from $5 to $10",
+  ]) {
+    expect($(<Markdown>{src}</Markdown>).find(".math-inline").length).toBe(0);
+  }
+});
+
+it("keeps dollar amounts in separate table cells", () => {
+  const src = "| a | b |\n|---|---|\n| $5 | $10 |";
+  expect(
+    $(<Markdown>{src}</Markdown>)
+      .find("td")
+      .array("textContent"),
+  ).toEqual(["$5", "$10"]);
+});
+
+it("renders \\( \\) as inline math", () => {
+  const $el = $(<Markdown>{"Inline \\(x^2\\) here"}</Markdown>);
+  expect($el.find(".math-inline msup").length).toBe(1);
+});
+
+it("renders \\[ \\] on their own lines as display math", () => {
+  const $el = $(<Markdown>{"\\[\n\\int_0^1 x\\,dx\n\\]"}</Markdown>);
+  expect($el.find(".math-block math").attr("display")).toBe("block");
+});
+
+it("renders a one-line \\[ \\] block", () => {
+  expect(
+    $(<Markdown>{"\\[ a^2 + b^2 = c^2 \\]"}</Markdown>).find(".math-block")
+      .length,
+  ).toBe(1);
+});

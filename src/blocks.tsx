@@ -2,7 +2,13 @@ import type { ReactNode } from "react";
 import type { RawHtml } from "./sanitize";
 import { allowTag } from "./sanitize";
 import type { HighlightFn, MathFn, RefMap } from "./inline";
-import { parseInline, refLabel, renderItem } from "./inline";
+import {
+  MATH_DISPLAY,
+  MATH_INLINE,
+  parseInline,
+  refLabel,
+  renderItem,
+} from "./inline";
 import {
   COMMENT_ALL,
   HTML_PAIR_LINE,
@@ -19,9 +25,14 @@ const HEADER = /^ {0,3}(#{1,6})(?: |$)/;
 const HEADER_TRAIL = /(^|\s)#+\s*$/;
 const HR = /^ {0,3}([-*_])(?:[ \t]*\1){2,}[ \t]*$/;
 const BLOCKQUOTE = /^ {0,3}>[ \t]?(.*)$/;
-const SETEXT = /^ {0,3}(=+|-+)[ \t]*$/;
-const REF_DEF = /^ {0,3}\[([^\]]+)\]:\s*(\S+)(?:\s+["'(](.*)["')])?\s*$/;
-const DISPLAY_MATH = /^\$\$(.+)\$\$$/;
+// A lone "-" is a list item still streaming in, not an underline.
+const SETEXT = /^ {0,3}(=+|--+)[ \t]*$/;
+// "[^1]: note" is a footnote, left as text rather than a link destination.
+const REF_DEF = /^ {0,3}\[([^\]^][^\]]*)\]:\s*(\S+)(?:\s+["'(](.*)["')])?\s*$/;
+// Inner spaces tell \[ x \] apart from the escaped brackets in \[text\].
+const DISPLAY_MATH = /^(?:\$\$(.+)\$\$|\\\[\s(.+)\s\\\])$/;
+const MATH_OPEN = /^(\$\$|\\\[)$/;
+const MATH_CLOSE = /^(\$\$|\\\])$/;
 const CALLOUT = /^\[!(NOTE|TIP|IMPORTANT|WARNING|CAUTION)\]$/i;
 const BLOCK_HTML_START = /^<[a-zA-Z]/;
 // The one multi-line HTML construct we support. Everything else must fit on a
@@ -31,11 +42,12 @@ const SUMMARY = /<summary(?:\s[^>]*)?>([\s\S]*?)<\/summary>/i;
 const FENCE = /^( {0,3})(`{3,}|~{3,})([^`]*)$/;
 const TABLE_ROW = /^\|.+\|$/;
 const TABLE_SEP = /^\|[\s|:-]+\|$/;
-const LIST_ITEM = /^([*+-])\s+(.+)/;
-const SUB_LIST_ITEM = /^\s{2,4}[*+-]\s+(.+)/;
+// Groups: indent, bullet, number, number delimiter.
+const LIST_ITEM = /^( {0,3})(?:([*+-])|(\d{1,9})([.)]))(?: +|$)/;
 const INDENTED_CODE = /^ {4,}/;
-const ORDERED_ITEM = /^(\d{1,9})([.)]) /;
-const ORDERED_SUB_ITEM = /^ {3}\d{1,9}[.)] (.+)/;
+const MATH_SPAN = new RegExp(
+  "^(?:" + MATH_DISPLAY.source + "|" + MATH_INLINE.source + ")",
+);
 
 const slugify = (text: string) =>
   text
@@ -50,18 +62,11 @@ export function parseRow(line: string) {
   let cell = "";
   let i = 0;
   while (i < trimmed.length) {
-    if (trimmed[i] === "$") {
-      const delim = trimmed[i + 1] === "$" ? "$$" : "$";
-      cell += delim;
-      i += delim.length;
-      while (i < trimmed.length) {
-        if (trimmed.startsWith(delim, i)) {
-          cell += delim;
-          i += delim.length;
-          break;
-        }
-        cell += trimmed[i++];
-      }
+    // Math keeps its pipes, as in $|x|$
+    const math = trimmed[i] === "$" && MATH_SPAN.exec(trimmed.slice(i));
+    if (math) {
+      cell += math[0];
+      i += math[0].length;
     } else if (trimmed[i] === "\\" && trimmed[i + 1] === "|") {
       cell += "|";
       i += 2;
@@ -99,7 +104,8 @@ export type Block =
       type: "L";
       ordered: boolean;
       start?: number;
-      items: { text: string; sub: string[] }[];
+      // Each item's lines, parsed as blocks of their own when rendered.
+      items: string[][];
     }
   | { type: "Q"; lines: string[] }
   | {
@@ -140,7 +146,11 @@ export function collectBlocks(
   let listOrdered = false;
   let listMarker = "";
   let listStart = 1;
-  let listItems: { text: string; sub: string[] }[] = [];
+  let listItems: string[][] = [];
+  // Lines indented this far belong to the open item; the dedent strips its
+  // content column. Lenient: two spaces nest even under "1. ".
+  let listIndent = 0;
+  let listDedent = /^/;
 
   let inBlockquote = false;
   let blockquoteLines: string[] = [];
@@ -220,21 +230,20 @@ export function collectBlocks(
     }
   }
   // A different marker, or ordered vs unordered, starts a separate list.
-  function openListItem(
-    ordered: boolean,
-    marker: string,
-    text: string,
-    start?: number,
-  ) {
+  function openListItem(match: RegExpExecArray, text: string) {
+    const ordered = !!match[3];
+    const marker = match[2] ?? match[4];
     if (inList && (listOrdered !== ordered || listMarker !== marker)) {
       flushList();
     }
     flushAll("list");
-    if (!inList && start !== undefined) listStart = start;
+    if (!inList && ordered) listStart = +match[3];
     inList = true;
     listOrdered = ordered;
     listMarker = marker;
-    listItems.push({ text, sub: [] });
+    listIndent = match[1].length + 2;
+    listDedent = new RegExp(`^ {0,${match[0].length}}`);
+    listItems.push([text]);
   }
 
   for (let index = 0; index < lines.length; index++) {
@@ -257,7 +266,7 @@ export function collectBlocks(
     }
 
     if (inMathBlock) {
-      if (line.trim() === "$$") {
+      if (MATH_CLOSE.test(line.trim())) {
         blocks.push({ type: "M", content: mathLines.join("\n") });
         mathLines = [];
         inMathBlock = false;
@@ -265,6 +274,17 @@ export function collectBlocks(
         mathLines.push(line);
       }
       continue;
+    }
+
+    if (inList) {
+      const item = listItems[listItems.length - 1];
+      const indent = line.search(/\S/);
+      if (indent < 0 || indent >= listIndent) {
+        item.push(line.replace(listDedent, ""));
+        continue;
+      }
+      // After a blank line, only a new item keeps the list going.
+      if (!item[item.length - 1] && !LIST_ITEM.test(line)) flushList();
     }
 
     const fence = FENCE.exec(line);
@@ -278,7 +298,7 @@ export function collectBlocks(
       continue;
     }
 
-    if (math && line.trim() === "$$") {
+    if (math && MATH_OPEN.test(line.trim())) {
       flushAll();
       inMathBlock = true;
       continue;
@@ -288,7 +308,7 @@ export function collectBlocks(
       const dm = DISPLAY_MATH.exec(line.trim());
       if (dm) {
         flushAll();
-        blocks.push({ type: "M", content: dm[1].trim() });
+        blocks.push({ type: "M", content: (dm[1] ?? dm[2]).trim() });
         continue;
       }
     }
@@ -391,31 +411,27 @@ export function collectBlocks(
       }
     }
 
-    if (TABLE_ROW.test(line)) {
+    const row = line.trimEnd();
+    if (TABLE_ROW.test(row)) {
       flushAll("table");
-      if (TABLE_SEP.test(line)) {
+      if (TABLE_SEP.test(row)) {
         tableSepSeen = true;
-        tableAligns = parseAligns(line);
+        tableAligns = parseAligns(row);
       } else if (!tableSepSeen) {
         inTable = true;
-        tableHeaders = parseRow(line);
+        tableHeaders = parseRow(row);
       } else {
-        tableRows.push(parseRow(line));
+        tableRows.push(parseRow(row));
       }
       continue;
     }
 
+    // A bare marker is a partial streaming item. CommonMark emits an empty
+    // item; see streaming.test.tsx for why we skip instead.
     const listMatch = LIST_ITEM.exec(line);
     if (listMatch) {
-      openListItem(false, listMatch[1], listMatch[2]);
-      continue;
-    }
-
-    const subItem = inList
-      ? (listOrdered ? ORDERED_SUB_ITEM : SUB_LIST_ITEM).exec(line)
-      : null;
-    if (subItem) {
-      listItems[listItems.length - 1].sub.push(subItem[1]);
+      const text = line.slice(listMatch[0].length);
+      if (text) openListItem(listMatch, text);
       continue;
     }
 
@@ -423,14 +439,6 @@ export function collectBlocks(
     if (INDENTED_CODE.test(line) && !inFencedCode && paraLines.length === 0) {
       flushAll("code");
       codeLines.push(line.replace(/^ {4}/, ""));
-      continue;
-    }
-
-    const orderedMatch = ORDERED_ITEM.exec(line);
-    if (orderedMatch) {
-      const text = line.replace(ORDERED_ITEM, "");
-      if (!text) continue;
-      openListItem(true, orderedMatch[2], text, +orderedMatch[1]);
       continue;
     }
 
@@ -442,10 +450,6 @@ export function collectBlocks(
       continue;
     }
 
-    // Partial streaming markers. CommonMark emits an empty item; see
-    // streaming.test.tsx for why we skip instead.
-    if (/^([*+\-]|\d{1,9}[.)])[ \t]*$/.test(line)) continue;
-
     // Lazy continuation, unless the quote's paragraph already closed.
     if (inBlockquote) {
       if (blockquoteLines[blockquoteLines.length - 1] !== "") {
@@ -455,6 +459,14 @@ export function collectBlocks(
       flushBlockquote();
     }
 
+    // Lazy continuation of the open item's paragraph.
+    if (inList) {
+      listItems[listItems.length - 1].push(line);
+      continue;
+    }
+
+    // Flushed now, or the paragraph would render above the table.
+    if (inTable) flushTable();
     paraLines.push(markBreak(line));
   }
 
@@ -518,20 +530,21 @@ export function renderBlock(
           key={key}
           start={block.ordered && block.start !== 1 ? block.start : undefined}
         >
-          {block.items.map(({ text, sub }, i) => (
-            <li key={i}>
-              {block.ordered
-                ? parseInline(text, math, raw, defs)
-                : renderItem(text, math, raw, defs)}
-              {sub.length > 0 && (
-                <Tag>
-                  {sub.map((s, j) => (
-                    <li key={j}>{parseInline(s, math, raw, defs)}</li>
-                  ))}
-                </Tag>
-              )}
-            </li>
-          ))}
+          {block.items.map((lines, i) => {
+            // A leading paragraph renders bare, as in a tight list.
+            const [first, ...rest] = collectBlocks(lines, !!math, raw, defs);
+            return (
+              <li key={i}>
+                {first?.type === "P"
+                  ? renderItem(first.lines.join(" "), math, raw, defs)
+                  : first &&
+                    renderBlock(first, 0, highlight, math, raw, seen, defs)}
+                {rest.map((b, j) =>
+                  renderBlock(b, j + 1, highlight, math, raw, seen, defs),
+                )}
+              </li>
+            );
+          })}
         </Tag>
       );
     }

@@ -106,3 +106,16 @@ it("does not split table cell on | inside $$...$$", () => {
   expect(el.find("td").length).toBe(2);
   expect(el.find("td").get(1)?.textContent).not.toContain("$$");
 });
+
+it("renders a table whose rows end in trailing spaces", () => {
+  const $el = $(<Markdown>{"| a | b | \n|---|---| \n| 1 | 2 | "}</Markdown>);
+  expect($el.find("td").array("textContent")).toEqual(["1", "2"]);
+});
+
+it("renders a line right after a table below it", () => {
+  const $el = $(
+    <Markdown>{"| a | b |\n|---|---|\n| 1 | 2 |\nAfter table"}</Markdown>,
+  );
+  const tags = [...$el.find("div > *")].map((el) => (el as Element).tagName);
+  expect(tags).toEqual(["TABLE", "P"]);
+});

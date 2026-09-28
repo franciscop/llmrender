@@ -61,7 +61,7 @@ it("renders links inside * list items", () => {
   ).toEqual(["#overview", "#philosophy"]);
 });
 
-it.skip("renders unordered sublist inside ordered list", () => {
+it("renders unordered sublist inside ordered list", () => {
   const src = "1. ordered item\n  - nested unordered";
   const $el = $(<Markdown>{src}</Markdown>);
   expect($el.find("ol > li").length).toBe(1);
