@@ -30,7 +30,7 @@ it("does not render block void tag inline inside paragraph text", () => {
   const root = $(<Markdown rawHtml={true}>{"before<hr />after"}</Markdown>);
   // <hr> inside <p> is invalid DOM nesting — should be left as raw text
   expect(root.find("hr").length).toBe(0);
-  expect(root.find("p").text()).toContain("before");
+  expect(root.find("p")).toHaveText(/before/);
 });
 
 it("renders block-level single-line HTML with rawHtml={true}", () => {

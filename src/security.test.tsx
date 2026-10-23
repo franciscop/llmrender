@@ -445,7 +445,7 @@ it("blocked tag preserves content as text (not executed)", () => {
   );
   expect(root.find("script").length).toBe(0);
   // The text content should appear somewhere as literal
-  expect(root.text()).toContain("alert(1)");
+  expect(root).toHaveText(/alert\(1\)/);
 });
 
 it("svg with nested script — script blocked, svg may render empty", () => {

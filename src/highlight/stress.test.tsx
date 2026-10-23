@@ -42,7 +42,7 @@ async function fetchUser(id: number): Promise<User> {
 
   it("finds comment", () => {
     const el = $(<div>{highlight(src, "ts")}</div>);
-    expect(el.find(".comment").text()).toContain("validate");
+    expect(el.find(".comment")).toHaveText(/validate/);
   });
 
   it("finds numbers", () => {
@@ -112,7 +112,7 @@ assert result == -3.0, f"expected -3.0, got {result}"
 
   it("finds comment", () => {
     const el = $(<div>{highlight(src, "py")}</div>);
-    expect(el.find(".comment").text()).toContain("inner product");
+    expect(el.find(".comment")).toHaveText(/inner product/);
   });
 
   it("finds numbers including floats", () => {
@@ -229,7 +229,7 @@ LIMIT 100;
 
   it("finds comment", () => {
     const el = $(<div>{highlight(src, "sql")}</div>);
-    expect(el.find(".comment").text()).toContain("monthly revenue");
+    expect(el.find(".comment")).toHaveText(/monthly revenue/);
   });
 
   it("finds numbers", () => {
@@ -275,7 +275,7 @@ describe("diff stress", () => {
 
   it("marks hunk header as .comment", () => {
     const el = $(<div>{highlight(src, "diff")}</div>);
-    expect(el.find(".comment").text()).toContain("@@");
+    expect(el.find(".comment")).toHaveText(/@@/);
   });
 
   it("has more additions than deletions", () => {

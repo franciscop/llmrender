@@ -62,7 +62,7 @@ it("renders nothing for single-line display math when math={false}", () => {
 it("renders inline math as literal text when math={false}", () => {
   const el = $(<Markdown math={false}>{"The formula $x^2$ is here"}</Markdown>);
   expect(el.find(".math-inline").length).toBe(0);
-  expect(el.find("p").text()).toContain("x^2");
+  expect(el.find("p")).toHaveText(/x\^2/);
 });
 
 it("renders nothing for children when undefined", () => {

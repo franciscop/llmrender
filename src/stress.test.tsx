@@ -139,7 +139,7 @@ describe("links — edge cases", () => {
     expect(el.find("a").attr("href")).toBe(
       "https://en.wikipedia.org/wiki/Limit_(mathematics)",
     );
-    expect(el.text()).not.toContain(")");
+    expect(el).not.toHaveText(/\)/);
   });
 
   it("adjacent links produce two anchor elements", () => {
@@ -449,7 +449,7 @@ describe("code blocks — isolation", () => {
     const el = $(<Markdown>{src}</Markdown>);
     expect(el.find("pre script").length).toBe(0);
     expect(el.find("pre p").length).toBe(0);
-    expect(el.find("pre").text()).toContain("<p>paragraph</p>");
+    expect(el.find("pre")).toHaveText(/<p>paragraph<\/p>/);
   });
 
   it("markdown inside a fenced block is not parsed", () => {
@@ -459,7 +459,7 @@ describe("code blocks — isolation", () => {
     expect(el.find("pre h1").length).toBe(0);
     expect(el.find("pre strong").length).toBe(0);
     expect(el.find("pre a").length).toBe(0);
-    expect(el.find("pre").text()).toContain("# Not a heading");
+    expect(el.find("pre")).toHaveText(/# Not a heading/);
   });
 
   it("math syntax inside a fenced block is not rendered", () => {
@@ -467,7 +467,7 @@ describe("code blocks — isolation", () => {
     const el = $(<Markdown>{src}</Markdown>);
     expect(el.find("pre .math-inline").length).toBe(0);
     expect(el.find("pre .math-block").length).toBe(0);
-    expect(el.find("pre").text()).toContain("$x^2$");
+    expect(el.find("pre")).toHaveText(/\$x\^2\$/);
   });
 
   it("indented (4-space) code block renders as pre", () => {
@@ -475,7 +475,7 @@ describe("code blocks — isolation", () => {
       "paragraph before\n\n    const x = 42;\n    function foo() {}\n\nparagraph after";
     const el = $(<Markdown>{src}</Markdown>);
     expect(el.find("pre").length).toBe(1);
-    expect(el.find("pre").text()).toContain("const x = 42;");
+    expect(el.find("pre")).toHaveText(/const x = 42;/);
   });
 });
 
@@ -538,7 +538,7 @@ describe("escaping and special characters", () => {
   it("escaped asterisks are not rendered as bold", () => {
     const el = $(<Markdown>{"\\*not bold\\*"}</Markdown>);
     expect(el.find("strong").length).toBe(0);
-    expect(el.text()).toContain("*not bold*");
+    expect(el).toHaveText(/\*not bold\*/);
   });
 
   it("escaped underscores are not rendered as italic", () => {
@@ -550,7 +550,7 @@ describe("escaping and special characters", () => {
     // non-http target so auto-link doesn't fire on the URL either
     const el = $(<Markdown>{"\\[not a link\\](not-a-url)"}</Markdown>);
     expect(el.find("a").length).toBe(0);
-    expect(el.text()).toContain("[not a link]");
+    expect(el).toHaveText(/\[not a link\]/);
   });
 
   it("escaped backtick is not rendered as code", () => {
@@ -592,24 +592,24 @@ describe("ruby / furigana", () => {
 describe("unicode pass-through", () => {
   it("CJK characters render as-is", () => {
     const el = $(<Markdown>{"你好世界"}</Markdown>);
-    expect(el.text()).toContain("你好世界");
+    expect(el).toHaveText(/你好世界/);
   });
 
   it("Arabic characters render as-is", () => {
     const el = $(<Markdown>{"مرحبا"}</Markdown>);
-    expect(el.text()).toContain("مرحبا");
+    expect(el).toHaveText(/مرحبا/);
   });
 
   it("emoji pass through", () => {
     const el = $(<Markdown>{"🎉 🚀 ✅ ❌"}</Markdown>);
-    expect(el.text()).toContain("🎉");
-    expect(el.text()).toContain("✅");
+    expect(el).toHaveText(/🎉/);
+    expect(el).toHaveText(/✅/);
   });
 
   it("unicode math symbols as plain text (no LaTeX)", () => {
     const el = $(<Markdown>{"α β γ ∑ ∫ ≠ ≤ ≥ ∞"}</Markdown>);
-    expect(el.text()).toContain("α");
-    expect(el.text()).toContain("∞");
+    expect(el).toHaveText(/α/);
+    expect(el).toHaveText(/∞/);
     expect(el.find(".math-inline").length).toBe(0);
   });
 });

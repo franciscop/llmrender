@@ -82,14 +82,14 @@ it("does not create <img> element from inline backtick `<img>`", () => {
 it("does not inject HTML tags found in fenced code blocks", () => {
   const root = $(<Markdown>{"```\n<script>alert(1)</script>\n```"}</Markdown>);
   expect(root.find("script").length).toBe(0);
-  expect(root.find("code").text()).toContain("<script>");
+  expect(root.find("code")).toHaveText(/<script>/);
 });
 
 it("renders 4-space indented block as pre/code, not paragraph", () => {
   const root = $(<Markdown>{"    <script>alert(1)</script>"}</Markdown>);
   expect(root.find("script").length).toBe(0);
   expect(root.find("pre").length).toBe(1);
-  expect(root.find("code").text()).toContain("<script>");
+  expect(root.find("code")).toHaveText(/<script>/);
 });
 
 it("does not inject arbitrary HTML tags in 4-space indented blocks", () => {
@@ -112,5 +112,5 @@ it("does not inject HTML tags found in inline code", () => {
     <Markdown>{"here is `<img src=x onerror=alert(1)>`"}</Markdown>,
   );
   expect(root.find("img").length).toBe(0);
-  expect(root.find("code").text()).toContain("<img");
+  expect(root.find("code")).toHaveText(/<img/);
 });

@@ -79,14 +79,14 @@ it("unclosed ``` renders the accumulated code lines", () => {
   const src = "```js\nconst x = 1;";
   const el = $(<Markdown>{src}</Markdown>);
   expect(el.find("pre").length).toBe(1);
-  expect(el.find("pre code").text()).toContain("const x = 1;");
+  expect(el.find("pre code")).toHaveText(/const x = 1;/);
 });
 
 it("unclosed ``` with multiple lines renders all accumulated code", () => {
   const src = "```python\ndef foo():\n    return 42";
   const el = $(<Markdown>{src}</Markdown>);
-  expect(el.find("pre code").text()).toContain("def foo():");
-  expect(el.find("pre code").text()).toContain("return 42");
+  expect(el.find("pre code")).toHaveText(/def foo\(\):/);
+  expect(el.find("pre code")).toHaveText(/return 42/);
 });
 
 // ---------------------------------------------------------------------------
@@ -105,9 +105,7 @@ it("unclosed $$ block renders the accumulated math", () => {
 
 it("unclosed ** does not throw and renders literal text", () => {
   expect(() => $(<Markdown>{"**partial bold"}</Markdown>)).not.toThrow();
-  expect($(<Markdown>{"**partial bold"}</Markdown>).text()).toContain(
-    "partial bold",
-  );
+  expect($(<Markdown>{"**partial bold"}</Markdown>)).toHaveText(/partial bold/);
 });
 
 it("unclosed ` does not throw and renders literal text", () => {

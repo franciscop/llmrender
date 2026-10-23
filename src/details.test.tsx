@@ -61,7 +61,7 @@ it("leaves details closed by default", () => {
 it("works without a blank line around the body", () => {
   const $el = D("<details>\n<summary>S</summary>\nBody.\n</details>");
   expect($el.find("summary").text()).toBe("S");
-  expect($el.find("details").text()).toContain("Body.");
+  expect($el.find("details")).toHaveText(/Body\./);
 });
 
 it("works without a summary", () => {
@@ -98,7 +98,7 @@ it("closes an unterminated details at the end of input", () => {
   const $el = D("<details>\n<summary>S</summary>\n\nPartial body");
   expect($el.find("details").length).toBe(1);
   expect($el.find("summary").text()).toBe("S");
-  expect($el.find("details").text()).toContain("Partial body");
+  expect($el.find("details")).toHaveText(/Partial body/);
 });
 
 it("does not render details without rawHtml", () => {
@@ -108,13 +108,13 @@ it("does not render details without rawHtml", () => {
     </Markdown>,
   );
   expect($el.find("details").length).toBe(0);
-  expect($el.text()).toContain("<details>");
+  expect($el).toHaveText(/<details>/);
 });
 
 it("does not treat details inside a fenced block as markup", () => {
   const $el = D("```html\n<details>\n<summary>S</summary>\n</details>\n```");
   expect($el.find("details").length).toBe(0);
-  expect($el.find("pre code").text()).toContain("<details>");
+  expect($el.find("pre code")).toHaveText(/<details>/);
 });
 
 it("still refuses other multi-line html", () => {

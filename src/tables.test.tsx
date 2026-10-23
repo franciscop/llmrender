@@ -65,7 +65,7 @@ it("renders a multiline table", () => {
     "| Header | Description |\n|--------|-------------|\n| Item 1 | This is a multiline<br>description that spans<br>multiple lines. |";
   const component = $(<Markdown>{multiSrc}</Markdown>);
   expect(component.find("table").length).toBe(1);
-  const cell = $(component.find("td").get(1));
+  const cell = component.find("td").eq(1);
   expect(cell.find("br").length).toBe(2);
   expect(cell.text()).toBe(
     "This is a multilinedescription that spansmultiple lines.",

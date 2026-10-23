@@ -9,7 +9,7 @@ it("removes a comment on its own line", () => {
 
 it("removes a comment spanning several lines", () => {
   const $el = $(<Markdown>{"<!--\nhidden\nnotes\n-->\n\nVisible."}</Markdown>);
-  expect($el.text()).not.toContain("hidden");
+  expect($el).not.toHaveText(/hidden/);
   expect($el.find("p").text()).toBe("Visible.");
 });
 
@@ -23,8 +23,8 @@ it("removes a comment in the middle of a paragraph", () => {
 
 it("removes comments with rawHtml enabled too", () => {
   expect(
-    $(<Markdown rawHtml>{"<!-- note -->\n\nText."}</Markdown>).text(),
-  ).not.toContain("note");
+    $(<Markdown rawHtml>{"<!-- note -->\n\nText."}</Markdown>),
+  ).not.toHaveText(/note/);
 });
 
 it("keeps a comment inside a code span", () => {

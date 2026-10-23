@@ -604,7 +604,7 @@ describe("renderMath", () => {
     expect(() => $(renderMath(tex))).not.toThrow();
     const el = $(renderMath(tex));
     expect(el.find("mspace[width='0.17em']").length).toBe(2);
-    expect(el.find("mo").text()).toContain("∫");
+    expect(el.find("mo").first()).toHaveText(/∫/);
   });
 });
 
@@ -751,7 +751,7 @@ describe("primes", () => {
   });
 
   it("does not leave a straight apostrophe in the output", () => {
-    expect($(renderMath("m'")).text()).not.toContain("'");
+    expect($(renderMath("m'"))).not.toHaveText(/'/);
   });
 
   it("renders a double prime", () => {
@@ -771,8 +771,8 @@ describe("primes", () => {
 
   it("renders a prime inside a larger expression", () => {
     const el = $(renderMath("n(0)\\exp(-m'ghN_A/RT)"));
-    expect(el.text()).toContain("m′");
-    expect(el.text()).not.toContain("'");
+    expect(el).toHaveText(/m′/);
+    expect(el).not.toHaveText(/'/);
   });
 });
 
@@ -796,7 +796,7 @@ describe("function names", () => {
 
 it("renders minus as the math minus sign", () => {
   expect($(renderMath("a - b")).find("mo").text()).toBe("−");
-  expect($(renderMath("x^{-1}")).text()).not.toContain("-");
+  expect($(renderMath("x^{-1}"))).not.toHaveText(/-/);
 });
 
 it("renders \\infty as an ordinary symbol, so -\\infty has no gap", () => {

@@ -266,7 +266,7 @@ it("escapes HTML tags inside inline code", () => {
   expect(result.find("code").length).toBe(1);
   expect(result.find("span").length).toBe(6);
 
-  expect(result.text()).toContain("<pre><code>hello</code></pre>");
+  expect(result).toHaveText(/<pre><code>hello<\/code><\/pre>/);
 });
 
 it("does not create DOM elements from injected HTML in code", () => {
@@ -275,7 +275,7 @@ it("does not create DOM elements from injected HTML in code", () => {
   const result = $(<p>{highlight(input, "js")}</p>);
 
   expect(result.find("script").length).toBe(0);
-  expect(result.text()).toContain("<script>");
+  expect(result).toHaveText(/<script>/);
 });
 
 // diff language
@@ -397,8 +397,6 @@ it("highlights Python decorator with dotted name", () => {
 // Rust attributes
 it("highlights Rust attribute opener as keyword", () => {
   expect(
-    $(<p>{highlight("#[derive(Debug)]", "rust")}</p>)
-      .find(".keyword")
-      .text(),
-  ).toContain("#[");
+    $(<p>{highlight("#[derive(Debug)]", "rust")}</p>).find(".keyword"),
+  ).toHaveText(/#\[/);
 });

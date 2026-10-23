@@ -85,8 +85,8 @@ describe("sum with limits", () => {
 
   it("lower limit has k=1", () => {
     const underRow = el.find("munderover mrow:nth-child(2)");
-    expect(underRow.text()).toContain("k");
-    expect(underRow.text()).toContain("1");
+    expect(underRow).toHaveText(/k/);
+    expect(underRow).toHaveText(/1/);
   });
 
   it("has k² via msup", () => {
@@ -236,7 +236,7 @@ describe("deeply nested scripts", () => {
 
   it("x_{n+1} has subscript with an operator inside", () => {
     const el = $(renderMath("x_{n+1}"));
-    expect(el.find("msub mrow mo").text()).toContain("+");
+    expect(el.find("msub mrow mo")).toHaveText(/\+/);
   });
 
   it("e^{x^2} has msup inside msup", () => {
