@@ -102,7 +102,7 @@ const unresolved = (
 
 const patterns: { regex: RegExp; render: Render }[] = [
   {
-    regex: /\\([!-\/:-@\[-`{-~])/,
+    regex: /\\([!-/:-@[-`{-~])/,
     render: (m) => m[1],
   },
   {

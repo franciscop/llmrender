@@ -23,6 +23,7 @@ const BR_SLASH = "\u0001";
 const TRAILING_SPACES = / {2,}$/;
 const TRAILING_SLASH = /\\$/;
 
+// oxlint-disable-next-line no-control-regex
 export const HARD_BREAK = /<br\s*\/?>|[\0\u0001]/i;
 
 export const markBreak = (line: string) =>
@@ -37,4 +38,5 @@ export const clearBreak = (text: string) =>
   text.replace(BR_MARK, "").replace(BR_SLASH, "\\");
 
 export const breakToSpace = (text: string) =>
+  // oxlint-disable-next-line no-control-regex
   text.replace(/\0/g, " ").replace(/\u0001/g, "\\ ");

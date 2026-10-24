@@ -1,3 +1,4 @@
+// oxlint-disable-next-line typescript/triple-slash-reference
 /// <reference path="./global.d.ts" />
 import type { HTMLAttributes, ReactElement } from "react";
 import { parseLines } from "./blocks";
@@ -12,6 +13,7 @@ export { allowTags, highlightCode };
 
 // Stripped before parsing: a scheme-obfuscation vector, and it keeps the
 // hard-break sentinels unforgeable. Tab is left for expandTabs.
+// oxlint-disable-next-line no-control-regex
 const CONTROL = /[\x00-\x08\x0B\x0C\x0E-\x1F\x7F]/g;
 
 // Block rules measure indentation in spaces. A tab advances to the next

@@ -50,6 +50,7 @@ function parseAttrs(str = ""): Record<string, string> {
 // Strip control chars browsers use to bypass scheme detection, then reject
 // any URL that has a scheme other than http or https.
 export const isUnsafeUrl = (url: string) => {
+  // oxlint-disable-next-line no-control-regex
   const s = url.replace(/[\x00-\x20\x7F"']/g, "");
   return HAS_SCHEME.test(s) && !SAFE_SCHEME.test(s);
 };
