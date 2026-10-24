@@ -1,4 +1,4 @@
-# LLMRender [![llmrender](https://img.shields.io/npm/v/llmrender?label=llmrender&color=greenlime)](https://www.npmjs.com/package/llmrender) [![tests](https://github.com/franciscop/llmrender/workflows/tests/badge.svg)](https://github.com/franciscop/llmrender/actions) [![gzip size](https://img.badgesize.io/franciscop/llmrender/master/index.min.js.svg?label=gzip&logo=&compression=gzip)](https://github.com/franciscop/llmrender/blob/master/index.min.js) [![dependencies](https://img.shields.io/badge/dependencies-0-limegreen.svg)](https://github.com/franciscop/llmrender/blob/master/package.json)
+# LLMRender [![npm install llmrender](https://img.shields.io/badge/npm%20install-llmrender-blue.svg)](https://www.npmjs.com/package/llmrender) [![tests](https://github.com/franciscop/llmrender/workflows/tests/badge.svg)](https://github.com/franciscop/llmrender/actions) [![gzip size](https://img.badgesize.io/franciscop/llmrender/master/index.min.js.svg?label=gzip&logo=&compression=gzip)](https://github.com/franciscop/llmrender/blob/master/index.min.js)
 
 A React Markdown renderer packed with features for all your LLM output:
 
